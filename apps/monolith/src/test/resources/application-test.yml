@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:iter;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      # 테스트 스키마는 엔티티에서 바로 만든다. Flyway 를 태우면 컨텍스트마다 스키마가
+      # 재생성되지 않아 테스트 간 데이터가 남는다.
+      # 마이그레이션 SQL 이 엔티티와 어긋나지 않는지는 SchemaMigrationConsistencyTest 가 검증한다.
+      ddl-auto: create-drop
+    show-sql: false
+  flyway:
+    enabled: false
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: test-kakao-client-id
+            client-secret: test-kakao-client-secret
+
+jwt:
+  issuer: iter
+  audience: iter-api
+  secret-key: dGVzdC1vbmx5LWl0ZXItand0LXNlY3JldC1rZXktbXVzdC1iZS1sb25nLWVub3VnaC1mb3ItaHM1MTItc2lnbmluZw==
+  access-token-validity: 15m
+  refresh-token-validity: 14d
+
+auth:
+  refresh-cookie:
+    name: iter-refresh
+    secure: false

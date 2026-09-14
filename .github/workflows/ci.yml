@@ -4,7 +4,13 @@ on:
   push:
     branches: [main, dev]
   pull_request:
-    branches: [main, dev]
+    # 모노레포 전환은 통합 브랜치(feat/**)에 작업 브랜치(monorepo/**, port/**)를 스택으로 쌓는
+    # 방식이라, base가 main/dev가 아니다. 이 패턴이 없으면 전환 작업 PR 전체에 CI가 돌지 않는다.
+    #
+    # !! branches 는 "어느 브랜치로 향하는 PR인가"(base)를 거른다 !!
+    # 작업 브랜치 이름이 아니다. 조건에 안 맞으면 에러가 아니라 아무 일도 안 일어나므로,
+    # 새 네임스페이스를 쓸 때는 첫 PR에서 `gh pr checks <번호>`로 반드시 확인할 것.
+    branches: [main, dev, 'feat/**', 'monorepo/**', 'port/**', 'schema/**']
 
 jobs:
   build:
@@ -30,11 +36,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - name: Set up JDK 25
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4

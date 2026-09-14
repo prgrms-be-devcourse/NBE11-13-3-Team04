@@ -1,0 +1,63 @@
+[versions]
+spring-boot = "4.1.0"
+jjwt = "0.12.6"
+aws-sdk = "2.47.5"
+bouncycastle = "1.82"
+springdoc = "3.0.3"
+
+[libraries]
+# ---- BOM ----
+# 버전을 적지 않은 라이브러리들은 전부 이 BOM 이 관리한다.
+spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
+aws-bom = { module = "software.amazon.awssdk:bom", version.ref = "aws-sdk" }
+
+# ---- Spring Boot 스타터 ----
+# Boot 4.x 부터 스타터 이름이 쪼개졌다. spring-boot-starter-web / -test 가 아니라
+# -webmvc / -webmvc-test 처럼 기술별로 나뉜다.
+spring-boot-starter-webmvc = { module = "org.springframework.boot:spring-boot-starter-webmvc" }
+spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security" }
+spring-boot-starter-security-oauth2-client = { module = "org.springframework.boot:spring-boot-starter-security-oauth2-client" }
+spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
+spring-boot-starter-mail = { module = "org.springframework.boot:spring-boot-starter-mail" }
+
+# ---- Spring Boot 테스트 스타터 ----
+spring-boot-starter-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test" }
+spring-boot-starter-data-jpa-test = { module = "org.springframework.boot:spring-boot-starter-data-jpa-test" }
+spring-boot-starter-security-test = { module = "org.springframework.boot:spring-boot-starter-security-test" }
+spring-boot-starter-security-oauth2-client-test = { module = "org.springframework.boot:spring-boot-starter-security-oauth2-client-test" }
+spring-boot-starter-validation-test = { module = "org.springframework.boot:spring-boot-starter-validation-test" }
+
+# ---- 서드파티 ----
+# lombok, junit-platform-launcher, mysql, h2 는 버전을 적지 않는다.
+# Spring Boot BOM 이 관리하며, 실제 해석 결과를 확인했다:
+#   lombok 1.18.46 / junit-platform-launcher 6.0.3 / byte-buddy 1.18.10
+# byte-buddy 를 임의로 올리거나 내리지 말 것 - Mockito 의 Java 25 동작이 여기에 달려 있다.
+lombok = { module = "org.projectlombok:lombok" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+mysql-connector = { module = "com.mysql:mysql-connector-j" }
+# !! flyway-core 만 넣으면 Flyway 가 아예 안 돈다 !!
+# Boot 4 에서 자동설정이 모듈로 쪼개져서, 라이브러리만 있고 스타터가 없으면
+# FlywayAutoConfiguration 자체가 클래스패스에 없다. 에러도 안 나고 조용히 건너뛴다.
+spring-boot-starter-flyway = { module = "org.springframework.boot:spring-boot-starter-flyway" }
+spring-boot-starter-flyway-test = { module = "org.springframework.boot:spring-boot-starter-flyway-test" }
+# flyway-mysql 은 MySQL 8 전용 모듈이다. 없으면 기동 시 "Unsupported Database" 로 실패한다.
+flyway-mysql = { module = "org.flywaydb:flyway-mysql" }
+h2 = { module = "com.h2database:h2" }
+
+# Jackson 2 (com.fasterxml). Boot 4.1 의 웹 스타터는 Jackson 3(tools.jackson)를 주므로
+# 이건 별도로 들어와야 한다. 현재 apps/monolith 에는 springdoc 을 타고 전이로 들어오고 있다.
+# 소스 6개가 com.fasterxml.jackson 애너테이션을 쓰는데 아무도 직접 선언하지 않은 상태라
+# springdoc 을 제거하거나 올릴 때 깨질 수 있다 - 별도로 정리할 것.
+jackson2-databind = { module = "com.fasterxml.jackson.core:jackson-databind" }
+
+bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
+jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
+jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }
+springdoc-openapi-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+aws-s3 = { module = "software.amazon.awssdk:s3" }
+aws-url-connection-client = { module = "software.amazon.awssdk:url-connection-client" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

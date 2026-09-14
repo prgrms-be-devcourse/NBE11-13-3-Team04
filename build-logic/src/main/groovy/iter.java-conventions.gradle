@@ -1,0 +1,51 @@
+import org.gradle.api.artifacts.VersionCatalogsExtension
+
+plugins {
+    id 'java-library'
+    id 'jacoco'
+}
+
+// precompiled script plugin 안에서는 타입 안전한 libs.* 접근자가 생성되지 않는다.
+// 아래가 공식적으로 지원되는 우회 방법이다.
+def libs = extensions.getByType(VersionCatalogsExtension).named('libs')
+def lombok = libs.findLibrary('lombok').get()
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+
+    // 지금은 Spring Boot 플러그인이 이 옵션을 공짜로 넣어준다.
+    // 하지만 라이브러리 모듈은 Boot 플러그인을 적용하지 않으므로 직접 넣어야 한다.
+    // 빠뜨리면 @RequestParam / @PathVariable 의 파라미터 이름 정보가 사라져
+    // "Name for argument ... not specified" 가 런타임에 터진다.
+    // 컴파일은 통과하고, .idea/compiler.xml 이 IDE 에는 이 옵션을 주므로 IDE 에서도 멀쩡해 보인다.
+    options.compilerArgs.add('-parameters')
+}
+
+dependencies {
+    compileOnly lombok
+    annotationProcessor lombok
+    testCompileOnly lombok
+    testAnnotationProcessor lombok
+
+    testRuntimeOnly libs.findLibrary('junit-platform-launcher').get()
+}
+
+// jacoco toolVersion 은 핀하지 않는다. Gradle 9.5.1 번들 기본값이 0.8.14 이고
+// 이는 Java 25 (클래스 파일 버전 69) 공식 지원 버전이다.
+// 커버리지 리포트와 게이트는 모듈별이 아니라 루트에서 집계한다 - 루트 build.gradle 참고.
+tasks.named('test', Test) {
+    useJUnitPlatform()
+
+    // DomainBoundaryTest처럼 소스 트리를 직접 훑는 테스트가 있어서,
+    // 어느 모듈에서 이 test 태스크가 돌든 저장소 루트를 알 수 있게 넘긴다.
+    systemProperty 'iter.repoRoot', rootProject.projectDir.absolutePath
+}

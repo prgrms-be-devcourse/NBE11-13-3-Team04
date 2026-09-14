@@ -1,72 +1,56 @@
 plugins {
-    id 'java'
-    id 'jacoco'
-    id 'org.springframework.boot' version '4.1.0'
-    id 'io.spring.dependency-management' version '1.1.7'
-}
-
-group = 'com.example'
-version = '0.0.1-SNAPSHOT'
-description = 'iter'
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-repositories {
-    mavenCentral()
+    id 'base'
+    id 'jacoco-report-aggregation'
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
-    implementation 'org.bouncycastle:bcprov-jdk18on:1.82'
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
-    implementation platform('software.amazon.awssdk:bom:2.47.5')
-    implementation 'software.amazon.awssdk:s3'
-    implementation 'software.amazon.awssdk:url-connection-client'
-    compileOnly 'org.projectlombok:lombok'
-    runtimeOnly 'com.mysql:mysql-connector-j'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-    testRuntimeOnly 'com.h2database:h2'
-    testCompileOnly 'org.projectlombok:lombok'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testAnnotationProcessor 'org.projectlombok:lombok'
+    jacocoAggregation project(':apps:monolith')
+    jacocoAggregation project(':libs:core')
+    jacocoAggregation project(':libs:security')
+    jacocoAggregation project(':libs:storage')
+    jacocoAggregation project(':services:domain-api')
+    jacocoAggregation project(':services:delivery')
+    jacocoAggregation project(':services:notification')
+    jacocoAggregation project(':services:dispute')
+    jacocoAggregation project(':services:auth')
+    jacocoAggregation project(':services:payment')
+    jacocoAggregation project(':services:device')
+    jacocoAggregation project(':services:reservation')
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
-    finalizedBy jacocoTestReport
-}
-
-jacoco {
-    toolVersion = '0.8.12'
-}
-
-jacocoTestReport {
-    dependsOn test
+// jacoco-report-aggregation 플러그인은 리포트 태스크를 자동으로 만들어주지 않는다.
+// 아래처럼 직접 선언해야 하며, 리포트 이름이 곧 태스크 이름이 된다.
+reporting {
     reports {
-        xml.required = true
-        html.required = true
+        testCodeCoverageReport(JacocoCoverageReport) {
+            // Gradle 9 에서 testType 은 제거되었다. testSuiteName 을 쓴다.
+            testSuiteName = 'test'
+        }
     }
 }
 
-jacocoTestCoverageVerification {
-    dependsOn jacocoTestReport
+def aggregatedReport = tasks.named('testCodeCoverageReport', JacocoReport)
+
+aggregatedReport.configure {
+    reports {
+        xml.required = true
+        html.required = true
+        // CI(.github/workflows/ci.yml)가 이 경로를 하드코딩하고 있다.
+        // 멀티모듈 전환 전과 동일하게 고정해서 CI 를 수정하지 않아도 되게 한다.
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/test/jacocoTestReport.xml')
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/test/html')
+    }
+}
+
+// 커버리지 게이트는 루트 집계 하나만 둔다.
+// 모듈별로 걸면 libs/core 처럼 값 타입 위주이고 테스트가 다른 모듈에 있는 경우
+// 첫날부터 실패한다. 소스 총합이 같으므로 집계 비율은 전환 전과 동일해야 한다.
+def aggregatedCoverageVerification = tasks.register('aggregatedCoverageVerification', JacocoCoverageVerification) {
+    def report = aggregatedReport.get()
+    executionData.from(report.executionData)
+    classDirectories.from(report.classDirectories)
+    sourceDirectories.from(report.sourceDirectories)
+    dependsOn report
     violationRules {
         rule {
             limit {
@@ -77,5 +61,5 @@ jacocoTestCoverageVerification {
 }
 
 tasks.named('check') {
-    dependsOn jacocoTestCoverageVerification
+    dependsOn aggregatedReport, aggregatedCoverageVerification
 }

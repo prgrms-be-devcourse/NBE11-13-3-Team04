@@ -1,0 +1,22 @@
+plugins {
+    id 'iter.spring-library-conventions'
+}
+
+description = 'iter 결제(mock 토스) 도메인'
+
+dependencies {
+    implementation project(':services:domain-api')
+    implementation project(':libs:core')
+    implementation project(':libs:security')
+
+    // AdminPaymentSearchRequest 가 Jackson 2 애너테이션을 쓴다. springdoc 전이
+    // 의존에 우연히 얹혀 있던 것을 명시적으로 선언한다 — springdoc 의존이 없어지거나
+    // 버전이 바뀌면 조용히 깨지는 걸 막기 위함이다.
+    implementation libs.jackson2.databind
+    // 컨트롤러 spec 인터페이스가 swagger 애너테이션을 쓴다.
+    implementation libs.springdoc.openapi.webmvc.ui
+
+    // 순수 Mockito 단위 테스트뿐이지만, spring-boot-starter-*-test 가 하나도 없으면
+    // Mockito 자체가 전이로 들어오지 않는다.
+    testImplementation libs.spring.boot.starter.data.jpa.test
+}

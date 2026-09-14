@@ -1,0 +1,12 @@
+plugins {
+    id 'iter.spring-library-conventions'
+}
+
+description = 'iter 배송(mock) 도메인'
+
+dependencies {
+    implementation project(':services:domain-api')
+    implementation project(':libs:core')
+
+    implementation libs.spring.boot.starter.data.jpa
+}

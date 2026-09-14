@@ -1,0 +1,16 @@
+plugins {
+    id 'iter.spring-library-conventions'
+}
+
+description = 'iter 인증 공용 - JWT 발급/검증, 인증 주체(AuthUser), 인증 필터'
+
+dependencies {
+    // CustomException / ErrorCode 를 쓰고, 이 모듈을 쓰는 쪽도 그 타입을 보게 되므로 api.
+    api project(':libs:core')
+
+    api libs.spring.boot.starter.security
+
+    implementation libs.jjwt.api
+    runtimeOnly libs.jjwt.impl
+    runtimeOnly libs.jjwt.jackson
+}

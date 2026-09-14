@@ -1,1 +1,37 @@
+pluginManagement {
+    // buildSrc 가 아니라 included build 를 쓴다.
+    // buildSrc 는 암묵적으로 모든 프로젝트의 의존성이라, 한 줄만 고쳐도
+    // 전체 빌드 설정 캐시가 무효화되고 재구성이 일어난다.
+    includeBuild('build-logic')
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    // 저장소 선언을 이 파일 한 곳으로 강제한다.
+    // 모듈 build.gradle 에 repositories 블록이 남아 있으면 빌드가 실패한다.
+    repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+    repositories {
+        mavenCentral()
+    }
+}
+
+// gradle/libs.versions.toml 은 자동으로 'libs' 카탈로그가 된다.
+// 여기에 versionCatalogs 블록을 또 쓰면 "Cannot create extension 'libs'" 로 실패한다.
+
 rootProject.name = 'iter'
+
+include 'libs:core'
+include 'libs:security'
+include 'libs:storage'
+include 'services:domain-api'
+include 'services:delivery'
+include 'services:notification'
+include 'services:dispute'
+include 'services:auth'
+include 'services:payment'
+include 'services:device'
+include 'services:reservation'
+include 'apps:monolith'

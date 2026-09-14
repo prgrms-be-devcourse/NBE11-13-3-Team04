@@ -1,0 +1,16 @@
+plugins {
+    id 'iter.spring-library-conventions'
+}
+
+description = 'iter S3 저장소 공용 - 프리사인 업로드 설정과 S3 클라이언트 빈'
+
+dependencies {
+    // S3Client/S3Presigner 타입을 소비 모듈이 필드 타입으로 그대로 쓰므로 api.
+    api platform(libs.aws.bom)
+    api libs.aws.s3
+
+    // S3Client 의 기본 HTTP 구현체 — 소비 모듈 런타임 클래스패스엔 전이로 포함된다.
+    implementation libs.aws.url.connection.client
+    // S3StorageProperties 의 @NotBlank/@Validated 컴파일에 필요.
+    implementation libs.spring.boot.starter.validation
+}

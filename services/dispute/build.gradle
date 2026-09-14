@@ -1,0 +1,23 @@
+plugins {
+    id 'iter.spring-library-conventions'
+}
+
+description = 'iter 분쟁·신고 도메인'
+
+dependencies {
+    implementation project(':services:domain-api')
+    implementation project(':libs:core')
+    implementation project(':libs:security')
+
+    // 컨트롤러 spec 인터페이스가 swagger 애너테이션을 쓴다.
+    implementation libs.springdoc.openapi.webmvc.ui
+
+    // 순수 Mockito 단위 테스트뿐이지만, spring-boot-starter-*-test 가 하나도 없으면
+    // Mockito 자체가 전이로 들어오지 않는다.
+    testImplementation libs.spring.boot.starter.data.jpa.test
+
+    // ReportServiceTest가 User 엔티티를 직접 만들어야 한다. 실물 클래스(User)와
+    // 픽스처 헬퍼(UserFixtures)는 각각 다른 소스셋이라 둘 다 필요하다.
+    testImplementation project(':services:auth')
+    testImplementation testFixtures(project(':services:auth'))
+}

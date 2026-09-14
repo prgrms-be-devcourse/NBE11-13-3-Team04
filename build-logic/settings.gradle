@@ -1,0 +1,16 @@
+dependencyResolutionManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+    // included build 는 별도의 빌드라서 상위 빌드의 libs 카탈로그를 물려받지 않는다.
+    // 이 블록이 없으면 build.gradle 의 libs.versions.* 가
+    // "Could not get unknown property 'libs'" 로 실패한다.
+    versionCatalogs {
+        create('libs') {
+            from(files('../gradle/libs.versions.toml'))
+        }
+    }
+}
+
+rootProject.name = 'build-logic'

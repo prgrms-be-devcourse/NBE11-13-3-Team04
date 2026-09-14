@@ -1,0 +1,22 @@
+plugins {
+    id 'iter.spring-library-conventions'
+    id 'org.springframework.boot'
+}
+
+springBoot {
+    mainClass = 'com.example.iter.IterApplication'
+}
+
+// 이 설정이 없으면 산출물 이름이 프로젝트명을 따라 monolith-0.0.1-SNAPSHOT.jar 가 된다.
+// 기존 배포 산출물 이름(iter-*.jar)을 유지한다.
+base {
+    archivesName = 'iter'
+}
+
+// Boot 4.1 은 plain jar 를 비활성화하지 않고 -plain 분류자를 붙여 같이 만든다.
+// 실행 가능한 jar 만 있으면 되는 앱 모듈에서는 불필요한 산출물이라 끈다.
+// 주의: 다른 모듈이 이 모듈을 의존하게 되면 이 줄을 지워야 한다.
+//      enabled = false 는 apiElements 를 비워서 소비자 쪽 컴파일이 깨진다.
+tasks.named('jar', Jar) {
+    enabled = false
+}

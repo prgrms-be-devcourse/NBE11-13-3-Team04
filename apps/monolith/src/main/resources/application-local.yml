@@ -1,0 +1,47 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/iter?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      # 스키마는 Flyway 가 만든다. Hibernate 는 엔티티와 맞는지 검증만 한다.
+      # update 로 두면 Hibernate 가 몰래 컬럼을 추가해 마이그레이션 이력과 어긋난다.
+      ddl-auto: validate
+    show-sql: true
+  flyway:
+    # 이미 ddl-auto: update 로 만들어 둔 로컬 DB 가 있는 경우를 위한 설정이다.
+    # 테이블은 있는데 이력 테이블이 없으면 Flyway 는 기본적으로 기동을 거부한다.
+    # baseline-on-migrate 는 "지금 스키마를 V1 이 적용된 상태로 치고 넘어가라"는 뜻이다.
+    #
+    # 그 스키마가 실제로 V1 과 다르면 바로 뒤 Hibernate validate 에서 걸린다.
+    # 그때는 로컬 DB 를 지우고 다시 만드는 것이 맞다:
+    #   mysql> drop database iter; create database iter;
+    baseline-on-migrate: true
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID:local-kakao-client-id}
+            client-secret: ${KAKAO_CLIENT_SECRET:local-kakao-client-secret}
+
+auth:
+  refresh-cookie:
+    name: iter-refresh
+    secure: false
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  storage:
+    s3:
+      bucket: iter-nbe1113-team04-equipment
+      region: ap-northeast-2
+      public-base-url: https://iter-nbe1113-team04-equipment.s3.ap-northeast-2.amazonaws.com
+      key-prefix: equipment
+      presigned-url-validity: 5m

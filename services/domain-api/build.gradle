@@ -1,0 +1,14 @@
+plugins {
+    id 'iter.spring-library-conventions'
+}
+
+description = 'iter 도메인 간 공개 창구(Port) 모음 - 도메인 순환을 끊기 위한 <domain>.api/<domain>.event 패키지 전용 모듈'
+
+dependencies {
+    // auth.api.UserLockView 가 UserStatus(libs/security)를 공개 시그니처에 그대로 노출한다.
+    api project(':libs:security')
+
+    // PreferredLanguageTest(순수 JUnit) 하나뿐이지만, spring-boot-starter-*-test 가
+    // 하나도 없으면 JUnit5/AssertJ 자체가 전이로 들어오지 않는다.
+    testImplementation libs.spring.boot.starter.validation.test
+}

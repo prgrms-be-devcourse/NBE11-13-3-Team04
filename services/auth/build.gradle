@@ -1,0 +1,30 @@
+plugins {
+    id 'iter.spring-library-conventions'
+    id 'java-test-fixtures'
+}
+
+description = 'iter 인증/회원 도메인'
+
+dependencies {
+    implementation project(':services:domain-api')
+    implementation project(':libs:core')
+    implementation project(':libs:security')
+
+    // KakaoOAuth2SuccessHandler/FailureHandler 등 OAuth2 로그인 흐름이 필요로 한다.
+    // libs:core는 spring-boot-starter-security만 api로 노출하고 oauth2-client는 아니다.
+    implementation libs.spring.boot.starter.security.oauth2.client
+
+    // AdminUserStatusRequest, UserUpdateRequest 가 Jackson 2 애너테이션을 쓴다. springdoc 전이
+    // 의존에 우연히 얹혀 있던 것을 명시적으로 선언한다 — springdoc 의존이 없어지거나
+    // 버전이 바뀌면 조용히 깨지는 걸 막기 위함이다.
+    implementation libs.jackson2.databind
+    // 컨트롤러 spec 인터페이스가 swagger 애너테이션을 쓴다.
+    implementation libs.springdoc.openapi.webmvc.ui
+
+    // 순수 Mockito 단위 테스트뿐이지만, spring-boot-starter-*-test 가 하나도 없으면
+    // Mockito 자체가 전이로 들어오지 않는다.
+    testImplementation libs.spring.boot.starter.data.jpa.test
+
+    // User 엔티티를 직접 빌드해야 하는 타 도메인 테스트가 testFixtures(project(':services:auth'))로 가져다 쓴다.
+    testFixturesImplementation project(':libs:security')
+}
