@@ -284,11 +284,6 @@ class ReturnRepositoryTest {
             int sortOrder,
             boolean thumbnail
     ) {
-        return EquipmentImage.builder()
-                .equipment(equipment)
-                .imageUrl(imageUrl)
-                .sortOrder(sortOrder)
-                .thumbnail(thumbnail)
-                .build();
+        return new EquipmentImage(equipment, imageUrl, null, sortOrder, thumbnail);
     }
 }

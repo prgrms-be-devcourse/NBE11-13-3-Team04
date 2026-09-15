@@ -152,13 +152,7 @@ class MyEquipmentApiTest {
     }
 
     private void saveThumbnail(Equipment equipment, String objectKey) {
-        equipmentImageRepository.saveAndFlush(EquipmentImage.builder()
-                .equipment(equipment)
-                .imageUrl("https://cdn.example.com/" + objectKey)
-                .objectKey(objectKey)
-                .sortOrder(0)
-                .thumbnail(true)
-                .build());
+        equipmentImageRepository.saveAndFlush(new EquipmentImage(equipment, "https://cdn.example.com/" + objectKey, objectKey, 0, true));
     }
 
     private String bearer(User user) {

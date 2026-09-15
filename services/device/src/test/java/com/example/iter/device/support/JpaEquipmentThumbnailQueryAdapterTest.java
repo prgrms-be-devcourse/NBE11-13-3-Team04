@@ -96,10 +96,6 @@ class JpaEquipmentThumbnailQueryAdapterTest {
     }
 
     private EquipmentImage image(Equipment equipment, String url) {
-        return EquipmentImage.builder()
-                .equipment(equipment)
-                .imageUrl(url)
-                .thumbnail(true)
-                .build();
+        return new EquipmentImage(equipment, url, null, 0, true);
     }
 }

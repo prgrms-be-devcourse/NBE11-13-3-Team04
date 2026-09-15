@@ -63,7 +63,7 @@ public class AdminEquipmentMapper {
                 image.getId(),
                 image.getImageUrl(),
                 image.getSortOrder(),
-                image.isThumbnail()
+                image.getThumbnail()
         );
     }
 }

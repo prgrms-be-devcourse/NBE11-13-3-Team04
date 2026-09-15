@@ -92,13 +92,12 @@ public class EquipmentManagementService {
 
         for (int index = 0; index < storedImages.size(); index++) {
             StoredImage storedImage = storedImages.get(index);
-            equipmentImageRepository.save(EquipmentImage.builder()
-                    .equipment(equipment)
-                    .imageUrl(storedImage.imageUrl())
-                    .objectKey(storedImage.objectKey())
-                    .sortOrder(index)
-                    .thumbnail(index == request.getThumbnailIndex())
-                    .build());
+            equipmentImageRepository.save(new EquipmentImage(
+                    equipment,
+                    storedImage.imageUrl(),
+                    storedImage.objectKey(),
+                    index,
+                    index == request.getThumbnailIndex()));
         }
 
         equipmentImageRepository.flush();
@@ -142,14 +141,13 @@ public class EquipmentManagementService {
                 .orElse(-1) + 1;
         for (int index = 0; index < storedImages.size(); index++) {
             StoredImage storedImage = storedImages.get(index);
-            equipmentImageRepository.save(EquipmentImage.builder()
-                    .equipment(equipment)
-                    .imageUrl(storedImage.imageUrl())
-                    .objectKey(storedImage.objectKey())
-                    .sortOrder(nextSortOrder + index)
-                    .thumbnail(request.getThumbnailIndex() != null
-                            && index == request.getThumbnailIndex())
-                    .build());
+            equipmentImageRepository.save(new EquipmentImage(
+                    equipment,
+                    storedImage.imageUrl(),
+                    storedImage.objectKey(),
+                    nextSortOrder + index,
+                    request.getThumbnailIndex() != null
+                            && index == request.getThumbnailIndex()));
         }
         LocalDateTime usedAt = LocalDateTime.now();
         uploadRecords.forEach(upload -> upload.use(usedAt));
@@ -180,7 +178,7 @@ public class EquipmentManagementService {
         List<EquipmentImage> remainingImages = images.stream()
                 .filter(image -> !image.getId().equals(imageId))
                 .toList();
-        if (target.isThumbnail()) {
+        if (target.getThumbnail()) {
             remainingImages.getFirst().changeThumbnail(true);
         }
         for (int index = 0; index < remainingImages.size(); index++) {

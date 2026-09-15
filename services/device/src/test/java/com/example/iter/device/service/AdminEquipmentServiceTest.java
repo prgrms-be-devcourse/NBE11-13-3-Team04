@@ -367,13 +367,7 @@ class AdminEquipmentServiceTest {
             int sortOrder,
             boolean thumbnail
     ) {
-        return EquipmentImage.builder()
-                .id(id)
-                .equipment(equipment)
-                .imageUrl(url)
-                .sortOrder(sortOrder)
-                .thumbnail(thumbnail)
-                .build();
+        return new EquipmentImage(equipment, url, null, sortOrder, thumbnail, id);
     }
 
     private static Stream<EquipmentStatus> suspendableStatuses() {
