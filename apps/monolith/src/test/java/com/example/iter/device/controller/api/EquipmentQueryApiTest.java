@@ -228,17 +228,16 @@ class EquipmentQueryApiTest {
             long dailyPrice,
             EquipmentStatus status
     ) {
-        return equipmentRepository.save(Equipment.builder()
-                .ownerId(1L)
-                .category(category)
-                .name(name)
-                .description(name + " 설명")
-                .dailyPrice(BigDecimal.valueOf(dailyPrice))
-                .availableFrom(LocalDate.now())
-                .availableTo(LocalDate.now().plusMonths(2))
-                .status(status)
-                .productCondition(ProductConditionType.NORMAL)
-                .build());
+        return equipmentRepository.save(new Equipment(
+                1L,
+                category,
+                name,
+                name + " 설명",
+                BigDecimal.valueOf(dailyPrice),
+                LocalDate.now(),
+                LocalDate.now().plusMonths(2),
+                status,
+                ProductConditionType.NORMAL));
     }
 
     private void saveThumbnail(Equipment equipment, String imageUrl) {

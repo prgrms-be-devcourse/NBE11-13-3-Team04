@@ -72,19 +72,18 @@ public class EquipmentManagementService {
                         upload.getExpectedSize()))
                 .toList();
 
-        Equipment equipment = equipmentRepository.saveAndFlush(Equipment.builder()
-                .ownerId(owner.getId())
-                .category(request.getCategory())
-                .name(request.getName().trim())
-                .description(request.getDescription().trim())
-                .dailyPrice(request.getDailyPrice())
-                .availableFrom(request.getAvailableFrom())
-                .availableTo(request.getAvailableTo())
-                .status(EquipmentStatus.ACTIVE)
-                .productCondition(request.getProductCondition())
-                .conditionDetail(normalizeConditionDetail(
-                        request.getProductCondition(), request.getConditionDetail()))
-                .build());
+        Equipment equipment = equipmentRepository.saveAndFlush(new Equipment(
+                owner.getId(),
+                request.getCategory(),
+                request.getName().trim(),
+                request.getDescription().trim(),
+                request.getDailyPrice(),
+                request.getAvailableFrom(),
+                request.getAvailableTo(),
+                EquipmentStatus.ACTIVE,
+                request.getProductCondition(),
+                normalizeConditionDetail(
+                        request.getProductCondition(), request.getConditionDetail())));
 
         List<StoredImage> storedImages = promoteAll(equipment.getId(), validatedUploads);
         registerStorageSynchronization(storedImages, request.getImageKeys());

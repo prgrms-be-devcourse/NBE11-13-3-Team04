@@ -48,12 +48,12 @@ class RentalCreationConcurrencyTest {
         int requesterCount = 3;
 
         User owner = userRepository.save(user("owner-" + System.nanoTime()));
-        Equipment equipment = equipmentRepository.save(Equipment.builder()
-                .ownerId(owner.getId())
-                .category(EquipmentCategory.CAMERA)
-                .name("소니 A7C2")
-                .dailyPrice(BigDecimal.valueOf(30000))
-                .build());
+        Equipment equipment = equipmentRepository.save(new Equipment(
+                owner.getId(),
+                EquipmentCategory.CAMERA,
+                "소니 A7C2",
+                null,
+                BigDecimal.valueOf(30000)));
 
         List<User> renters = List.of(
                 userRepository.save(user("renter1-" + System.nanoTime())),

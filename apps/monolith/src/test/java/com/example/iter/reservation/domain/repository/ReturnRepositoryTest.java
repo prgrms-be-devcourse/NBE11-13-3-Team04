@@ -216,12 +216,12 @@ class ReturnRepositoryTest {
     }
 
     private Equipment equipment(Long ownerId, String name) {
-        return Equipment.builder()
-                .ownerId(ownerId)
-                .category(EquipmentCategory.LAPTOP)
-                .name(name)
-                .dailyPrice(BigDecimal.valueOf(30000))
-                .build();
+        return new Equipment(
+                ownerId,
+                EquipmentCategory.LAPTOP,
+                name,
+                null,
+                BigDecimal.valueOf(30000));
     }
 
     private Rental rental(Equipment equipment, RentalStatus status, String snapshotName) {

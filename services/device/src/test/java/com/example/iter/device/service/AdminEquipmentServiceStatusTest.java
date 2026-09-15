@@ -116,14 +116,17 @@ class AdminEquipmentServiceStatusTest {
     }
 
     private Equipment equipment(EquipmentStatus status) {
-        return Equipment.builder()
-                .id(EQUIPMENT_ID)
-                .ownerId(OWNER_ID)
-                .category(EquipmentCategory.CAMERA)
-                .name("테스트 장비")
-                .dailyPrice(BigDecimal.valueOf(10_000))
-                .status(status)
-                .productCondition(ProductConditionType.NORMAL)
-                .build();
+        return new Equipment(
+                OWNER_ID,
+                EquipmentCategory.CAMERA,
+                "테스트 장비",
+                null,
+                BigDecimal.valueOf(10_000),
+                null,
+                null,
+                status,
+                ProductConditionType.NORMAL,
+                null,
+                EQUIPMENT_ID);
     }
 }
