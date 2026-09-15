@@ -34,13 +34,12 @@ public class EquipmentImageUploadService {
                     imagePolicy.validateMetadata(file.getContentType(), file.getSize());
                     var presigned = imageStorage.createPresignedUpload(
                             user.getId(), file.getContentType(), file.getSize());
-                    uploadRepository.save(EquipmentImageUpload.builder()
-                            .userId(user.getId())
-                            .objectKey(presigned.objectKey())
-                            .expectedContentType(file.getContentType())
-                            .expectedSize(file.getSize())
-                            .expiresAt(presigned.expiresAt())
-                            .build());
+                    uploadRepository.save(new EquipmentImageUpload(
+                            user.getId(),
+                            presigned.objectKey(),
+                            file.getContentType(),
+                            file.getSize(),
+                            presigned.expiresAt()));
                     return new PresignedImageUploadItemResponse(
                             presigned.objectKey(),
                             presigned.uploadUrl().toExternalForm(),

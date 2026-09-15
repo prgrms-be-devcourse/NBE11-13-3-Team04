@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -395,7 +396,7 @@ public class EquipmentManagementService {
         return objectKeys.stream()
                 .map(objectKey -> {
                     EquipmentImageUpload record = recordsByKey.get(objectKey);
-                    if (record == null || !record.getUserId().equals(ownerId)) {
+                    if (record == null || !Objects.equals(record.getUserId(), ownerId)) {
                         throw new CustomException(ErrorCode.IMAGE_UPLOAD_NOT_FOUND);
                     }
                     if (record.isUsed()) {

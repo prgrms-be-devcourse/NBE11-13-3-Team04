@@ -285,13 +285,12 @@ class EquipmentManagementApiTest {
     void 만료된_이미지_업로드는_장비에_등록할_수_없다() throws Exception {
         User owner = saveUser("expired-upload@example.com", UserStatus.ACTIVE);
         EquipmentImageUpload upload = imageUploadRepository.saveAndFlush(
-                EquipmentImageUpload.builder()
-                        .userId(owner.getId())
-                        .objectKey("equipment/temp/%d/expired.jpg".formatted(owner.getId()))
-                        .expectedContentType("image/jpeg")
-                        .expectedSize(IMAGE_SIZE)
-                        .expiresAt(LocalDateTime.now().minusSeconds(1))
-                        .build());
+                new EquipmentImageUpload(
+                        owner.getId(),
+                        "equipment/temp/%d/expired.jpg".formatted(owner.getId()),
+                        "image/jpeg",
+                        IMAGE_SIZE,
+                        LocalDateTime.now().minusSeconds(1)));
 
         mockMvc.perform(post("/api/v1/devices")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -592,13 +591,12 @@ class EquipmentManagementApiTest {
     }
 
     private EquipmentImageUpload savePendingUpload(User user, String filename) {
-        return imageUploadRepository.saveAndFlush(EquipmentImageUpload.builder()
-                .userId(user.getId())
-                .objectKey("equipment/temp/%d/%s".formatted(user.getId(), filename))
-                .expectedContentType("image/jpeg")
-                .expectedSize(IMAGE_SIZE)
-                .expiresAt(LocalDateTime.now().plusMinutes(5))
-                .build());
+        return imageUploadRepository.saveAndFlush(new EquipmentImageUpload(
+                user.getId(),
+                "equipment/temp/%d/%s".formatted(user.getId(), filename),
+                "image/jpeg",
+                IMAGE_SIZE,
+                LocalDateTime.now().plusMinutes(5)));
     }
 
     private Equipment saveEquipment(Long ownerId, EquipmentStatus status) {

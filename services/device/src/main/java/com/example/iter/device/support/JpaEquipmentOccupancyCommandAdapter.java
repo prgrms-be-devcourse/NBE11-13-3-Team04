@@ -25,12 +25,8 @@ public class JpaEquipmentOccupancyCommandAdapter implements EquipmentOccupancyCo
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public void markOccupied(Long rentalId, Long equipmentId, LocalDate startDate, LocalDate endDate) {
-        equipmentOccupancyRepository.save(EquipmentOccupancy.builder()
-                .rentalId(rentalId)
-                .equipmentId(equipmentId)
-                .startDate(startDate)
-                .endDate(endDate)
-                .build());
+        equipmentOccupancyRepository.save(
+                new EquipmentOccupancy(equipmentId, rentalId, startDate, endDate));
     }
 
     @Override
