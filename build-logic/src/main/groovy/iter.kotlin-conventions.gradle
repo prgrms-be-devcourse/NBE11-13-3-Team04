@@ -30,6 +30,10 @@ kotlin {
         jvmTarget = JvmTarget.JVM_25
         // 자바 쪽 @Nullable/@NonNull 애너테이션을 코틀린 null 안전성에 엄격하게 반영한다.
         freeCompilerArgs.add('-Xjsr305=strict')
+        // kotlinc 는 기본 설정에서 List<@NotBlank String> 같은 타입-유즈(type-use) 애너테이션을
+        // 바이트코드에 남기지 않는다. 이 플래그가 없으면 Hibernate Validator 가 컬렉션 원소
+        // 제약을 못 봐서 검증이 컴파일은 통과한 채로 조용히 꺼진다.
+        freeCompilerArgs.add('-Xemit-jvm-type-annotations')
     }
 }
 
