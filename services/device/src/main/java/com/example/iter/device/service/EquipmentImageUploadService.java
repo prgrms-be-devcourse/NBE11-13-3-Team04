@@ -29,7 +29,7 @@ public class EquipmentImageUploadService {
     ) {
         validateActiveUser(user);
 
-        var uploads = request.files().stream()
+        var uploads = request.getFiles().stream()
                 .map(file -> {
                     imagePolicy.validateMetadata(file.getContentType(), file.getSize());
                     var presigned = imageStorage.createPresignedUpload(

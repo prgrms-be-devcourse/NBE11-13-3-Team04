@@ -63,7 +63,7 @@ public class EquipmentManagementService {
     ) {
         validateCanCreate(owner);
         List<EquipmentImageUpload> uploadRecords = findAndValidateUploadRecords(
-                owner.getId(), request.imageKeys());
+                owner.getId(), request.getImageKeys());
         List<ValidatedUpload> validatedUploads = uploadRecords.stream()
                 .map(upload -> imageStorage.validateTemporaryUpload(
                         upload.getObjectKey(),
@@ -73,20 +73,20 @@ public class EquipmentManagementService {
 
         Equipment equipment = equipmentRepository.saveAndFlush(Equipment.builder()
                 .ownerId(owner.getId())
-                .category(request.category())
-                .name(request.name().trim())
-                .description(request.description().trim())
-                .dailyPrice(request.dailyPrice())
-                .availableFrom(request.availableFrom())
-                .availableTo(request.availableTo())
+                .category(request.getCategory())
+                .name(request.getName().trim())
+                .description(request.getDescription().trim())
+                .dailyPrice(request.getDailyPrice())
+                .availableFrom(request.getAvailableFrom())
+                .availableTo(request.getAvailableTo())
                 .status(EquipmentStatus.ACTIVE)
-                .productCondition(request.productCondition())
+                .productCondition(request.getProductCondition())
                 .conditionDetail(normalizeConditionDetail(
-                        request.productCondition(), request.conditionDetail()))
+                        request.getProductCondition(), request.getConditionDetail()))
                 .build());
 
         List<StoredImage> storedImages = promoteAll(equipment.getId(), validatedUploads);
-        registerStorageSynchronization(storedImages, request.imageKeys());
+        registerStorageSynchronization(storedImages, request.getImageKeys());
         LocalDateTime usedAt = LocalDateTime.now();
         uploadRecords.forEach(upload -> upload.use(usedAt));
 
@@ -97,7 +97,7 @@ public class EquipmentManagementService {
                     .imageUrl(storedImage.imageUrl())
                     .objectKey(storedImage.objectKey())
                     .sortOrder(index)
-                    .thumbnail(index == request.thumbnailIndex())
+                    .thumbnail(index == request.getThumbnailIndex())
                     .build());
         }
 
@@ -118,12 +118,12 @@ public class EquipmentManagementService {
                 equipmentId, owner.getId(), "본인 소유의 장비에만 이미지를 추가할 수 있습니다.");
         List<EquipmentImage> existingImages = equipmentImageRepository
                 .findByEquipmentIdOrderBySortOrderAscIdAsc(equipmentId);
-        if (existingImages.size() + request.imageKeys().size() > EquipmentImagePolicy.MAX_IMAGE_COUNT) {
+        if (existingImages.size() + request.getImageKeys().size() > EquipmentImagePolicy.MAX_IMAGE_COUNT) {
             throw new CustomException(ErrorCode.IMAGE_LIMIT_EXCEEDED);
         }
 
         List<EquipmentImageUpload> uploadRecords = findAndValidateUploadRecords(
-                owner.getId(), request.imageKeys());
+                owner.getId(), request.getImageKeys());
         List<ValidatedUpload> validatedUploads = uploadRecords.stream()
                 .map(upload -> imageStorage.validateTemporaryUpload(
                         upload.getObjectKey(),
@@ -131,9 +131,9 @@ public class EquipmentManagementService {
                         upload.getExpectedSize()))
                 .toList();
         List<StoredImage> storedImages = promoteAll(equipmentId, validatedUploads);
-        registerStorageSynchronization(storedImages, request.imageKeys());
+        registerStorageSynchronization(storedImages, request.getImageKeys());
 
-        if (request.thumbnailIndex() != null) {
+        if (request.getThumbnailIndex() != null) {
             existingImages.forEach(image -> image.changeThumbnail(false));
         }
         int nextSortOrder = existingImages.stream()
@@ -147,8 +147,8 @@ public class EquipmentManagementService {
                     .imageUrl(storedImage.imageUrl())
                     .objectKey(storedImage.objectKey())
                     .sortOrder(nextSortOrder + index)
-                    .thumbnail(request.thumbnailIndex() != null
-                            && index == request.thumbnailIndex())
+                    .thumbnail(request.getThumbnailIndex() != null
+                            && index == request.getThumbnailIndex())
                     .build());
         }
         LocalDateTime usedAt = LocalDateTime.now();
@@ -201,25 +201,25 @@ public class EquipmentManagementService {
     ) {
         Equipment equipment = findOwnedForUpdate(equipmentId, ownerId, "본인 소유의 장비만 수정할 수 있습니다.");
 
-        String name = request.name() == null ? equipment.getName() : request.name().trim();
-        String description = request.description() == null
+        String name = request.getName() == null ? equipment.getName() : request.getName().trim();
+        String description = request.getDescription() == null
                 ? equipment.getDescription()
-                : request.description().trim();
-        BigDecimal dailyPrice = request.dailyPrice() == null
+                : request.getDescription().trim();
+        BigDecimal dailyPrice = request.getDailyPrice() == null
                 ? equipment.getDailyPrice()
-                : request.dailyPrice();
-        LocalDate availableFrom = request.availableFrom() == null
+                : request.getDailyPrice();
+        LocalDate availableFrom = request.getAvailableFrom() == null
                 ? equipment.getAvailableFrom()
-                : request.availableFrom();
-        LocalDate availableTo = request.availableTo() == null
+                : request.getAvailableFrom();
+        LocalDate availableTo = request.getAvailableTo() == null
                 ? equipment.getAvailableTo()
-                : request.availableTo();
-        ProductConditionType productCondition = request.productCondition() == null
+                : request.getAvailableTo();
+        ProductConditionType productCondition = request.getProductCondition() == null
                 ? equipment.getProductCondition()
-                : request.productCondition();
-        String conditionDetail = request.conditionDetail() == null
+                : request.getProductCondition();
+        String conditionDetail = request.getConditionDetail() == null
                 ? equipment.getConditionDetail()
-                : request.conditionDetail().trim();
+                : request.getConditionDetail().trim();
 
         validateUpdateValues(availableFrom, availableTo, productCondition, conditionDetail);
         validateExistingRentalsRemainIncluded(equipment, availableFrom, availableTo);
