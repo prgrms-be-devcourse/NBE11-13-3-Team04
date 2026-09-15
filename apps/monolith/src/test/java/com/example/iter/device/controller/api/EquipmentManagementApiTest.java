@@ -685,7 +685,7 @@ class EquipmentManagementApiTest {
         ready.countDown();
         start.await();
         try {
-            return equipmentManagementService.create(owner.toAuthUser(), request).id();
+            return equipmentManagementService.create(owner.toAuthUser(), request).getId();
         } catch (CustomException exception) {
             return exception.getErrorCode();
         }

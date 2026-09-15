@@ -208,11 +208,11 @@ class AdminEquipmentServiceTest {
 
         var response = adminEquipmentService.getEquipmentDetail(EQUIPMENT_ID);
 
-        assertThat(response.equipmentId()).isEqualTo(EQUIPMENT_ID);
-        assertThat(response.owner().userId()).isEqualTo(OWNER_ID);
-        assertThat(response.name()).isEqualTo("맥북 프로");
-        assertThat(response.images()).hasSize(1);
-        assertThat(response.images().getFirst().getImageUrl())
+        assertThat(response.getEquipmentId()).isEqualTo(EQUIPMENT_ID);
+        assertThat(response.getOwner().userId()).isEqualTo(OWNER_ID);
+        assertThat(response.getName()).isEqualTo("맥북 프로");
+        assertThat(response.getImages()).hasSize(1);
+        assertThat(response.getImages().getFirst().getImageUrl())
                 .isEqualTo("https://example.com/image.jpg");
     }
 
@@ -246,7 +246,7 @@ class AdminEquipmentServiceTest {
         );
 
         assertThat(equipment.getStatus()).isEqualTo(EquipmentStatus.SUSPENDED);
-        assertThat(response.status()).isEqualTo(EquipmentStatus.SUSPENDED);
+        assertThat(response.getStatus()).isEqualTo(EquipmentStatus.SUSPENDED);
         verify(adminActionService).record(
                 ADMIN_ID,
                 AdminActionTargetType.EQUIPMENT,
@@ -272,7 +272,7 @@ class AdminEquipmentServiceTest {
         );
 
         assertThat(equipment.getStatus()).isEqualTo(EquipmentStatus.INACTIVE);
-        assertThat(response.status()).isEqualTo(EquipmentStatus.INACTIVE);
+        assertThat(response.getStatus()).isEqualTo(EquipmentStatus.INACTIVE);
         verify(adminActionService).record(
                 ADMIN_ID,
                 AdminActionTargetType.EQUIPMENT,
