@@ -1,6 +1,6 @@
-package com.example.iter.device.domain.entity;
+package com.example.iter.device.domain.entity
 
-public enum EquipmentCategory {
+enum class EquipmentCategory {
     LAPTOP,
     TABLET,
     CAMERA,
@@ -9,5 +9,5 @@ public enum EquipmentCategory {
     VR,
     GAME_CONSOLE,
     PROJECTOR,
-    OTHER
+    OTHER,
 }
