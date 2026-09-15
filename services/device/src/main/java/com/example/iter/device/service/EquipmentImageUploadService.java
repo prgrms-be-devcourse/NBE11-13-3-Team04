@@ -36,15 +36,15 @@ public class EquipmentImageUploadService {
                             user.getId(), file.getContentType(), file.getSize());
                     uploadRepository.save(new EquipmentImageUpload(
                             user.getId(),
-                            presigned.objectKey(),
+                            presigned.getObjectKey(),
                             file.getContentType(),
                             file.getSize(),
-                            presigned.expiresAt()));
+                            presigned.getExpiresAt()));
                     return new PresignedImageUploadItemResponse(
-                            presigned.objectKey(),
-                            presigned.uploadUrl().toExternalForm(),
-                            presigned.requiredHeaders(),
-                            presigned.expiresAt()
+                            presigned.getObjectKey(),
+                            presigned.getUploadUrl().toExternalForm(),
+                            presigned.getRequiredHeaders(),
+                            presigned.getExpiresAt()
                     );
                 })
                 .toList();
