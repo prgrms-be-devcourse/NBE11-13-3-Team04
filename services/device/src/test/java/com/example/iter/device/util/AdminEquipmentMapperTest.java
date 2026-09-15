@@ -33,15 +33,15 @@ class AdminEquipmentMapperTest {
                 "https://example.com/thumbnail.jpg"
         );
 
-        assertThat(response.equipmentId()).isEqualTo(10L);
-        assertThat(response.name()).isEqualTo("맥북 프로");
-        assertThat(response.category()).isEqualTo(EquipmentCategory.LAPTOP);
-        assertThat(response.dailyPrice()).isEqualByComparingTo("30000");
-        assertThat(response.status()).isEqualTo(EquipmentStatus.SUSPENDED);
-        assertThat(response.owner().userId()).isEqualTo(2L);
-        assertThat(response.owner().nickName()).isEqualTo("등록자");
-        assertThat(response.thumbnailUrl()).isEqualTo("https://example.com/thumbnail.jpg");
-        assertThat(response.createdAt()).isEqualTo(LocalDateTime.of(2026, 8, 1, 10, 0));
+        assertThat(response.getEquipmentId()).isEqualTo(10L);
+        assertThat(response.getName()).isEqualTo("맥북 프로");
+        assertThat(response.getCategory()).isEqualTo(EquipmentCategory.LAPTOP);
+        assertThat(response.getDailyPrice()).isEqualByComparingTo("30000");
+        assertThat(response.getStatus()).isEqualTo(EquipmentStatus.SUSPENDED);
+        assertThat(response.getOwner().userId()).isEqualTo(2L);
+        assertThat(response.getOwner().nickName()).isEqualTo("등록자");
+        assertThat(response.getThumbnailUrl()).isEqualTo("https://example.com/thumbnail.jpg");
+        assertThat(response.getCreatedAt()).isEqualTo(LocalDateTime.of(2026, 8, 1, 10, 0));
     }
 
     @Test
@@ -70,8 +70,8 @@ class AdminEquipmentMapperTest {
         assertThat(response.productCondition()).isEqualTo(ProductConditionType.NORMAL);
         assertThat(response.conditionDetail()).isEqualTo("정상");
         assertThat(response.images()).hasSize(1);
-        assertThat(response.images().getFirst().imageId()).isEqualTo(100L);
-        assertThat(response.images().getFirst().thumbnail()).isTrue();
+        assertThat(response.images().getFirst().getImageId()).isEqualTo(100L);
+        assertThat(response.images().getFirst().getThumbnail()).isTrue();
         assertThat(response.updatedAt()).isEqualTo(LocalDateTime.of(2026, 8, 2, 11, 0));
     }
 

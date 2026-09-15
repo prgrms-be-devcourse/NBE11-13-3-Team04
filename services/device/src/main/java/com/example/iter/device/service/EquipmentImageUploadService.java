@@ -31,14 +31,14 @@ public class EquipmentImageUploadService {
 
         var uploads = request.files().stream()
                 .map(file -> {
-                    imagePolicy.validateMetadata(file.contentType(), file.size());
+                    imagePolicy.validateMetadata(file.getContentType(), file.getSize());
                     var presigned = imageStorage.createPresignedUpload(
-                            user.getId(), file.contentType(), file.size());
+                            user.getId(), file.getContentType(), file.getSize());
                     uploadRepository.save(EquipmentImageUpload.builder()
                             .userId(user.getId())
                             .objectKey(presigned.objectKey())
-                            .expectedContentType(file.contentType())
-                            .expectedSize(file.size())
+                            .expectedContentType(file.getContentType())
+                            .expectedSize(file.getSize())
                             .expiresAt(presigned.expiresAt())
                             .build());
                     return new PresignedImageUploadItemResponse(

@@ -106,10 +106,10 @@ class AdminEquipmentServiceTest {
         var response = adminEquipmentService.getEquipments(request);
 
         assertThat(response.content()).hasSize(2);
-        assertThat(response.content().getFirst().owner().userId()).isEqualTo(OWNER_ID);
-        assertThat(response.content().getFirst().thumbnailUrl())
+        assertThat(response.content().getFirst().getOwner().userId()).isEqualTo(OWNER_ID);
+        assertThat(response.content().getFirst().getThumbnailUrl())
                 .isEqualTo("https://example.com/first.jpg");
-        assertThat(response.content().get(1).thumbnailUrl())
+        assertThat(response.content().get(1).getThumbnailUrl())
                 .isEqualTo("https://example.com/air.jpg");
         assertThat(response.size()).isEqualTo(10);
         assertThat(response.hasNext()).isFalse();
@@ -212,7 +212,7 @@ class AdminEquipmentServiceTest {
         assertThat(response.owner().userId()).isEqualTo(OWNER_ID);
         assertThat(response.name()).isEqualTo("맥북 프로");
         assertThat(response.images()).hasSize(1);
-        assertThat(response.images().getFirst().imageUrl())
+        assertThat(response.images().getFirst().getImageUrl())
                 .isEqualTo("https://example.com/image.jpg");
     }
 
