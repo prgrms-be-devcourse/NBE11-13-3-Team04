@@ -266,15 +266,15 @@ public class EquipmentManagementService {
 
         if (equipment.getStatus() == EquipmentStatus.SUSPENDED
                 || equipment.getStatus() == EquipmentStatus.DELETED
-                || equipment.getStatus() == request.status()) {
+                || equipment.getStatus() == request.getStatus()) {
             throw new CustomException(ErrorCode.EQUIPMENT_STATUS_CHANGE_NOT_ALLOWED);
         }
-        if (request.status() == EquipmentStatus.ACTIVE) {
+        if (request.getStatus() == EquipmentStatus.ACTIVE) {
             validateCanCreate(owner);
         }
 
         EquipmentStatus previousStatus = equipment.getStatus();
-        equipment.changeStatus(request.status());
+        equipment.changeStatus(request.getStatus());
         equipmentRepository.flush();
         log.info("장비 상태 변경 처리: equipmentId={}, ownerId={}, previousStatus={}, status={}",
                 equipmentId, owner.getId(), previousStatus, equipment.getStatus());

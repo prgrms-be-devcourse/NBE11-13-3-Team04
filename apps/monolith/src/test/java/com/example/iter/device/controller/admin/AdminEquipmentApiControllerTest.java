@@ -176,8 +176,8 @@ class AdminEquipmentApiControllerTest {
                 eq(EQUIPMENT_ID),
                 captor.capture()
         );
-        assertThat(captor.getValue().status()).isEqualTo(EquipmentStatus.SUSPENDED);
-        assertThat(captor.getValue().reason()).isEqualTo("신고 누적으로 관리자 차단");
+        assertThat(captor.getValue().getStatus()).isEqualTo(EquipmentStatus.SUSPENDED);
+        assertThat(captor.getValue().getReason()).isEqualTo("신고 누적으로 관리자 차단");
     }
 
     @Test

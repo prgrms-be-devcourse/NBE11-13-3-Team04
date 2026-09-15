@@ -62,12 +62,12 @@ public class EquipmentQueryService {
     ) {
         Equipment equipment = findPublicEquipment(equipmentId);
         AvailabilityReason reason = findUnavailabilityReason(
-                equipment, request.startDate(), request.endDate());
+                equipment, request.getStartDate(), request.getEndDate());
 
         return new EquipmentAvailabilityResponse(
                 equipmentId,
-                request.startDate(),
-                request.endDate(),
+                request.getStartDate(),
+                request.getEndDate(),
                 reason == null,
                 reason
         );
@@ -79,19 +79,19 @@ public class EquipmentQueryService {
     ) {
         Equipment equipment = findPublicEquipment(equipmentId);
         AvailabilityReason reason = findUnavailabilityReason(
-                equipment, request.startDate(), request.endDate());
+                equipment, request.getStartDate(), request.getEndDate());
         if (reason != null) {
             throw new CustomException(ErrorCode.EQUIPMENT_RENTAL_PERIOD_UNAVAILABLE);
         }
 
         int rentalDays = Math.toIntExact(
-                ChronoUnit.DAYS.between(request.startDate(), request.endDate()) + 1);
+                ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1);
         BigDecimal totalPrice = equipment.getDailyPrice().multiply(BigDecimal.valueOf(rentalDays));
 
         return new EquipmentEstimateResponse(
                 equipmentId,
-                request.startDate(),
-                request.endDate(),
+                request.getStartDate(),
+                request.getEndDate(),
                 rentalDays,
                 equipment.getDailyPrice(),
                 totalPrice
@@ -221,12 +221,12 @@ public class EquipmentQueryService {
 
         // 일정에 표시하지 않는 상태(취소·거절 등)는 reservation 이 걸러서 준다.
         List<RentalScheduleItemResponse> rentals = rentalQueryPort
-                .findSchedule(equipmentId, request.from(), request.to())
+                .findSchedule(equipmentId, request.getFrom(), request.getTo())
                 .stream()
                 .map(RentalScheduleItemResponse::from)
                 .toList();
         return new EquipmentScheduleResponse(
-                equipmentId, request.from(), request.to(), rentals);
+                equipmentId, request.getFrom(), request.getTo(), rentals);
     }
 
     private Map<Long, String> findThumbnailUrls(List<Long> equipmentIds) {

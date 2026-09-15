@@ -94,15 +94,15 @@ public class AdminEquipmentService {
     ) {
         Equipment equipment = equipmentRepository.findByIdForUpdate(equipmentId).orElseThrow(() -> new CustomException(ErrorCode.EQUIPMENT_NOT_FOUND));
 
-        validateStatusChange(equipment, request.status());
-        AdminActionType action = applyStatus(equipment, request.status());
+        validateStatusChange(equipment, request.getStatus());
+        AdminActionType action = applyStatus(equipment, request.getStatus());
 
         adminActionService.record(
                 adminId,
                 AdminActionTargetType.EQUIPMENT,
                 equipment.getId(),
                 action,
-                request.reason().trim()
+                request.getReason().trim()
         );
 
         equipmentRepository.flush();
