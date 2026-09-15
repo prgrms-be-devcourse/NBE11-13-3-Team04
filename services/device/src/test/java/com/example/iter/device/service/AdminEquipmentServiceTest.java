@@ -142,7 +142,7 @@ class AdminEquipmentServiceTest {
         )).thenReturn(List.of());
 
         var response = adminEquipmentService.getEquipments(
-                new AdminEquipmentSearchRequest("  ", " ", null, null, null)
+                new AdminEquipmentSearchRequest("  ", " ", null, null, 20)
         );
 
         assertThat(response.content()).isEmpty();
