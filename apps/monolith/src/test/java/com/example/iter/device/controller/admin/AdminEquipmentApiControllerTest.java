@@ -38,6 +38,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -203,7 +204,7 @@ class AdminEquipmentApiControllerTest {
                         .with(user(adminPrincipal)))
                 .andExpect(status().isBadRequest());
 
-        verify(adminEquipmentService, never()).getEquipmentDetail(any());
+        verify(adminEquipmentService, never()).getEquipmentDetail(anyLong());
     }
 
     @Test
@@ -221,7 +222,7 @@ class AdminEquipmentApiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        verify(adminEquipmentService, never()).updateEquipmentStatus(any(), any(), any());
+        verify(adminEquipmentService, never()).updateEquipmentStatus(anyLong(), anyLong(), any());
     }
 
     @Test
@@ -239,7 +240,7 @@ class AdminEquipmentApiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        verify(adminEquipmentService, never()).updateEquipmentStatus(any(), any(), any());
+        verify(adminEquipmentService, never()).updateEquipmentStatus(anyLong(), anyLong(), any());
     }
 
     private CustomUserDetails principal(Long id, Role role) {
