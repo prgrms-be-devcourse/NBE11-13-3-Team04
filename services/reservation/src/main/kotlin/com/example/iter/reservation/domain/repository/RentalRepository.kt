@@ -70,6 +70,33 @@ interface RentalRepository : JpaRepository<Rental, Long> {
     // 해당 회원이 소유한 장비에서 발생한 성립된 거래 수를 조회합니다.
     fun countByOwnerIdSnapshotAndStatusIn(ownerIdSnapshot: Long, statuses: Collection<RentalStatus>): Long
 
+    // 특정 장비를 특정 회원이 대여한 가장 최근 거래를 조회합니다.
+    fun findFirstByEquipmentIdAndRenterIdOrderByCreatedAtDesc(equipmentId: Long, renterId: Long): Optional<Rental>
+
+    /**
+     * 두 회원이 대여자와 등록자로 참여한 가장 최근 거래를 조회합니다.
+     * 양방향 조건을 파생 쿼리 메서드 이름으로 표현하면 지나치게 길어져 JPQL로 명시합니다.
+     */
+    @Query(
+        """
+        select r
+        from Rental r
+        where (r.renterId = :firstUserId and r.ownerIdSnapshot = :secondUserId)
+           or (r.renterId = :secondUserId and r.ownerIdSnapshot = :firstUserId)
+        order by r.createdAt desc, r.id desc
+        """
+    )
+    fun findLatestBetweenUsers(
+        @Param("firstUserId") firstUserId: Long,
+        @Param("secondUserId") secondUserId: Long,
+        pageable: Pageable,
+    ): List<Rental>
+
+    fun findLatestBetweenUsers(firstUserId: Long, secondUserId: Long): Optional<Rental> =
+        findLatestBetweenUsers(firstUserId, secondUserId, PageRequest.of(0, 1)).firstOrNull().let {
+            Optional.ofNullable(it)
+        }
+
     // 등록자가 소유한 장비의 대여 거래 중 반납 최종 확인이 필요한 거래를 조회합니다.
     fun findByOwnerIdSnapshotAndStatus(ownerIdSnapshot: Long, status: RentalStatus, pageable: Pageable): Page<Rental>
 

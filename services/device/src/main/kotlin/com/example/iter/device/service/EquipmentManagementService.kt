@@ -1,8 +1,10 @@
 package com.example.iter.device.service
 
 import com.example.iter.auth.api.UserQueryPort
+import com.example.iter.common.dto.request.CapturedImageRequest
 import com.example.iter.common.exception.CustomException
 import com.example.iter.common.exception.ErrorCode
+import com.example.iter.common.image.CaptureView
 import com.example.iter.common.security.AuthUser
 import com.example.iter.common.security.UserStatus
 import com.example.iter.device.domain.entity.Equipment
@@ -52,6 +54,7 @@ class EquipmentManagementService(
         validateCanCreate(owner)
         val imageKeys = request.imageKeys!!
         val uploadRecords = findAndValidateUploadRecords(owner.id, imageKeys)
+        validateCaptureViews(request.orderedImages(), uploadRecords)
         val validatedUploads = uploadRecords.map { upload ->
             imageStorage.validateTemporaryUpload(upload.objectKey, upload.expectedContentType, upload.expectedSize)
         }
@@ -78,14 +81,17 @@ class EquipmentManagementService(
         val usedAt = LocalDateTime.now()
         uploadRecords.forEach { it.use(usedAt) }
 
+        val orderedImages = request.orderedImages()
         storedImages.forEachIndexed { index, storedImage ->
+            val capturedImage = orderedImages[index]
             equipmentImageRepository.save(
                 EquipmentImage(
                     equipment,
                     storedImage.imageUrl,
                     storedImage.objectKey,
                     index,
-                    index == request.thumbnailIndex,
+                    capturedImage.captureView == CaptureView.FRONT,
+                    capturedImage.captureView,
                 )
             )
         }
@@ -354,6 +360,20 @@ class EquipmentManagementService(
                 throw CustomException(ErrorCode.IMAGE_UPLOAD_EXPIRED)
             }
             record
+        }
+    }
+
+    // 최종 제출한 촬영 방향이 presigned URL 발급 시 지정한 방향과 같은지 확인합니다.
+    private fun validateCaptureViews(
+        images: List<CapturedImageRequest>,
+        uploads: List<EquipmentImageUpload>,
+    ) {
+        val uploadsByKey = uploads.associateBy { it.objectKey }
+        images.forEach { image ->
+            val upload = uploadsByKey[image.objectKey]
+            if (upload == null || upload.captureView != image.captureView) {
+                throw CustomException(ErrorCode.IMAGE_UPLOAD_NOT_FOUND)
+            }
         }
     }
 

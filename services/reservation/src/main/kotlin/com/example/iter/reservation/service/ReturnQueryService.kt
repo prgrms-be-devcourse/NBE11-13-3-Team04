@@ -76,9 +76,9 @@ class ReturnQueryService(
             renter,
             findListingImages(rental.equipmentId),
             receipt,
-            findReceiptImages(receipt.id),
+            findReceiptImages(receipt.id!!),
             returnReceipt,
-            findReturnReceiptImages(returnReceipt.id)
+            findReturnReceiptImages(returnReceipt.id!!)
         )
     }
 
@@ -97,9 +97,9 @@ class ReturnQueryService(
     )
 
     private fun loadReturnTargetData(rentals: List<Rental>): ReturnTargetData {
-        val rentalIds = rentals.map(Rental::getId).toSet()
-        val renterIds = rentals.map(Rental::getRenterId).toSet()
-        val equipmentIds = rentals.map(Rental::getEquipmentId).toSet()
+        val rentalIds = rentals.map { it.id!! }.toSet()
+        val renterIds = rentals.map { it.renterId }.toSet()
+        val equipmentIds = rentals.map { it.equipmentId }.toSet()
 
         return ReturnTargetData(
             userQueryPort.findSummaries(renterIds),
@@ -109,7 +109,7 @@ class ReturnQueryService(
     }
 
     private fun findReturnReceiptsByRentalId(rentalIds: Set<Long>): Map<Long, ReturnReceipt> =
-        returnReceiptRepository.findAllByRental_IdIn(rentalIds).associateBy { it.rental.id }
+        returnReceiptRepository.findAllByRental_IdIn(rentalIds).associateBy { it.rental.id!! }
 
     private fun toReturnTargetResponse(rental: Rental, data: ReturnTargetData): ReturnTargetResponse {
         val renter = data.rentersById[rental.renterId] ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
