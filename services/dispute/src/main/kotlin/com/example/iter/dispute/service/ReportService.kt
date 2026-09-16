@@ -43,14 +43,14 @@ class ReportService(
         validateDuplicateActiveReport(reporterId, targetType, targetId)
 
         val savedReport = reportRepository.save(
-            Report.builder()
-                .reporterId(reporterId)
-                .targetType(targetType)
-                .targetId(targetId)
-                .reason(requireNotNull(request.reason).trim())
-                .description(requireNotNull(request.description).trim())
-                .status(ReportStatus.RECEIVED)
-                .build()
+            Report(
+                reporterId = reporterId,
+                targetType = targetType,
+                targetId = targetId,
+                reason = requireNotNull(request.reason).trim(),
+                description = requireNotNull(request.description).trim(),
+                status = ReportStatus.RECEIVED,
+            )
         )
 
         log.info(

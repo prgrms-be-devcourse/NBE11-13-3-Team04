@@ -87,7 +87,7 @@ class RentalReportContextContributor(
         returnReceipts.findByRentalId(rental.id!!).ifPresent { receipt ->
             addReturnReceipt(receipt, draft, !hasPriorConditionAnalysis)
         }
-        disputes.findFirstByRentalIdOrderByCreatedAtDesc(rental.id).ifPresent { dispute ->
+        disputes.findFirstByRentalIdOrderByCreatedAtDesc(rental.id!!).ifPresent { dispute ->
             addDispute(dispute, draft)
         }
     }

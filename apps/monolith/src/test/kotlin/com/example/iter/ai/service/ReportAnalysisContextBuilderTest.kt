@@ -65,14 +65,14 @@ class ReportAnalysisContextBuilderTest {
 
     @Test
     fun 회원_신고는_거래_관련_문구가_있을_때만_최근_거래를_조회한다() {
-        val report = Report.builder()
-            .id(40L)
-            .reporterId(2L)
-            .targetType(ReportTargetType.USER)
-            .targetId(3L)
-            .reason("회원 신고")
-            .status(ReportStatus.RECEIVED)
-            .build()
+        val report = Report(
+            id = 40L,
+            reporterId = 2L,
+            targetType = ReportTargetType.USER,
+            targetId = 3L,
+            reason = "회원 신고",
+            status = ReportStatus.RECEIVED,
+        )
         val target = User.builder()
             .id(3L)
             .email("private@example.test")
@@ -100,14 +100,14 @@ class ReportAnalysisContextBuilderTest {
 
     @Test
     fun 기존_상태비교_결과가_있는_거래_신고는_사진을_다시_보내지_않는다() {
-        val report = Report.builder()
-            .id(50L)
-            .reporterId(2L)
-            .targetType(ReportTargetType.RENTAL)
-            .targetId(20L)
-            .reason("반납 상태 불일치")
-            .status(ReportStatus.RECEIVED)
-            .build()
+        val report = Report(
+            id = 50L,
+            reporterId = 2L,
+            targetType = ReportTargetType.RENTAL,
+            targetId = 20L,
+            reason = "반납 상태 불일치",
+            status = ReportStatus.RECEIVED,
+        )
         val rental = rental()
         val item = equipment()
         val listing = EquipmentImage(

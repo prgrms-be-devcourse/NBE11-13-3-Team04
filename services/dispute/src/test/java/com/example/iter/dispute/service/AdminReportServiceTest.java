@@ -279,15 +279,17 @@ class AdminReportServiceTest {
     }
 
     private Report report(Long id, ReportStatus status) {
-        return Report.builder()
-                .id(id)
-                .reporterId(REPORTER_ID)
-                .targetType(ReportTargetType.EQUIPMENT)
-                .targetId(100L)
-                .reason("신고 사유")
-                .description("신고 내용")
-                .status(status)
-                .build();
+        return new Report(
+                REPORTER_ID,
+                ReportTargetType.EQUIPMENT,
+                100L,
+                "신고 사유",
+                "신고 내용",
+                status,
+                null,
+                null,
+                id
+        );
     }
 
     private UserSummary reporter() {

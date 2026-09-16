@@ -84,7 +84,7 @@ class AdminReportService(
         adminActionService.record(
             adminId,
             AdminActionTargetType.REPORT,
-            report.id,
+            report.id!!,
             action,
             adminMemo
         )
@@ -130,7 +130,7 @@ class AdminReportService(
             return emptyMap()
         }
 
-        return userQueryPort.findSummaries(reports.map(Report::getReporterId).distinct())
+        return userQueryPort.findSummaries(reports.map(Report::reporterId).distinct())
     }
 
     private fun getRequiredReporter(reporterMap: Map<Long, UserSummary>, reporterId: Long): UserSummary =

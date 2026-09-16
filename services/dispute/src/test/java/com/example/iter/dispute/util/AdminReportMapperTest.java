@@ -52,17 +52,17 @@ class AdminReportMapperTest {
     }
 
     private Report report() {
-        Report report = Report.builder()
-                .id(10L)
-                .reporterId(2L)
-                .targetType(ReportTargetType.EQUIPMENT)
-                .targetId(100L)
-                .reason("허위 장비")
-                .description("허위로 등록된 장비입니다.")
-                .status(ReportStatus.RESOLVED)
-                .adminMemo("위반 사항 확인 완료")
-                .resolvedAt(RESOLVED_AT)
-                .build();
+        Report report = new Report(
+                2L,
+                ReportTargetType.EQUIPMENT,
+                100L,
+                "허위 장비",
+                "허위로 등록된 장비입니다.",
+                ReportStatus.RESOLVED,
+                "위반 사항 확인 완료",
+                RESOLVED_AT,
+                10L
+        );
         ReflectionTestUtils.setField(report, "createdAt", CREATED_AT);
         ReflectionTestUtils.setField(report, "updatedAt", UPDATED_AT);
         return report;

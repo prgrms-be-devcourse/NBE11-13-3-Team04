@@ -218,14 +218,14 @@ class ReportAnalysisApiTest {
     private fun user(role: Role) = users.saveAndFlush(User.builder().email("${UUID.randomUUID()}@example.test")
         .name("테스트").password("test-only").role(role).status(UserStatus.ACTIVE).build())
     private fun report(status: ReportStatus) = reports.saveAndFlush(
-        Report.builder()
-            .reporterId(admin.id)
-            .targetType(ReportTargetType.USER)
-            .targetId(admin.id)
-            .reason("신고 사유")
-            .description("원본 private@example.test")
-            .status(status)
-            .build()
+        Report(
+            reporterId = admin.id,
+            targetType = ReportTargetType.USER,
+            targetId = admin.id,
+            reason = "신고 사유",
+            description = "원본 private@example.test",
+            status = status,
+        )
     )
     private fun input() = ReportAnalysisRequest("개인정보 제거한 검토 내용", true)
     private fun body(consent: Boolean) = """{"description":"개인정보 제거한 검토 내용","externalAiConsent":$consent}"""
