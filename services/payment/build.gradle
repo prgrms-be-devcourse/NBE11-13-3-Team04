@@ -1,5 +1,6 @@
 plugins {
     id 'iter.spring-library-conventions'
+    id 'iter.kotlin-conventions'
 }
 
 description = 'iter 결제(mock 토스) 도메인'
