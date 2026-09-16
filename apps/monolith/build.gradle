@@ -34,6 +34,8 @@ dependencies {
     implementation libs.spring.boot.starter.validation
     implementation libs.spring.boot.starter.webmvc
     implementation libs.spring.boot.starter.mail
+    // apps:chat과 공유하는 유일한 채널 — 채팅 티켓/문의 승인 발급에 쓴다(chatbridge 패키지).
+    implementation libs.spring.boot.starter.data.redis
 
     implementation libs.bouncycastle.bcprov
     implementation libs.jjwt.api

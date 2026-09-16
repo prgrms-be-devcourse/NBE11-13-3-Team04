@@ -22,6 +22,8 @@ dependencies {
     implementation libs.r2dbc.mysql
     implementation libs.r2dbc.pool
     implementation libs.kotlinx.coroutines.reactor
+    // 티켓/그랜트 조회(monolith가 써 둔 값을 읽기만 함) + 이후 CH5의 메시지 팬아웃(Pub/Sub)에도 쓴다.
+    implementation libs.spring.boot.starter.data.redis.reactive
 
     // 스키마 마이그레이션은 Flyway(JDBC)로만 한다 — R2DBC 에는 마이그레이션 도구가 없다.
     // monolith와 동일한 방식(기동 시 1회)이라 alias 를 그대로 재사용한다.
@@ -32,6 +34,7 @@ dependencies {
     testImplementation libs.spring.boot.starter.webflux.test
     testImplementation libs.spring.boot.starter.data.r2dbc.test
     testImplementation libs.kotlinx.coroutines.test
+    testImplementation libs.mockito.kotlin
 
     // 리포지토리 통합 테스트용 — @Tag("integration")으로 분리해서 기본 test 태스크에서는
     // 빼고, integrationTest 태스크에서만 돈다(Docker 없는 로컬에서도 build 가 깨지지 않게).
