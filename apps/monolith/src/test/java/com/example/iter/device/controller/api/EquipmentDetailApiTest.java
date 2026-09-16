@@ -156,18 +156,17 @@ class EquipmentDetailApiTest {
     }
 
     private Equipment saveEquipment(Long ownerId, EquipmentStatus status) {
-        return equipmentRepository.saveAndFlush(Equipment.builder()
-                .ownerId(ownerId)
-                .category(EquipmentCategory.CAMERA)
-                .name("소니 A7C2")
-                .description("풀프레임 미러리스 카메라입니다.")
-                .dailyPrice(BigDecimal.valueOf(30_000))
-                .availableFrom(LocalDate.now().plusDays(1))
-                .availableTo(LocalDate.now().plusMonths(2))
-                .status(status)
-                .productCondition(ProductConditionType.NORMAL)
-                .conditionDetail("사용감이 적습니다.")
-                .build());
+        return equipmentRepository.saveAndFlush(new Equipment(
+                ownerId,
+                EquipmentCategory.CAMERA,
+                "소니 A7C2",
+                "풀프레임 미러리스 카메라입니다.",
+                BigDecimal.valueOf(30_000),
+                LocalDate.now().plusDays(1),
+                LocalDate.now().plusMonths(2),
+                status,
+                ProductConditionType.NORMAL,
+                "사용감이 적습니다."));
     }
 
     private EquipmentImage saveImage(

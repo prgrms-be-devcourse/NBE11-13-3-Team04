@@ -600,17 +600,16 @@ class EquipmentManagementApiTest {
     }
 
     private Equipment saveEquipment(Long ownerId, EquipmentStatus status) {
-        return equipmentRepository.saveAndFlush(Equipment.builder()
-                .ownerId(ownerId)
-                .category(EquipmentCategory.CAMERA)
-                .name("기존 카메라")
-                .description("기존 설명")
-                .dailyPrice(BigDecimal.valueOf(30_000))
-                .availableFrom(LocalDate.now())
-                .availableTo(LocalDate.now().plusMonths(2))
-                .status(status)
-                .productCondition(ProductConditionType.NORMAL)
-                .build());
+        return equipmentRepository.saveAndFlush(new Equipment(
+                ownerId,
+                EquipmentCategory.CAMERA,
+                "기존 카메라",
+                "기존 설명",
+                BigDecimal.valueOf(30_000),
+                LocalDate.now(),
+                LocalDate.now().plusMonths(2),
+                status,
+                ProductConditionType.NORMAL));
     }
 
     private EquipmentImage saveImage(

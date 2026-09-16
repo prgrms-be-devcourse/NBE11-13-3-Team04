@@ -108,12 +108,12 @@ class RentalCreationDeadlockTest {
     }
 
     private Equipment equipment(Long ownerId, String name) {
-        return Equipment.builder()
-                .ownerId(ownerId)
-                .category(EquipmentCategory.CAMERA)
-                .name(name)
-                .dailyPrice(BigDecimal.valueOf(30000))
-                .build();
+        return new Equipment(
+                ownerId,
+                EquipmentCategory.CAMERA,
+                name,
+                null,
+                BigDecimal.valueOf(30000));
     }
 
     private User user(String tag) {

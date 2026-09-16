@@ -225,17 +225,16 @@ class EquipmentRepositoryAdminTest {
             String name,
             EquipmentStatus status
     ) {
-        return Equipment.builder()
-                .ownerId(ownerId)
-                .category(category)
-                .name(name)
-                .description("테스트 장비")
-                .dailyPrice(BigDecimal.valueOf(30000))
-                .availableFrom(LocalDate.of(2026, 8, 1))
-                .availableTo(LocalDate.of(2026, 8, 31))
-                .status(status)
-                .productCondition(ProductConditionType.NORMAL)
-                .conditionDetail("정상")
-                .build();
+        return new Equipment(
+                ownerId,
+                category,
+                name,
+                "테스트 장비",
+                BigDecimal.valueOf(30000),
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 31),
+                status,
+                ProductConditionType.NORMAL,
+                "정상");
     }
 }

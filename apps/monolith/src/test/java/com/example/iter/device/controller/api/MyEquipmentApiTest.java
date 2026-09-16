@@ -139,17 +139,16 @@ class MyEquipmentApiTest {
             long dailyPrice,
             EquipmentStatus status
     ) {
-        return equipmentRepository.saveAndFlush(Equipment.builder()
-                .ownerId(owner.getId())
-                .category(EquipmentCategory.CAMERA)
-                .name(name)
-                .description("장비 설명")
-                .dailyPrice(BigDecimal.valueOf(dailyPrice))
-                .availableFrom(LocalDate.now())
-                .availableTo(LocalDate.now().plusMonths(1))
-                .status(status)
-                .productCondition(ProductConditionType.NORMAL)
-                .build());
+        return equipmentRepository.saveAndFlush(new Equipment(
+                owner.getId(),
+                EquipmentCategory.CAMERA,
+                name,
+                "장비 설명",
+                BigDecimal.valueOf(dailyPrice),
+                LocalDate.now(),
+                LocalDate.now().plusMonths(1),
+                status,
+                ProductConditionType.NORMAL));
     }
 
     private void saveThumbnail(Equipment equipment, String objectKey) {

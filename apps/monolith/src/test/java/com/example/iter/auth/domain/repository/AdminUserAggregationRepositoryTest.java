@@ -142,15 +142,14 @@ class AdminUserAggregationRepositoryTest {
     }
 
     private Equipment equipment(Long ownerId, String name) {
-        return Equipment.builder()
-                .ownerId(ownerId)
-                .category(EquipmentCategory.LAPTOP)
-                .name(name)
-                .description("테스트 장비")
-                .dailyPrice(BigDecimal.valueOf(10_000))
-                .availableFrom(LocalDate.now().minusMonths(1))
-                .availableTo(LocalDate.now().plusMonths(1))
-                .build();
+        return new Equipment(
+                ownerId,
+                EquipmentCategory.LAPTOP,
+                name,
+                "테스트 장비",
+                BigDecimal.valueOf(10_000),
+                LocalDate.now().minusMonths(1),
+                LocalDate.now().plusMonths(1));
     }
 
     private Rental rental(
