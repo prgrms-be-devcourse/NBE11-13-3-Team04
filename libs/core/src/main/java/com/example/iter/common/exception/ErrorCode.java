@@ -112,7 +112,11 @@ public enum ErrorCode {
 
     // Reservation - Review
     REVIEW_NOT_ALLOWED_STATUS(HttpStatus.CONFLICT, "반납이 완료된 거래만 리뷰를 작성할 수 있습니다."),
-    REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 이 거래에 대한 리뷰를 작성했습니다.");
+    REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 이 거래에 대한 리뷰를 작성했습니다."),
+
+    // Chat — monolith가 발급만 하고 실제 채팅은 apps:chat이 처리한다.
+    CHAT_EQUIPMENT_NOT_INQUIRABLE(HttpStatus.CONFLICT, "문의할 수 없는 상태의 장비입니다."),
+    CHAT_INQUIRY_SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "본인이 등록한 장비에는 문의할 수 없습니다.");
 
     // TODO: delivery / dispute 담당자가 각자 도메인 에러코드를 이어서 추가
 

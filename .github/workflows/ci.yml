@@ -31,6 +31,19 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
+      # apps:monolith가 spring-boot-starter-data-redis를 물게 되면서(채팅 티켓/그랜트
+      # 발급용) LettuceConnectionFactory가 컨텍스트 기동 시점에 공유 커넥션을 미리 여는데,
+      # Redis가 없으면 그 시점에 바로 실패한다 — apps:monolith의 모든 @SpringBootTest가
+      # 이 서비스가 없으면 깨진다. iter_test 처럼 시크릿 없이 그대로 쓴다.
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
 
     steps:
       - name: Checkout

@@ -16,6 +16,13 @@ spring:
     url: ${CHAT_FLYWAY_URL}
     user: ${CHAT_DB_USERNAME}
     password: ${CHAT_DB_PASSWORD}
+  data:
+    # monolith와 공유하는 유일한 채널 — 티켓/그랜트 조회, CH5의 메시지 팬아웃(Pub/Sub).
+    # JWT 비밀키는 여기 없다 — chat은 티켓만 검증하고 발급은 monolith가 한다.
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD:}
 
 server:
   port: ${CHAT_SERVER_PORT:8081}
