@@ -109,11 +109,14 @@ class ReportAnalysisContextBuilderTest {
             .build()
         val rental = rental()
         val item = equipment()
-        val listing = EquipmentImage.builder()
-            .id(101L)
-            .objectKey("equipment/public/10/listing.png")
-            .imageUrl("https://example.test/listing.png")
-            .build()
+        val listing = EquipmentImage(
+            item,
+            "https://example.test/listing.png",
+            "equipment/public/10/listing.png",
+            0,
+            false,
+            101L
+        )
         val receipt = Receipt.builder().id(201L).rental(rental).conditionDetail("수령 상태").build()
         val returned = ReturnReceipt.builder().id(301L).rental(rental).conditionDetail("반납 시 긁힘").build()
         val receiptImage = ReceiptImage.builder()
@@ -193,16 +196,16 @@ class ReportAnalysisContextBuilderTest {
         .status(RentalStatus.RETURNED)
         .build()
 
-    private fun equipment() = Equipment.builder()
-        .id(10L)
-        .ownerId(1L)
-        .category(EquipmentCategory.CAMERA)
-        .name("Canon 카메라")
-        .description("등록 설명 contact@example.test 010-1234-5678")
-        .dailyPrice(BigDecimal.valueOf(30_000))
-        .status(EquipmentStatus.ACTIVE)
-        .productCondition(ProductConditionType.NORMAL)
-        .build()
+    private fun equipment() = Equipment(
+        ownerId = 1L,
+        category = EquipmentCategory.CAMERA,
+        name = "Canon 카메라",
+        description = "등록 설명 contact@example.test 010-1234-5678",
+        dailyPrice = BigDecimal.valueOf(30_000),
+        status = EquipmentStatus.ACTIVE,
+        productCondition = ProductConditionType.NORMAL,
+        id = 10L
+    )
 
     private fun builder(): ReportAnalysisContextBuilder {
         val sanitizer = ReportTextSanitizer()

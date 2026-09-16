@@ -68,10 +68,13 @@ class EquipmentDraftApiTest {
     fun setup() {
         owner = user(UserStatus.ACTIVE)
         upload = uploads.saveAndFlush(
-            EquipmentImageUpload.builder().userId(owner.id)
-                .objectKey("equipment/temp/${owner.id}/${UUID.randomUUID()}.jpg")
-                .expectedContentType("image/jpeg").expectedSize(123)
-                .expiresAt(LocalDateTime.now().plusMinutes(5)).build()
+            EquipmentImageUpload(
+                requireNotNull(owner.id),
+                "equipment/temp/${owner.id}/${UUID.randomUUID()}.jpg",
+                "image/jpeg",
+                123,
+                LocalDateTime.now().plusMinutes(5)
+            )
         )
         whenever(images.validateTemporaryUpload(any(), any(), any())).thenAnswer { call ->
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse()
@@ -89,7 +92,7 @@ class EquipmentDraftApiTest {
     fun 생성은_본인_사진만_참조하고_사진을_소비하지_않는다() {
         mvc.post(URL) { header("Authorization", bearer(owner)); contentType = MediaType.APPLICATION_JSON; content = body(upload.objectKey) }
             .andExpect { status { isAccepted() }; jsonPath("$.status") { value("PENDING") } }
-        assertThat(uploads.findById(upload.id).orElseThrow().isUsed).isFalse()
+        assertThat(uploads.findById(requireNotNull(upload.id)).orElseThrow().isUsed()).isFalse()
         verify(images, never()).promote(any(), any())
     }
 
@@ -125,8 +128,13 @@ class EquipmentDraftApiTest {
         upload.use(LocalDateTime.now()); uploads.saveAndFlush(upload)
         assertError(ErrorCode.IMAGE_UPLOAD_ALREADY_USED) { service.create(owner.id, request()) }
         val expired = uploads.saveAndFlush(
-            EquipmentImageUpload.builder().userId(owner.id).objectKey("equipment/temp/expired-${UUID.randomUUID()}")
-                .expectedContentType("image/jpeg").expectedSize(123).expiresAt(LocalDateTime.now().minusMinutes(1)).build()
+            EquipmentImageUpload(
+                requireNotNull(owner.id),
+                "equipment/temp/expired-${UUID.randomUUID()}",
+                "image/jpeg",
+                123,
+                LocalDateTime.now().minusMinutes(1)
+            )
         )
         assertError(ErrorCode.IMAGE_UPLOAD_EXPIRED) {
             service.create(owner.id, EquipmentDraftRequest(listOf(expired.objectKey), null, null))

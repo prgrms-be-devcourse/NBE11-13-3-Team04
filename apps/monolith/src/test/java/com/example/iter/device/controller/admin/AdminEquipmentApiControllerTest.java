@@ -126,11 +126,11 @@ class AdminEquipmentApiControllerTest {
         ArgumentCaptor<AdminEquipmentSearchRequest> captor =
                 ArgumentCaptor.forClass(AdminEquipmentSearchRequest.class);
         verify(adminEquipmentService).getEquipments(captor.capture());
-        assertThat(captor.getValue().keyword()).isEqualTo("맥북");
-        assertThat(captor.getValue().category()).isEqualTo("LAPTOP");
-        assertThat(captor.getValue().status()).isEqualTo(EquipmentStatus.ACTIVE);
-        assertThat(captor.getValue().cursor()).isEqualTo("current-cursor");
-        assertThat(captor.getValue().size()).isEqualTo(20);
+        assertThat(captor.getValue().getKeyword()).isEqualTo("맥북");
+        assertThat(captor.getValue().getCategory()).isEqualTo("LAPTOP");
+        assertThat(captor.getValue().getStatus()).isEqualTo(EquipmentStatus.ACTIVE);
+        assertThat(captor.getValue().getCursor()).isEqualTo("current-cursor");
+        assertThat(captor.getValue().getSize()).isEqualTo(20);
     }
 
     @Test
@@ -178,8 +178,8 @@ class AdminEquipmentApiControllerTest {
                 eq(EQUIPMENT_ID),
                 captor.capture()
         );
-        assertThat(captor.getValue().status()).isEqualTo(EquipmentStatus.SUSPENDED);
-        assertThat(captor.getValue().reason()).isEqualTo("신고 누적으로 관리자 차단");
+        assertThat(captor.getValue().getStatus()).isEqualTo(EquipmentStatus.SUSPENDED);
+        assertThat(captor.getValue().getReason()).isEqualTo("신고 누적으로 관리자 차단");
     }
 
     @Test

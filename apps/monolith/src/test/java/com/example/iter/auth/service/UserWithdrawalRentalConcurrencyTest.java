@@ -141,17 +141,16 @@ class UserWithdrawalRentalConcurrencyTest {
     }
 
     private Equipment saveEquipment(Long ownerId) {
-        return equipmentRepository.saveAndFlush(Equipment.builder()
-                .ownerId(ownerId)
-                .category(EquipmentCategory.CAMERA)
-                .name("동시성 테스트 장비")
-                .description("회원 탈퇴와 대여 생성 동시성 테스트")
-                .dailyPrice(BigDecimal.valueOf(10_000))
-                .availableFrom(LocalDate.now().plusDays(1))
-                .availableTo(LocalDate.now().plusMonths(1))
-                .status(EquipmentStatus.ACTIVE)
-                .productCondition(ProductConditionType.NORMAL)
-                .build());
+        return equipmentRepository.saveAndFlush(new Equipment(
+                ownerId,
+                EquipmentCategory.CAMERA,
+                "동시성 테스트 장비",
+                "회원 탈퇴와 대여 생성 동시성 테스트",
+                BigDecimal.valueOf(10_000),
+                LocalDate.now().plusDays(1),
+                LocalDate.now().plusMonths(1),
+                EquipmentStatus.ACTIVE,
+                ProductConditionType.NORMAL));
     }
 
     private RentalCreateRequest request(Long equipmentId) {

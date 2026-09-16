@@ -23,6 +23,7 @@ class EquipmentReportContextContributor(
     // 장비의 현재 상태·신고 횟수·공개 설명과 신고자의 최근 관련 거래를 함께 구성합니다.
     override fun contribute(report: Report, reviewedDescription: String?, draft: ReportAnalysisDraft) {
         val target = equipment.findById(report.targetId).orElseThrow { CustomException(ErrorCode.EQUIPMENT_NOT_FOUND) }
+        val equipmentId = requireNotNull(target.id)
 
         draft.addFact("equipmentCategory", target.category)
         draft.addFact("equipmentStatus", target.status)
@@ -30,15 +31,15 @@ class EquipmentReportContextContributor(
         draft.addFact("dailyPrice", target.dailyPrice)
         draft.addFact(
             "reportsAgainstEquipment",
-            reports.countByTargetTypeAndTargetId(ReportTargetType.EQUIPMENT, target.id)
+            reports.countByTargetTypeAndTargetId(ReportTargetType.EQUIPMENT, equipmentId)
         )
         sanitizer.addPublicContent(draft.publicContent, "equipmentName", target.name)
         sanitizer.addPublicContent(draft.publicContent, "equipmentDescription", target.description)
         sanitizer.addPublicContent(draft.publicContent, "equipmentConditionDetail", target.conditionDetail)
-        evidenceCollector.collectEquipmentImages(target.id, draft, 2)
+        evidenceCollector.collectEquipmentImages(equipmentId, draft, 2)
 
         // 신고자가 해당 장비를 실제로 빌린 적이 있으면 가장 최근 거래 증빙까지 연결합니다.
-        rentals.findFirstByEquipmentIdAndRenterIdOrderByCreatedAtDesc(target.id, report.reporterId).ifPresent { rental ->
+        rentals.findFirstByEquipmentIdAndRenterIdOrderByCreatedAtDesc(equipmentId, report.reporterId).ifPresent { rental ->
             rentalContributor.addRentalContext(
                 rental,
                 "LATEST_RENTAL_FOR_REPORTED_EQUIPMENT",

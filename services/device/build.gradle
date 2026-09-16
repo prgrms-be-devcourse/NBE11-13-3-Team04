@@ -1,5 +1,6 @@
 plugins {
     id 'iter.spring-library-conventions'
+    // device 코틀린 전환 시작. src/main/kotlin 이 src/main/java 와 공존한다.
     id 'iter.kotlin-conventions'
 }
 

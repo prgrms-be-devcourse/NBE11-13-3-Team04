@@ -13,4 +13,9 @@ dependencies {
     implementation libs.jjwt.api
     runtimeOnly libs.jjwt.impl
     runtimeOnly libs.jjwt.jackson
+
+    // JwtPropertiesTest 는 Validator 를 직접 만들어 쓰는 순수 단위 테스트다.
+    // hibernate-validator 자체는 libs:core 가 api 로 노출하는 validation 스타터를 타고
+    // 이미 들어와 있고, 여기서 필요한 건 JUnit/AssertJ 쪽이다.
+    testImplementation libs.spring.boot.starter.validation.test
 }

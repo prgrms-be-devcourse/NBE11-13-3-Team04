@@ -84,8 +84,13 @@ class ConditionAnalysisApiTest {
         owner = user()
         renter = user()
         item = equipment.saveAndFlush(
-            Equipment.builder().ownerId(owner.id).name("테스트 카메라")
-                .category(EquipmentCategory.CAMERA).dailyPrice(BigDecimal.valueOf(1000)).build()
+            Equipment(
+                requireNotNull(owner.id),
+                EquipmentCategory.CAMERA,
+                "테스트 카메라",
+                null,
+                BigDecimal.valueOf(1000)
+            )
         )
         rental = rental(RentalStatus.RETURNED)
         val before = ConditionEvidenceResponse(ProductConditionType.NORMAL, null, evidence("before"), LocalDateTime.now())

@@ -12,20 +12,29 @@ import org.springframework.stereotype.Component
 class AdminEquipmentMapper {
 
     // 장비, 등록자, 썸네일을 관리자 장비 목록 응답으로 변환합니다.
-    fun toSummary(equipment: Equipment, owner: UserSummary, thumbnailUrl: String?): AdminEquipmentSummaryResponse = AdminEquipmentSummaryResponse(
-        equipment.id,
+    // id 단언은 전부 같은 근거다 — 저장된 엔티티만 여기로 들어온다.
+    fun toSummary(
+        equipment: Equipment,
+        owner: UserSummary,
+        thumbnailUrl: String?,
+    ): AdminEquipmentSummaryResponse = AdminEquipmentSummaryResponse(
+        equipment.id!!,
         equipment.name,
         equipment.category,
         equipment.dailyPrice,
         equipment.status,
         owner,
         thumbnailUrl,
-        equipment.createdAt
+        equipment.createdAt,
     )
 
     // 장비, 등록자, 전체 이미지 목록을 관리자 장비 상세 응답으로 변환합니다.
-    fun toDetail(equipment: Equipment, owner: UserSummary, images: List<EquipmentImage>): AdminEquipmentDetailResponse = AdminEquipmentDetailResponse(
-        equipment.id,
+    fun toDetail(
+        equipment: Equipment,
+        owner: UserSummary,
+        images: List<EquipmentImage>,
+    ): AdminEquipmentDetailResponse = AdminEquipmentDetailResponse(
+        equipment.id!!,
         owner,
         equipment.category,
         equipment.name,
@@ -38,15 +47,15 @@ class AdminEquipmentMapper {
         equipment.conditionDetail,
         images.map(::toImageResponse),
         equipment.createdAt,
-        equipment.updatedAt
+        equipment.updatedAt,
     )
 
     // 장비 이미지 엔티티를 이미지 응답 DTO로 변환합니다.
     private fun toImageResponse(image: EquipmentImage): ImageResponse = ImageResponse(
-        image.id,
+        image.id!!,
         image.imageUrl,
         image.captureView,
         image.sortOrder,
-        image.isThumbnail
+        image.thumbnail
     )
 }

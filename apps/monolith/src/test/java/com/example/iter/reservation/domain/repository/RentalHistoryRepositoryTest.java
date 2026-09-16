@@ -305,17 +305,16 @@ class RentalHistoryRepositoryTest {
 
     private Equipment equipment(Long ownerId, String name) {
         return equipmentRepository.saveAndFlush(
-                Equipment.builder()
-                        .ownerId(ownerId)
-                        .category(EquipmentCategory.OTHER)
-                        .name(name)
-                        .description("테스트 장비")
-                        .dailyPrice(BigDecimal.valueOf(20_000))
-                        .availableFrom(TODAY.minusMonths(1))
-                        .availableTo(TODAY.plusMonths(1))
-                        .status(EquipmentStatus.ACTIVE)
-                        .productCondition(ProductConditionType.NORMAL)
-                        .build()
+                new Equipment(
+                        ownerId,
+                        EquipmentCategory.OTHER,
+                        name,
+                        "테스트 장비",
+                        BigDecimal.valueOf(20_000),
+                        TODAY.minusMonths(1),
+                        TODAY.plusMonths(1),
+                        EquipmentStatus.ACTIVE,
+                        ProductConditionType.NORMAL)
         );
     }
 

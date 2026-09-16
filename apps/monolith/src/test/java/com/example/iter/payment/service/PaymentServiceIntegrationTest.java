@@ -54,9 +54,12 @@ class PaymentServiceIntegrationTest {
     void confirm_이후_재조회하면_실제_DB에_PAID_REQUESTED로_반영돼있다() {
         User owner = userRepository.save(user("owner"));
         User renter = userRepository.save(user("renter"));
-        Equipment equipment = equipmentRepository.save(Equipment.builder()
-                .ownerId(owner.getId()).category(EquipmentCategory.CAMERA).name("A7C2")
-                .dailyPrice(BigDecimal.valueOf(10000)).build());
+        Equipment equipment = equipmentRepository.save(new Equipment(
+                owner.getId(),
+                EquipmentCategory.CAMERA,
+                "A7C2",
+                null,
+                BigDecimal.valueOf(10000)));
         Rental rental = rentalRepository.save(Rental.builder()
                 .equipmentId(equipment.getId()).ownerIdSnapshot(owner.getId()).renterId(renter.getId())
                 .startDate(LocalDate.now().plusDays(1)).endDate(LocalDate.now().plusDays(2))

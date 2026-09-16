@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -65,7 +66,7 @@ public class EquipmentManagementService {
     ) {
         validateCanCreate(owner);
         List<EquipmentImageUpload> uploadRecords = findAndValidateUploadRecords(
-                owner.getId(), request.imageKeys());
+                owner.getId(), request.getImageKeys());
         validateCaptureViews(request.orderedImages(), uploadRecords);
         List<ValidatedUpload> validatedUploads = uploadRecords.stream()
                 .map(upload -> imageStorage.validateTemporaryUpload(
@@ -74,36 +75,34 @@ public class EquipmentManagementService {
                         upload.getExpectedSize()))
                 .toList();
 
-        Equipment equipment = equipmentRepository.saveAndFlush(Equipment.builder()
-                .ownerId(owner.getId())
-                .category(request.category())
-                .name(request.name().trim())
-                .description(request.description().trim())
-                .dailyPrice(request.dailyPrice())
-                .availableFrom(request.availableFrom())
-                .availableTo(request.availableTo())
-                .status(EquipmentStatus.ACTIVE)
-                .productCondition(request.productCondition())
-                .conditionDetail(normalizeConditionDetail(
-                        request.productCondition(), request.conditionDetail()))
-                .build());
+        Equipment equipment = equipmentRepository.saveAndFlush(new Equipment(
+                owner.getId(),
+                request.getCategory(),
+                request.getName().trim(),
+                request.getDescription().trim(),
+                request.getDailyPrice(),
+                request.getAvailableFrom(),
+                request.getAvailableTo(),
+                EquipmentStatus.ACTIVE,
+                request.getProductCondition(),
+                normalizeConditionDetail(
+                        request.getProductCondition(), request.getConditionDetail())));
 
         List<StoredImage> storedImages = promoteAll(equipment.getId(), validatedUploads);
-        registerStorageSynchronization(storedImages, request.imageKeys());
+        registerStorageSynchronization(storedImages, request.getImageKeys());
         LocalDateTime usedAt = LocalDateTime.now();
         uploadRecords.forEach(upload -> upload.use(usedAt));
 
         for (int index = 0; index < storedImages.size(); index++) {
             StoredImage storedImage = storedImages.get(index);
             CapturedImageRequest capturedImage = request.orderedImages().get(index);
-            equipmentImageRepository.save(EquipmentImage.builder()
-                    .equipment(equipment)
-                    .imageUrl(storedImage.imageUrl())
-                    .objectKey(storedImage.objectKey())
-                    .captureView(capturedImage.captureView())
-                    .sortOrder(index)
-                    .thumbnail(capturedImage.captureView() == CaptureView.FRONT)
-                    .build());
+            equipmentImageRepository.save(new EquipmentImage(
+                    equipment,
+                    storedImage.getImageUrl(),
+                    storedImage.getObjectKey(),
+                    index,
+                    capturedImage.captureView() == CaptureView.FRONT,
+                    capturedImage.captureView()));
         }
 
         equipmentImageRepository.flush();
@@ -123,12 +122,12 @@ public class EquipmentManagementService {
                 equipmentId, owner.getId(), "본인 소유의 장비에만 이미지를 추가할 수 있습니다.");
         List<EquipmentImage> existingImages = equipmentImageRepository
                 .findByEquipmentIdOrderBySortOrderAscIdAsc(equipmentId);
-        if (existingImages.size() + request.imageKeys().size() > EquipmentImagePolicy.MAX_IMAGE_COUNT) {
+        if (existingImages.size() + request.getImageKeys().size() > EquipmentImagePolicy.MAX_IMAGE_COUNT) {
             throw new CustomException(ErrorCode.IMAGE_LIMIT_EXCEEDED);
         }
 
         List<EquipmentImageUpload> uploadRecords = findAndValidateUploadRecords(
-                owner.getId(), request.imageKeys());
+                owner.getId(), request.getImageKeys());
         List<ValidatedUpload> validatedUploads = uploadRecords.stream()
                 .map(upload -> imageStorage.validateTemporaryUpload(
                         upload.getObjectKey(),
@@ -136,9 +135,9 @@ public class EquipmentManagementService {
                         upload.getExpectedSize()))
                 .toList();
         List<StoredImage> storedImages = promoteAll(equipmentId, validatedUploads);
-        registerStorageSynchronization(storedImages, request.imageKeys());
+        registerStorageSynchronization(storedImages, request.getImageKeys());
 
-        if (request.thumbnailIndex() != null) {
+        if (request.getThumbnailIndex() != null) {
             existingImages.forEach(image -> image.changeThumbnail(false));
         }
         int nextSortOrder = existingImages.stream()
@@ -147,14 +146,13 @@ public class EquipmentManagementService {
                 .orElse(-1) + 1;
         for (int index = 0; index < storedImages.size(); index++) {
             StoredImage storedImage = storedImages.get(index);
-            equipmentImageRepository.save(EquipmentImage.builder()
-                    .equipment(equipment)
-                    .imageUrl(storedImage.imageUrl())
-                    .objectKey(storedImage.objectKey())
-                    .sortOrder(nextSortOrder + index)
-                    .thumbnail(request.thumbnailIndex() != null
-                            && index == request.thumbnailIndex())
-                    .build());
+            equipmentImageRepository.save(new EquipmentImage(
+                    equipment,
+                    storedImage.getImageUrl(),
+                    storedImage.getObjectKey(),
+                    nextSortOrder + index,
+                    request.getThumbnailIndex() != null
+                            && index == request.getThumbnailIndex()));
         }
         LocalDateTime usedAt = LocalDateTime.now();
         uploadRecords.forEach(upload -> upload.use(usedAt));
@@ -185,7 +183,7 @@ public class EquipmentManagementService {
         List<EquipmentImage> remainingImages = images.stream()
                 .filter(image -> !image.getId().equals(imageId))
                 .toList();
-        if (target.isThumbnail()) {
+        if (target.getThumbnail()) {
             remainingImages.getFirst().changeThumbnail(true);
         }
         for (int index = 0; index < remainingImages.size(); index++) {
@@ -206,25 +204,25 @@ public class EquipmentManagementService {
     ) {
         Equipment equipment = findOwnedForUpdate(equipmentId, ownerId, "본인 소유의 장비만 수정할 수 있습니다.");
 
-        String name = request.name() == null ? equipment.getName() : request.name().trim();
-        String description = request.description() == null
+        String name = request.getName() == null ? equipment.getName() : request.getName().trim();
+        String description = request.getDescription() == null
                 ? equipment.getDescription()
-                : request.description().trim();
-        BigDecimal dailyPrice = request.dailyPrice() == null
+                : request.getDescription().trim();
+        BigDecimal dailyPrice = request.getDailyPrice() == null
                 ? equipment.getDailyPrice()
-                : request.dailyPrice();
-        LocalDate availableFrom = request.availableFrom() == null
+                : request.getDailyPrice();
+        LocalDate availableFrom = request.getAvailableFrom() == null
                 ? equipment.getAvailableFrom()
-                : request.availableFrom();
-        LocalDate availableTo = request.availableTo() == null
+                : request.getAvailableFrom();
+        LocalDate availableTo = request.getAvailableTo() == null
                 ? equipment.getAvailableTo()
-                : request.availableTo();
-        ProductConditionType productCondition = request.productCondition() == null
+                : request.getAvailableTo();
+        ProductConditionType productCondition = request.getProductCondition() == null
                 ? equipment.getProductCondition()
-                : request.productCondition();
-        String conditionDetail = request.conditionDetail() == null
+                : request.getProductCondition();
+        String conditionDetail = request.getConditionDetail() == null
                 ? equipment.getConditionDetail()
-                : request.conditionDetail().trim();
+                : request.getConditionDetail().trim();
 
         validateUpdateValues(availableFrom, availableTo, productCondition, conditionDetail);
         validateExistingRentalsRemainIncluded(equipment, availableFrom, availableTo);
@@ -271,15 +269,15 @@ public class EquipmentManagementService {
 
         if (equipment.getStatus() == EquipmentStatus.SUSPENDED
                 || equipment.getStatus() == EquipmentStatus.DELETED
-                || equipment.getStatus() == request.status()) {
+                || equipment.getStatus() == request.getStatus()) {
             throw new CustomException(ErrorCode.EQUIPMENT_STATUS_CHANGE_NOT_ALLOWED);
         }
-        if (request.status() == EquipmentStatus.ACTIVE) {
+        if (request.getStatus() == EquipmentStatus.ACTIVE) {
             validateCanCreate(owner);
         }
 
         EquipmentStatus previousStatus = equipment.getStatus();
-        equipment.changeStatus(request.status());
+        equipment.changeStatus(request.getStatus());
         equipmentRepository.flush();
         log.info("장비 상태 변경 처리: equipmentId={}, ownerId={}, previousStatus={}, status={}",
                 equipmentId, owner.getId(), previousStatus, equipment.getStatus());
@@ -400,7 +398,7 @@ public class EquipmentManagementService {
         return objectKeys.stream()
                 .map(objectKey -> {
                     EquipmentImageUpload record = recordsByKey.get(objectKey);
-                    if (record == null || !record.getUserId().equals(ownerId)) {
+                    if (record == null || !Objects.equals(record.getUserId(), ownerId)) {
                         throw new CustomException(ErrorCode.IMAGE_UPLOAD_NOT_FOUND);
                     }
                     if (record.isUsed()) {
@@ -442,7 +440,7 @@ public class EquipmentManagementService {
             return List.copyOf(promoted);
         } catch (RuntimeException exception) {
             promoted.forEach(image -> deleteQuietly(
-                    image.objectKey(), "부분 승격된 장비 이미지 삭제 실패"));
+                    image.getObjectKey(), "부분 승격된 장비 이미지 삭제 실패"));
             throw exception;
         }
     }
@@ -453,7 +451,7 @@ public class EquipmentManagementService {
     ) {
         List<String> temporaryKeys = List.copyOf(temporaryObjectKeys);
         List<String> storedKeys = storedImages.stream()
-                .map(StoredImage::objectKey)
+                .map(StoredImage::getObjectKey)
                 .toList();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override

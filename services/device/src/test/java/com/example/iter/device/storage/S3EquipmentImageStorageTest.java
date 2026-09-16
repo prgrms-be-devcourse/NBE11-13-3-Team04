@@ -70,10 +70,10 @@ class S3EquipmentImageStorageTest {
 
         PresignedUpload upload = storage.createPresignedUpload(42L, "image/jpeg", 1024);
 
-        assertThat(upload.objectKey())
+        assertThat(upload.getObjectKey())
                 .startsWith("equipment/temp/42/")
                 .endsWith(".jpg");
-        assertThat(upload.requiredHeaders())
+        assertThat(upload.getRequiredHeaders())
                 .containsEntry("content-type", "image/jpeg")
                 .doesNotContainKeys("host", "content-length");
         ArgumentCaptor<PutObjectPresignRequest> requestCaptor =
@@ -100,8 +100,8 @@ class S3EquipmentImageStorageTest {
         ValidatedUpload upload = storage.validateTemporaryUpload(
                 objectKey, "image/jpeg", 1024L);
 
-        assertThat(upload.objectKey()).isEqualTo(objectKey);
-        assertThat(upload.eTag()).isEqualTo("etag-1");
+        assertThat(upload.getObjectKey()).isEqualTo(objectKey);
+        assertThat(upload.getETag()).isEqualTo("etag-1");
         ArgumentCaptor<GetObjectRequest> requestCaptor =
                 ArgumentCaptor.forClass(GetObjectRequest.class);
         verify(s3Client).getObjectAsBytes(requestCaptor.capture());
@@ -125,7 +125,7 @@ class S3EquipmentImageStorageTest {
                 .endsWith(".jpg");
         assertThat(request.cacheControl())
                 .isEqualTo("public, max-age=31536000, immutable");
-        assertThat(storedImage.imageUrl())
+        assertThat(storedImage.getImageUrl())
                 .isEqualTo("https://cdn.example.com/" + request.destinationKey());
     }
 

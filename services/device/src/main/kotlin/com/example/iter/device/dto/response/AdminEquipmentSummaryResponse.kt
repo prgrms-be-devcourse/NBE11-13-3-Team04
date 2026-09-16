@@ -3,11 +3,10 @@ package com.example.iter.device.dto.response
 import com.example.iter.auth.api.UserSummary
 import com.example.iter.device.domain.entity.EquipmentCategory
 import com.example.iter.device.domain.entity.EquipmentStatus
+
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import kotlin.jvm.JvmRecord
 
-@JvmRecord
 data class AdminEquipmentSummaryResponse(
     val equipmentId: Long,
     val name: String,
@@ -16,5 +15,5 @@ data class AdminEquipmentSummaryResponse(
     val status: EquipmentStatus,
     val owner: UserSummary,
     val thumbnailUrl: String?,
-    val createdAt: LocalDateTime?
+    val createdAt: LocalDateTime?,
 )

@@ -25,7 +25,7 @@ public class JpaEquipmentImageQueryAdapter implements EquipmentImageQueryPort {
                         image.getId(),
                         image.getCaptureView() == null ? null : image.getCaptureView().name(),
                         imageUrlResolver.resolve(image),
-                        image.isThumbnail()
+                        image.getThumbnail()
                 ))
                 .toList();
     }

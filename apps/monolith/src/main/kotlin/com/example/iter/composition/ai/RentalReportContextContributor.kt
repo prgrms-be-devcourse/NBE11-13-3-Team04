@@ -71,7 +71,7 @@ class RentalReportContextContributor(
             sanitizer.addPublicContent(draft.publicContent, "equipmentConditionDetail", item.conditionDetail)
 
             if (includeListingImages && !hasPriorConditionAnalysis) {
-                evidenceCollector.collectEquipmentImages(item.id, draft, 2)
+                evidenceCollector.collectEquipmentImages(requireNotNull(item.id), draft, 2)
             }
         }
 

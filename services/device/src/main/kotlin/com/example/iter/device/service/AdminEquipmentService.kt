@@ -59,7 +59,7 @@ class AdminEquipmentService(
                     thumbnailMap[item.id]
                 )
             }
-        ) { item -> CursorKey(item.createdAt, item.id) }
+        ) { item -> CursorKey(item.createdAt, requireNotNull(item.id)) }
     }
 
     // 관리자가 특정 장비의 상세 정보와 전체 이미지를 조회합니다.
@@ -86,7 +86,7 @@ class AdminEquipmentService(
         adminActionService.record(
             adminId,
             AdminActionTargetType.EQUIPMENT,
-            equipment.id,
+            requireNotNull(equipment.id),
             action,
             requireNotNull(request.reason).trim()
         )
@@ -132,7 +132,7 @@ class AdminEquipmentService(
 
     private fun loadOwners(equipment: List<Equipment>): Map<Long, UserSummary> {
         if (equipment.isEmpty()) return emptyMap()
-        return userQueryPort.findSummaries(equipment.map(Equipment::getOwnerId).distinct())
+        return userQueryPort.findSummaries(equipment.map { it.ownerId }.distinct())
     }
 
     private fun loadThumbnails(equipment: List<Equipment>): Map<Long, String> {
@@ -140,8 +140,8 @@ class AdminEquipmentService(
 
         return buildMap {
             equipmentImageRepository
-                .findByEquipment_IdInAndThumbnailTrueOrderBySortOrderAscIdAsc(equipment.map(Equipment::getId))
-                .forEach { image -> putIfAbsent(image.equipment.id, image.imageUrl) }
+                .findByEquipment_IdInAndThumbnailTrueOrderBySortOrderAscIdAsc(equipment.mapNotNull { it.id })
+                .forEach { image -> putIfAbsent(requireNotNull(image.equipment.id), image.imageUrl) }
         }
     }
 

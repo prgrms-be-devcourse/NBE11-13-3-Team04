@@ -39,11 +39,11 @@ class EquipmentDraftContextAdapter(
 
             DraftImageReference(
                 imageId = requireNotNull(upload.id).toString(),
-                objectKey = validated.objectKey(),
-                etag = validated.eTag(),
+                objectKey = validated.objectKey,
+                etag = validated.eTag,
                 captureSlot = upload.captureView?.name ?: "OVERVIEW",
-                contentType = validated.contentType(),
-                sizeBytes = validated.size()
+                contentType = validated.contentType,
+                sizeBytes = validated.size
             )
         }
     }
@@ -85,7 +85,7 @@ class EquipmentDraftContextAdapter(
                 throw CustomException(ErrorCode.IMAGE_UPLOAD_NOT_FOUND)
             }
 
-            if (upload.isUsed) {
+            if (upload.isUsed()) {
                 throw CustomException(ErrorCode.IMAGE_UPLOAD_ALREADY_USED)
             }
 

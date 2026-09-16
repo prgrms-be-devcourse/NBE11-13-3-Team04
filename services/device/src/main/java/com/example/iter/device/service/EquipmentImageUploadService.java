@@ -29,25 +29,24 @@ public class EquipmentImageUploadService {
     ) {
         validateActiveUser(user);
 
-        var uploads = request.files().stream()
+        var uploads = request.getFiles().stream()
                 .map(file -> {
-                    imagePolicy.validateMetadata(file.contentType(), file.size());
+                    imagePolicy.validateMetadata(file.getContentType(), file.getSize());
                     var presigned = imageStorage.createPresignedUpload(
-                            user.getId(), file.contentType(), file.size());
-                    uploadRepository.save(EquipmentImageUpload.builder()
-                            .userId(user.getId())
-                            .captureView(file.captureView())
-                            .objectKey(presigned.objectKey())
-                            .expectedContentType(file.contentType())
-                            .expectedSize(file.size())
-                            .expiresAt(presigned.expiresAt())
-                            .build());
+                            user.getId(), file.getContentType(), file.getSize());
+                    uploadRepository.save(new EquipmentImageUpload(
+                            user.getId(),
+                            presigned.getObjectKey(),
+                            file.getContentType(),
+                            file.getSize(),
+                            presigned.getExpiresAt(),
+                            file.getCaptureView()));
                     return new PresignedImageUploadItemResponse(
-                            file.captureView(),
-                            presigned.objectKey(),
-                            presigned.uploadUrl().toExternalForm(),
-                            presigned.requiredHeaders(),
-                            presigned.expiresAt()
+                            file.getCaptureView(),
+                            presigned.getObjectKey(),
+                            presigned.getUploadUrl().toExternalForm(),
+                            presigned.getRequiredHeaders(),
+                            presigned.getExpiresAt()
                     );
                 })
                 .toList();
