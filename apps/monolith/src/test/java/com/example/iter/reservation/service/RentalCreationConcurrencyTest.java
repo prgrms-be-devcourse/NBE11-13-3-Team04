@@ -90,7 +90,7 @@ class RentalCreationConcurrencyTest {
         assertThat(results.stream().filter(Boolean::booleanValue).count()).isEqualTo(1);
 
         List<Rental> createdRentals = rentalRepository.findAll().stream()
-                .filter(r -> r.getEquipmentId().equals(equipment.getId()))
+                .filter(r -> r.getEquipmentId() == equipment.getId())
                 .toList();
         assertThat(createdRentals).hasSize(1);
         assertThat(createdRentals.get(0).getStatus()).isEqualTo(RentalStatus.PENDING);
