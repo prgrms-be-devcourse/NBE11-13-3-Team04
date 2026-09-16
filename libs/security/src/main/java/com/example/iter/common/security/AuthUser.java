@@ -35,4 +35,9 @@ public final class AuthUser {
     public static AuthUser of(Long id, String email, String password, Role role, UserStatus status) {
         return new AuthUser(id, email, password, role, status);
     }
+
+    // 메서드 보안 SpEL이 도메인 User 엔티티 없이도 현재 계정 활성 상태를 판별한다.
+    public boolean isActive() {
+        return status == UserStatus.ACTIVE;
+    }
 }
