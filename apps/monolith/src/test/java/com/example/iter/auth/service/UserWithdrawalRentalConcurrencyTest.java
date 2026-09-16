@@ -116,7 +116,7 @@ class UserWithdrawalRentalConcurrencyTest {
 
         User user = userRepository.findById(withdrawingUserId).orElseThrow();
         List<Rental> rentals = rentalRepository.findAll().stream()
-                .filter(rental -> rental.getEquipmentId().equals(equipmentId))
+                .filter(rental -> rental.getEquipmentId() == equipmentId)
                 .toList();
 
         if (result.withdrawal().success()) {

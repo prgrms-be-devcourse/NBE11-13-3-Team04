@@ -98,19 +98,28 @@ class RentalServiceTest {
     }
 
     private Rental rental(Long id, Long renterId, RentalStatus status) {
-        return Rental.builder()
-                .id(id)
-                .equipmentId(1L)
-                .renterId(renterId)
-                .startDate(LocalDate.of(2026, 8, 20))
-                .endDate(LocalDate.of(2026, 8, 25))
-                .productNameSnapshot("소니 A7C2")
-                .categorySnapshot("카메라")
-                .dailyPriceSnapshot(BigDecimal.valueOf(30000))
-                .rentalDays(6)
-                .totalPrice(BigDecimal.valueOf(180000))
-                .status(status)
-                .build();
+        return new Rental(
+                1L,
+                0L,
+                renterId,
+                LocalDate.of(2026, 8, 20),
+                LocalDate.of(2026, 8, 25),
+                "소니 A7C2",
+                BigDecimal.valueOf(30000),
+                6,
+                BigDecimal.valueOf(180000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                "카메라",
+                null,
+                id);
     }
 
     @Test

@@ -109,14 +109,13 @@ class RentalReviewServiceTest {
         when(rentalReviewRepository.existsByRentalIdAndReviewerId(RENTAL_ID, RENTER_ID)).thenReturn(false);
         when(rentalReviewRepository.save(any())).thenAnswer(invocation -> {
             var review = invocation.getArgument(0, com.example.iter.reservation.domain.entity.RentalReview.class);
-            return com.example.iter.reservation.domain.entity.RentalReview.builder()
-                    .id(100L)
-                    .rentalId(review.getRentalId())
-                    .reviewerId(review.getReviewerId())
-                    .revieweeId(review.getRevieweeId())
-                    .rating(review.getRating())
-                    .content(review.getContent())
-                    .build();
+            return new com.example.iter.reservation.domain.entity.RentalReview(
+                    review.getRentalId(),
+                    review.getReviewerId(),
+                    review.getRevieweeId(),
+                    review.getRating(),
+                    review.getContent(),
+                    100L);
         });
 
         RentalReviewResponse response = rentalReviewService.createReview(RENTER_ID, RENTAL_ID, request());
@@ -137,14 +136,13 @@ class RentalReviewServiceTest {
         when(rentalReviewRepository.existsByRentalIdAndReviewerId(RENTAL_ID, OWNER_ID)).thenReturn(false);
         when(rentalReviewRepository.save(any())).thenAnswer(invocation -> {
             var review = invocation.getArgument(0, com.example.iter.reservation.domain.entity.RentalReview.class);
-            return com.example.iter.reservation.domain.entity.RentalReview.builder()
-                    .id(101L)
-                    .rentalId(review.getRentalId())
-                    .reviewerId(review.getReviewerId())
-                    .revieweeId(review.getRevieweeId())
-                    .rating(review.getRating())
-                    .content(review.getContent())
-                    .build();
+            return new com.example.iter.reservation.domain.entity.RentalReview(
+                    review.getRentalId(),
+                    review.getReviewerId(),
+                    review.getRevieweeId(),
+                    review.getRating(),
+                    review.getContent(),
+                    101L);
         });
 
         RentalReviewResponse response = rentalReviewService.createReview(OWNER_ID, RENTAL_ID, request());
@@ -155,14 +153,7 @@ class RentalReviewServiceTest {
 
     @Test
     void 사용자가_작성한_리뷰_목록은_reviewerId_기준으로_조회한다() {
-        RentalReview written = RentalReview.builder()
-                .id(200L)
-                .rentalId(RENTAL_ID)
-                .reviewerId(RENTER_ID)
-                .revieweeId(OWNER_ID)
-                .rating(5)
-                .content("잘 썼습니다.")
-                .build();
+        RentalReview written = new RentalReview(RENTAL_ID, RENTER_ID, OWNER_ID, 5, "잘 썼습니다.", 200L);
         when(rentalReviewRepository.findNextByReviewerId(
                 eq(RENTER_ID), isNull(), isNull(), any()))
                 .thenReturn(List.of(written));
@@ -179,19 +170,28 @@ class RentalReviewServiceTest {
     }
 
     private Rental rental(RentalStatus status) {
-        return Rental.builder()
-                .id(RENTAL_ID)
-                .equipmentId(EQUIPMENT_ID)
-                .renterId(RENTER_ID)
-                .startDate(LocalDate.of(2026, 8, 1))
-                .endDate(LocalDate.of(2026, 8, 10))
-                .productNameSnapshot("예약 당시 맥북")
-                .categorySnapshot("노트북")
-                .dailyPriceSnapshot(BigDecimal.valueOf(30000))
-                .rentalDays(10)
-                .totalPrice(BigDecimal.valueOf(300000))
-                .status(status)
-                .build();
+        return new Rental(
+                EQUIPMENT_ID,
+                0L,
+                RENTER_ID,
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 10),
+                "예약 당시 맥북",
+                BigDecimal.valueOf(30000),
+                10,
+                BigDecimal.valueOf(300000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                "노트북",
+                null,
+                RENTAL_ID);
     }
 
     private EquipmentInfo equipment() {

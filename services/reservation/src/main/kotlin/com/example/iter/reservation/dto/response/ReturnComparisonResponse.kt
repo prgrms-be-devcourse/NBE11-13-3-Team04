@@ -1,10 +1,9 @@
 package com.example.iter.reservation.dto.response
 
 import com.example.iter.auth.api.UserSummary
-import java.time.LocalDate
-import kotlin.jvm.JvmRecord
 
-@JvmRecord
+import java.time.LocalDate
+
 data class ReturnComparisonResponse(
     val rentalId: Long?,
     val equipmentName: String?,
@@ -14,5 +13,15 @@ data class ReturnComparisonResponse(
     val returnDate: LocalDate?,
     val listingImages: List<ConditionEvidenceImageResponse> = emptyList(),
     val receipt: ConditionEvidenceResponse?,
-    val returnReceipt: ConditionEvidenceResponse?
-)
+    val returnReceipt: ConditionEvidenceResponse?,
+) {
+    fun rentalId(): Long? = rentalId
+    fun equipmentName(): String? = equipmentName
+    fun renter(): UserSummary? = renter
+    fun startDate(): LocalDate? = startDate
+    fun endDate(): LocalDate? = endDate
+    fun returnDate(): LocalDate? = returnDate
+    fun listingImages(): List<ConditionEvidenceImageResponse> = listingImages
+    fun receipt(): ConditionEvidenceResponse? = receipt
+    fun returnReceipt(): ConditionEvidenceResponse? = returnReceipt
+}

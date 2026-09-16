@@ -7,17 +7,13 @@ class ConditionEvidenceResponse(
     val productCondition: ProductConditionType?,
     val conditionDetail: String?,
     images: List<ConditionEvidenceImageResponse>?,
-    val recordedAt: LocalDateTime?
+    val recordedAt: LocalDateTime?,
 ) {
     val images: List<ConditionEvidenceImageResponse> = java.util.List.copyOf(images ?: emptyList())
 
-    // 기존 Java record 호출부와 같은 접근자 형태를 유지합니다.
     fun productCondition(): ProductConditionType? = productCondition
-
     fun conditionDetail(): String? = conditionDetail
-
     fun images(): List<ConditionEvidenceImageResponse> = images
-
     fun recordedAt(): LocalDateTime? = recordedAt
 
     override fun equals(other: Any?): Boolean =
@@ -33,7 +29,6 @@ class ConditionEvidenceResponse(
         result = 31 * result + (conditionDetail?.hashCode() ?: 0)
         result = 31 * result + images.hashCode()
         result = 31 * result + (recordedAt?.hashCode() ?: 0)
-
         return result
     }
 
