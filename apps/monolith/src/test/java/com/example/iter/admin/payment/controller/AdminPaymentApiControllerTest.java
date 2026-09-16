@@ -36,6 +36,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -307,7 +308,7 @@ class AdminPaymentApiControllerTest {
                         .with(user(adminPrincipal)))
                 .andExpect(status().isBadRequest());
 
-        verify(adminPaymentQueryService, never()).getPayment(any());
+        verify(adminPaymentQueryService, never()).getPayment(anyLong());
     }
 
     private CustomUserDetails principal(Long id, Role role) {
