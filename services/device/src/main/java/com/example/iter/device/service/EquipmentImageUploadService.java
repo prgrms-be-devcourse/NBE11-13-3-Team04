@@ -36,12 +36,14 @@ public class EquipmentImageUploadService {
                             user.getId(), file.contentType(), file.size());
                     uploadRepository.save(EquipmentImageUpload.builder()
                             .userId(user.getId())
+                            .captureView(file.captureView())
                             .objectKey(presigned.objectKey())
                             .expectedContentType(file.contentType())
                             .expectedSize(file.size())
                             .expiresAt(presigned.expiresAt())
                             .build());
                     return new PresignedImageUploadItemResponse(
+                            file.captureView(),
                             presigned.objectKey(),
                             presigned.uploadUrl().toExternalForm(),
                             presigned.requiredHeaders(),

@@ -116,7 +116,14 @@ class RentalFulfillmentApiControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                { "productCondition": "NORMAL", "imageUrls": ["https://example.com/a.jpg"] }
+                                {
+                                  "productCondition": "NORMAL",
+                                  "images": [
+                                    {"captureView":"FRONT","objectKey":"equipment/private/rental-evidence/10/receipt/front.jpg"},
+                                    {"captureView":"SIDE","objectKey":"equipment/private/rental-evidence/10/receipt/side.jpg"},
+                                    {"captureView":"REAR","objectKey":"equipment/private/rental-evidence/10/receipt/rear.jpg"}
+                                  ]
+                                }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("RENTING"));
@@ -145,7 +152,14 @@ class RentalFulfillmentApiControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                { "productCondition": "NORMAL", "imageUrls": ["https://example.com/b.jpg"] }
+                                {
+                                  "productCondition": "NORMAL",
+                                  "images": [
+                                    {"captureView":"FRONT","objectKey":"equipment/private/rental-evidence/10/return/front.jpg"},
+                                    {"captureView":"SIDE","objectKey":"equipment/private/rental-evidence/10/return/side.jpg"},
+                                    {"captureView":"REAR","objectKey":"equipment/private/rental-evidence/10/return/rear.jpg"}
+                                  ]
+                                }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("RETURNED"));

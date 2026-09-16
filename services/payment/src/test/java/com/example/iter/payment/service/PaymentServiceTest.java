@@ -61,7 +61,7 @@ class PaymentServiceTest {
     }
 
     private RentalInfo rental(RentalStatus status) {
-        return new RentalInfo(10L, 1L, 2L, "소니 A7C2", null, status, BigDecimal.valueOf(180000),
+        return new RentalInfo(10L, 1L, 3L, 2L, "소니 A7C2", null, status, BigDecimal.valueOf(180000),
                 LocalDate.now().plusDays(1), LocalDate.now().plusDays(3));
     }
 

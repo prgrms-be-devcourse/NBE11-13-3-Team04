@@ -36,6 +36,7 @@ public class JpaRentalCommandAdapter implements RentalCommandPort {
                     return new RentalInfo(
                             rental.getId(),
                             rental.getEquipmentId(),
+                            rental.getOwnerIdSnapshot(),
                             rental.getRenterId(),
                             rental.getProductNameSnapshot(),
                             rental.getRejectReason(),

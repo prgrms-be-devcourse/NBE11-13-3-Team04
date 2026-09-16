@@ -12,6 +12,7 @@ import com.example.iter.device.api.EquipmentInfo;
 import com.example.iter.device.api.EquipmentLockPort;
 import com.example.iter.device.api.EquipmentOccupancyCommandPort;
 import com.example.iter.device.api.EquipmentQueryPort;
+import com.example.iter.device.api.EquipmentThumbnailQueryPort;
 import com.example.iter.payment.api.PaymentStatus;
 import com.example.iter.payment.api.PaymentCommandPort;
 import com.example.iter.payment.api.PaymentQueryPort;
@@ -61,6 +62,7 @@ public class RentalService {
     private final EquipmentQueryPort equipmentQueryPort;
     private final EquipmentLockPort equipmentLockPort;
     private final EquipmentOccupancyCommandPort equipmentOccupancyCommandPort;
+    private final EquipmentThumbnailQueryPort equipmentThumbnailQueryPort;
     private final UserQueryPort userQueryPort;
     private final UserLockPort userLockPort;
     private final PaymentQueryPort paymentQueryPort;
@@ -156,8 +158,12 @@ public class RentalService {
         UserSummary owner = userQueryPort.findSummary(equipment.ownerId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         PaymentStatus paymentStatus = paymentQueryPort.findStatusByRentalId(rentalId).orElse(null);
+        String thumbnailUrl = equipmentThumbnailQueryPort
+                .findThumbnailUrls(Set.of(rental.getEquipmentId()))
+                .get(rental.getEquipmentId());
 
-        return RentalDetailResponse.of(rental, renter, owner, paymentStatus, overdueDays(rental));
+        return RentalDetailResponse.of(
+                rental, renter, owner, paymentStatus, overdueDays(rental), thumbnailUrl);
     }
 
     @Transactional(readOnly = true)

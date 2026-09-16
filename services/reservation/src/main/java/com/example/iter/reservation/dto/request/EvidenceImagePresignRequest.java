@@ -1,9 +1,13 @@
 package com.example.iter.reservation.dto.request;
 
+import com.example.iter.common.image.CaptureView;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
@@ -16,12 +20,19 @@ public record EvidenceImagePresignRequest(
         List<@Valid Item> files
 ) {
     public record Item(
+            @NotNull(message = "사진 촬영 방향은 필수입니다.")
+            CaptureView captureView,
+
             @NotBlank(message = "Content-Type은 필수입니다.")
             @Pattern(
                     regexp = "image/jpeg|image/png|image/webp",
                     message = "JPEG, PNG, WebP 형식만 지원합니다."
             )
-            String contentType
+            String contentType,
+
+            @Positive(message = "이미지 크기는 0보다 커야 합니다.")
+            @Max(value = 10_485_760, message = "이미지는 한 장당 10MB 이하여야 합니다.")
+            long size
     ) {
     }
 }

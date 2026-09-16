@@ -13,14 +13,14 @@ public record RentalEquipmentSnapshotResponse(
 ) {
     // 현재 Equipment가 아니라 예약 시점에 Rental에 복사해둔 스냅샷을 써야 이후 장비 정보가
     // 바뀌어도 과거 예약 조회 결과가 그대로 유지된다.
-    // TODO: 장비 썸네일 URL — 스냅샷에 아직 없음, EquipmentImage 연동 필요 (A 담당 영역), 우선 null
-    public static RentalEquipmentSnapshotResponse from(Rental rental) {
+    // 썸네일은 Rental에 별도 스냅샷이 없으므로 현재 장비 이미지에서 조회한 URL을 함께 받습니다.
+    public static RentalEquipmentSnapshotResponse from(Rental rental, String thumbnailUrl) {
         return new RentalEquipmentSnapshotResponse(
                 rental.getEquipmentId(),
                 rental.getProductNameSnapshot(),
                 rental.getCategorySnapshot(),
                 rental.getDailyPriceSnapshot(),
-                null
+                thumbnailUrl
         );
     }
 }

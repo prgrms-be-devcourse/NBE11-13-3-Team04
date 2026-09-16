@@ -31,10 +31,11 @@ public record RentalDetailResponse(
 ) {
     // paymentStatus는 아직 결제 전(PENDING) 예약이면 null — 결제 전 상태도 조회 가능해야 하므로 null 허용
     public static RentalDetailResponse of(Rental rental, UserSummary renter, UserSummary owner,
-                                           PaymentStatus paymentStatus, int overdueDays) {
+                                           PaymentStatus paymentStatus, int overdueDays,
+                                           String thumbnailUrl) {
         return new RentalDetailResponse(
                 rental.getId(),
-                RentalEquipmentSnapshotResponse.from(rental),
+                RentalEquipmentSnapshotResponse.from(rental, thumbnailUrl),
                 owner,
                 renter,
                 rental.getStartDate(),

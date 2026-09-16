@@ -1,12 +1,19 @@
 package com.example.iter.device.domain.entity;
 
 import com.example.iter.common.entity.BaseCreatedAtEntity;
+import com.example.iter.common.image.CaptureView;
 import jakarta.persistence.*;
 import lombok.*;
 
 // ERD EQUIPMENT_IMAGE 엔티티 — Equipment와 같은 도메인이므로 정상적인 JPA 연관관계를 사용
 @Entity
-@Table(name = "equipment_image")
+@Table(
+        name = "equipment_image",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_equipment_image_capture_view",
+                columnNames = {"equipment_id", "capture_view"}
+        )
+)
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -26,6 +33,10 @@ public class EquipmentImage extends BaseCreatedAtEntity {
 
     @Column(name = "object_key", length = 500)
     private String objectKey;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "capture_view", length = 16)
+    private CaptureView captureView;
 
     @Column(name = "sort_order")
     private int sortOrder;

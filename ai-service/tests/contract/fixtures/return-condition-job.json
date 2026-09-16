@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "jobId": "01980000-0000-7000-8000-000000000001",
+  "featureType": "RETURN_CONDITION_V1",
+  "source": {
+    "type": "RENTAL",
+    "id": "930011"
+  },
+  "inputHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "payload": {
+    "beforeImages": [
+      {
+        "imageId": "before-image-0001",
+        "objectKey": "rental-evidence/private/before.jpg",
+        "captureSlot": "FRONT",
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "contentType": "image/jpeg",
+        "sizeBytes": 1024
+      }
+    ],
+    "afterImages": [
+      {
+        "imageId": "after-image-00001",
+        "objectKey": "rental-evidence/private/after.jpg",
+        "captureSlot": "FRONT",
+        "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "contentType": "image/jpeg",
+        "sizeBytes": 1024
+      }
+    ]
+  }
+}

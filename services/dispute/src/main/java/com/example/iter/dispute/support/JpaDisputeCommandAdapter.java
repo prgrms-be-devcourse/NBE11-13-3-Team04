@@ -2,8 +2,12 @@ package com.example.iter.dispute.support;
 
 import com.example.iter.dispute.api.DisputeCommandPort;
 import com.example.iter.dispute.api.ReturnDisputeCommand;
+import com.example.iter.dispute.api.ReturnDisputeResult;
 import com.example.iter.dispute.domain.entity.Dispute;
+import com.example.iter.dispute.domain.entity.Report;
+import com.example.iter.dispute.domain.entity.ReportTargetType;
 import com.example.iter.dispute.domain.repository.DisputeRepository;
+import com.example.iter.dispute.domain.repository.ReportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -19,10 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class JpaDisputeCommandAdapter implements DisputeCommandPort {
 
     private final DisputeRepository disputeRepository;
+    private final ReportRepository reportRepository;
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public Long openReturnDispute(ReturnDisputeCommand command) {
+    public ReturnDisputeResult openReturnDispute(ReturnDisputeCommand command) {
         Dispute dispute = disputeRepository.save(Dispute.builder()
                 .rentalId(command.rentalId())
                 .reporterId(command.reporterId())
@@ -30,6 +35,13 @@ public class JpaDisputeCommandAdapter implements DisputeCommandPort {
                 .reason(command.reason())
                 .description(command.description())
                 .build());
-        return dispute.getId();
+        Report report = reportRepository.save(Report.builder()
+                .reporterId(command.reporterId())
+                .targetType(ReportTargetType.RENTAL)
+                .targetId(command.rentalId())
+                .reason(command.reason())
+                .description(command.description())
+                .build());
+        return new ReturnDisputeResult(dispute.getId(), report.getId());
     }
 }

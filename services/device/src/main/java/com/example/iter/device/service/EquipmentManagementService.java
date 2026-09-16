@@ -1,5 +1,7 @@
 package com.example.iter.device.service;
 
+import com.example.iter.common.dto.request.CapturedImageRequest;
+import com.example.iter.common.image.CaptureView;
 import com.example.iter.common.security.AuthUser;
 import com.example.iter.common.security.UserStatus;
 import com.example.iter.auth.api.UserQueryPort;
@@ -64,6 +66,7 @@ public class EquipmentManagementService {
         validateCanCreate(owner);
         List<EquipmentImageUpload> uploadRecords = findAndValidateUploadRecords(
                 owner.getId(), request.imageKeys());
+        validateCaptureViews(request.orderedImages(), uploadRecords);
         List<ValidatedUpload> validatedUploads = uploadRecords.stream()
                 .map(upload -> imageStorage.validateTemporaryUpload(
                         upload.getObjectKey(),
@@ -92,12 +95,14 @@ public class EquipmentManagementService {
 
         for (int index = 0; index < storedImages.size(); index++) {
             StoredImage storedImage = storedImages.get(index);
+            CapturedImageRequest capturedImage = request.orderedImages().get(index);
             equipmentImageRepository.save(EquipmentImage.builder()
                     .equipment(equipment)
                     .imageUrl(storedImage.imageUrl())
                     .objectKey(storedImage.objectKey())
+                    .captureView(capturedImage.captureView())
                     .sortOrder(index)
-                    .thumbnail(index == request.thumbnailIndex())
+                    .thumbnail(capturedImage.captureView() == CaptureView.FRONT)
                     .build());
         }
 
@@ -407,6 +412,22 @@ public class EquipmentManagementService {
                     return record;
                 })
                 .toList();
+    }
+
+    // 최종 제출한 촬영 방향이 presigned URL 발급 시 지정한 방향과 같은지 확인합니다.
+    private void validateCaptureViews(
+            List<CapturedImageRequest> images,
+            List<EquipmentImageUpload> uploads
+    ) {
+        Map<String, EquipmentImageUpload> uploadsByKey = new LinkedHashMap<>();
+        uploads.forEach(upload -> uploadsByKey.put(upload.getObjectKey(), upload));
+
+        for (CapturedImageRequest image : images) {
+            EquipmentImageUpload upload = uploadsByKey.get(image.objectKey());
+            if (upload == null || upload.getCaptureView() != image.captureView()) {
+                throw new CustomException(ErrorCode.IMAGE_UPLOAD_NOT_FOUND);
+            }
+        }
     }
 
     private List<StoredImage> promoteAll(

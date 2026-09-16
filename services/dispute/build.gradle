@@ -1,5 +1,6 @@
 plugins {
     id 'iter.spring-library-conventions'
+    id 'iter.kotlin-conventions'
 }
 
 description = 'iter 분쟁·신고 도메인'

@@ -1,11 +1,13 @@
 package com.example.iter.reservation.util;
 
 import com.example.iter.auth.api.UserSummary;
+import com.example.iter.common.image.CaptureView;
 import com.example.iter.reservation.domain.entity.ProductConditionType;
 import com.example.iter.reservation.domain.entity.Receipt;
 import com.example.iter.reservation.domain.entity.Rental;
 import com.example.iter.reservation.api.RentalStatus;
 import com.example.iter.reservation.domain.entity.ReturnReceipt;
+import com.example.iter.reservation.dto.response.ConditionEvidenceImageResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -53,10 +55,14 @@ class ReturnMapperTest {
         var response = returnMapper.toComparison(
                 rental,
                 renter(),
+                List.of(new ConditionEvidenceImageResponse(CaptureView.FRONT, "listing.jpg")),
                 receipt,
-                List.of("receipt-1.jpg", "receipt-2.jpg"),
+                List.of(
+                        new ConditionEvidenceImageResponse(CaptureView.FRONT, "receipt-1.jpg"),
+                        new ConditionEvidenceImageResponse(CaptureView.SIDE, "receipt-2.jpg")
+                ),
                 returnReceipt,
-                List.of("return-1.jpg")
+                List.of(new ConditionEvidenceImageResponse(CaptureView.FRONT, "return-1.jpg"))
         );
 
         assertThat(response.rentalId()).isEqualTo(10L);
@@ -66,11 +72,15 @@ class ReturnMapperTest {
         assertThat(response.returnDate()).isEqualTo(LocalDate.of(2026, 8, 11));
         assertThat(response.receipt().productCondition()).isEqualTo(ProductConditionType.NORMAL);
         assertThat(response.receipt().conditionDetail()).isEqualTo("수령 시 정상");
-        assertThat(response.receipt().imageUrls()).containsExactly("receipt-1.jpg", "receipt-2.jpg");
+        assertThat(response.receipt().images())
+                .extracting(ConditionEvidenceImageResponse::imageUrl)
+                .containsExactly("receipt-1.jpg", "receipt-2.jpg");
         assertThat(response.receipt().recordedAt()).isEqualTo(LocalDateTime.of(2026, 8, 1, 14, 30));
         assertThat(response.returnReceipt().productCondition()).isEqualTo(ProductConditionType.DAMAGED);
         assertThat(response.returnReceipt().conditionDetail()).isEqualTo("반납 시 모서리 파손");
-        assertThat(response.returnReceipt().imageUrls()).containsExactly("return-1.jpg");
+        assertThat(response.returnReceipt().images())
+                .extracting(ConditionEvidenceImageResponse::imageUrl)
+                .containsExactly("return-1.jpg");
         assertThat(response.returnReceipt().recordedAt()).isEqualTo(returnedAt);
     }
 
@@ -78,22 +88,24 @@ class ReturnMapperTest {
     void 정상_반납_확인_결과를_거래완료_응답으로_변환한다() {
         Rental rental = rental(RentalStatus.COMPLETED);
 
-        var response = returnMapper.toConfirmation(rental, null);
+        var response = returnMapper.toConfirmation(rental, null, null);
 
         assertThat(response.rentalId()).isEqualTo(10L);
         assertThat(response.status()).isEqualTo(RentalStatus.COMPLETED);
         assertThat(response.disputeId()).isNull();
+        assertThat(response.reportId()).isNull();
     }
 
     @Test
     void 비정상_반납_확인_결과를_분쟁_응답으로_변환한다() {
         Rental rental = rental(RentalStatus.DISPUTED);
 
-        var response = returnMapper.toConfirmation(rental, 50L);
+        var response = returnMapper.toConfirmation(rental, 50L, 60L);
 
         assertThat(response.rentalId()).isEqualTo(10L);
         assertThat(response.status()).isEqualTo(RentalStatus.DISPUTED);
         assertThat(response.disputeId()).isEqualTo(50L);
+        assertThat(response.reportId()).isEqualTo(60L);
     }
 
     private Rental rental(RentalStatus status) {

@@ -1,11 +1,18 @@
 package com.example.iter.reservation.domain.entity;
 
 import com.example.iter.common.entity.BaseCreatedAtEntity;
+import com.example.iter.common.image.CaptureView;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "receipt_image")
+@Table(
+        name = "receipt_image",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_receipt_image_capture_view",
+                columnNames = {"receipt_id", "capture_view"}
+        )
+)
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -22,6 +29,10 @@ public class ReceiptImage extends BaseCreatedAtEntity {
 
     @Column(name = "image_url", nullable = false, length = 500)
     private String imageUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "capture_view", length = 16)
+    private CaptureView captureView;
 
     @Column(name = "sort_order")
     private int sortOrder;

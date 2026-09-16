@@ -1,0 +1,20 @@
+plugins {
+    id 'iter.spring-library-conventions'
+    id 'iter.kotlin-conventions'
+}
+
+description = 'iter AI 작업 오케스트레이션 및 Python AI 서비스 연동'
+
+dependencies {
+    implementation project(':libs:core')
+    implementation project(':libs:security')
+    implementation project(':libs:storage')
+
+    implementation libs.kotlin.reflect
+    implementation libs.jackson3.module.kotlin
+    implementation libs.springdoc.openapi.webmvc.ui
+
+    testImplementation libs.spring.boot.starter.data.jpa.test
+    testImplementation libs.spring.boot.starter.webmvc.test
+    testImplementation libs.mockito.kotlin
+}

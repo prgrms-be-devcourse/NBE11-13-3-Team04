@@ -115,6 +115,7 @@ public class JpaRentalQueryAdapter implements RentalQueryPort {
         return new RentalInfo(
                 rental.getId(),
                 rental.getEquipmentId(),
+                rental.getOwnerIdSnapshot(),
                 rental.getRenterId(),
                 rental.getProductNameSnapshot(),
                 rental.getRejectReason(),

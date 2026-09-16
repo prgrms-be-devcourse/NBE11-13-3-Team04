@@ -1,4 +1,6 @@
 .gradle/
+.gradle-test-cache/
+.kotlin/
 build/
 .idea/
 *.iml

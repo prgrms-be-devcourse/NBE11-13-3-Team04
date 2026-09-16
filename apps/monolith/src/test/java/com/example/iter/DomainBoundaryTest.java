@@ -39,8 +39,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 //
 // 규칙:
 //  - 다른 도메인의 것을 쓰려면 그 도메인이 공개한 <domain>.api 패키지를 거친다
-//  - common / config / admin 은 도메인이 아니다
-//    (admin 은 여러 도메인을 조합해 보여주는 화면이라 조인·참조가 정상이다)
+//  - common / config / admin / composition 은 도메인이 아니다
+//    (admin·composition 은 여러 도메인을 조합하는 애플리케이션 계층이라 참조가 정상이다)
 class DomainBoundaryTest {
 
     // 이 테스트는 :apps:monolith:test 에서만 돌지만, 검사 대상은 저장소 전체
@@ -61,9 +61,15 @@ class DomainBoundaryTest {
                     "services/auth",
                     "services/payment",
                     "services/device",
-                    "services/reservation")
+                    "services/reservation",
+                    "services/ai")
             .stream()
-            .map(module -> repoRoot().resolve(module).resolve("src/main/java/com/example/iter"))
+            .flatMap(module -> Stream.of("java", "kotlin")
+                    .map(language -> repoRoot()
+                            .resolve(module)
+                            .resolve("src/main")
+                            .resolve(language)
+                            .resolve("com/example/iter")))
             .toList();
 
     private static Path repoRoot() {
@@ -82,10 +88,10 @@ class DomainBoundaryTest {
     }
 
     // 도메인이 아닌 패키지. 근거는 클래스 주석 참고.
-    private static final Set<String> NOT_A_DOMAIN = Set.of("common", "config", "admin");
+    private static final Set<String> NOT_A_DOMAIN = Set.of("common", "config", "admin", "composition");
 
     private static final Pattern IMPORT =
-            Pattern.compile("^\\s*import\\s+(?:static\\s+)?com\\.example\\.iter\\.([a-z]+)\\.([\\w.]+);",
+            Pattern.compile("^\\s*import\\s+(?:static\\s+)?com\\.example\\.iter\\.([a-z]+)\\.([\\w.]+);?\\s*$",
                     Pattern.MULTILINE);
 
     @Test
@@ -182,7 +188,7 @@ class DomainBoundaryTest {
         forEachSource((relativePath, source) -> {
             if (source.contains("@Entity")) {
                 String fileName = relativePath.substring(relativePath.lastIndexOf('/') + 1);
-                owners.put(fileName.replace(".java", ""), relativePath.split("/")[0]);
+                owners.put(fileName.replaceFirst("\\.(java|kt)$", ""), relativePath.split("/")[0]);
             }
         });
         return owners;
@@ -203,7 +209,9 @@ class DomainBoundaryTest {
                 continue;
             }
             try (Stream<Path> paths = Files.walk(root)) {
-                paths.filter(path -> path.toString().endsWith(".java")).forEach(path -> {
+                paths.filter(path -> path.toString().endsWith(".java")
+                                || path.toString().endsWith(".kt"))
+                        .forEach(path -> {
                     try {
                         visitor.visit(
                                 root.relativize(path).toString().replace('\\', '/'),

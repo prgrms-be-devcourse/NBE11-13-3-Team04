@@ -1,5 +1,6 @@
 plugins {
     id 'iter.spring-app-conventions'
+    id 'iter.kotlin-conventions'
 }
 
 description = 'iter'
@@ -16,6 +17,7 @@ dependencies {
     implementation project(':services:payment')
     implementation project(':services:device')
     implementation project(':services:reservation')
+    implementation project(':services:ai')
 
     implementation libs.spring.boot.starter.data.jpa
     implementation libs.spring.boot.starter.security
@@ -29,6 +31,8 @@ dependencies {
     runtimeOnly libs.jjwt.impl
     runtimeOnly libs.jjwt.jackson
     implementation libs.springdoc.openapi.webmvc.ui
+    implementation libs.kotlin.reflect
+    implementation libs.jackson3.module.kotlin
 
     implementation libs.spring.boot.starter.flyway
     runtimeOnly libs.flyway.mysql
@@ -40,5 +44,6 @@ dependencies {
     testImplementation libs.spring.boot.starter.validation.test
     testImplementation libs.spring.boot.starter.webmvc.test
     testImplementation libs.spring.boot.starter.flyway.test
+    testImplementation libs.mockito.kotlin
     testRuntimeOnly libs.h2
 }

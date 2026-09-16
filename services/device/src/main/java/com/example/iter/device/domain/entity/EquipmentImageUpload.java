@@ -1,8 +1,11 @@
 package com.example.iter.device.domain.entity;
 
 import com.example.iter.common.entity.BaseCreatedAtEntity;
+import com.example.iter.common.image.CaptureView;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -32,6 +35,10 @@ public class EquipmentImageUpload extends BaseCreatedAtEntity {
 
     @Column(name = "object_key", nullable = false, unique = true, length = 500)
     private String objectKey;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "capture_view", length = 16)
+    private CaptureView captureView;
 
     @Column(name = "expected_content_type", nullable = false, length = 50)
     private String expectedContentType;
