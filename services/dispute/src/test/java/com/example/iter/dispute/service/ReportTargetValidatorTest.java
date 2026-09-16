@@ -137,10 +137,8 @@ class ReportTargetValidatorTest {
 
     @Test
     void 거래의_대여자와_장비_등록자는_거래를_신고할_수_있다() {
-        RentalInfo renterRental = rental(100L, 10L, REPORTER_ID);
-        EquipmentInfo ownerEquipment = equipment(10L, 2L, false, true);
+        RentalInfo renterRental = rental(100L, 10L, 2L, REPORTER_ID);
         when(rentalQueryPort.find(100L)).thenReturn(Optional.of(renterRental));
-        when(equipmentQueryPort.find(10L)).thenReturn(Optional.of(ownerEquipment));
 
         assertThatCode(() -> reportTargetValidator.validate(
                 ReportTargetType.RENTAL,
@@ -148,10 +146,8 @@ class ReportTargetValidatorTest {
                 REPORTER_ID
         )).doesNotThrowAnyException();
 
-        RentalInfo ownerRental = rental(101L, 11L, 3L);
-        EquipmentInfo reporterEquipment = equipment(11L, REPORTER_ID, true, false);
+        RentalInfo ownerRental = rental(101L, 11L, REPORTER_ID, 3L);
         when(rentalQueryPort.find(101L)).thenReturn(Optional.of(ownerRental));
-        when(equipmentQueryPort.find(11L)).thenReturn(Optional.of(reporterEquipment));
 
         assertThatCode(() -> reportTargetValidator.validate(
                 ReportTargetType.RENTAL,
@@ -162,10 +158,8 @@ class ReportTargetValidatorTest {
 
     @Test
     void 거래_제3자는_거래를_신고할_수_없다() {
-        RentalInfo rental = rental(100L, 10L, 2L);
-        EquipmentInfo equipment = equipment(10L, 3L, true, false);
+        RentalInfo rental = rental(100L, 10L, 3L, 2L);
         when(rentalQueryPort.find(100L)).thenReturn(Optional.of(rental));
-        when(equipmentQueryPort.find(10L)).thenReturn(Optional.of(equipment));
 
         assertThatThrownBy(() -> reportTargetValidator.validate(
                 ReportTargetType.RENTAL,
@@ -206,8 +200,8 @@ class ReportTargetValidatorTest {
         );
     }
 
-    private RentalInfo rental(Long id, Long equipmentId, Long renterId) {
-        return new RentalInfo(id, equipmentId, renterId, "테스트 장비", null,
+    private RentalInfo rental(Long id, Long equipmentId, Long ownerId, Long renterId) {
+        return new RentalInfo(id, equipmentId, ownerId, renterId, "테스트 장비", null,
                 RentalStatus.RENTING, java.math.BigDecimal.valueOf(150000),
                 LocalDate.now().plusDays(1), LocalDate.now().plusDays(3));
     }

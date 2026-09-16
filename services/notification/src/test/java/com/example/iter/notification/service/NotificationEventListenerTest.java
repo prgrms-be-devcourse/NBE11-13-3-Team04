@@ -67,7 +67,7 @@ class NotificationEventListenerTest {
     private NotificationEventListener listener;
 
     private RentalInfo rental() {
-        return new RentalInfo(RENTAL_ID, EQUIPMENT_ID, RENTER_ID, "소니 A7C2", "일정이 겹칩니다.",
+        return new RentalInfo(RENTAL_ID, EQUIPMENT_ID, 3L, RENTER_ID, "소니 A7C2", "일정이 겹칩니다.",
                 RentalStatus.REQUESTED, BigDecimal.valueOf(150000),
                 LocalDate.now().plusDays(1), LocalDate.now().plusDays(3));
     }

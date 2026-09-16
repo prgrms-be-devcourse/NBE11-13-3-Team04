@@ -35,6 +35,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -208,7 +209,7 @@ class AdminReportApiControllerTest {
                         .with(user(adminPrincipal)))
                 .andExpect(status().isBadRequest());
 
-        verify(adminReportService, never()).getReport(any());
+        verify(adminReportService, never()).getReport(anyLong());
     }
 
     @Test
@@ -226,7 +227,7 @@ class AdminReportApiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        verify(adminReportService, never()).updateReportStatus(any(), any(), any());
+        verify(adminReportService, never()).updateReportStatus(anyLong(), anyLong(), any());
     }
 
     @Test
