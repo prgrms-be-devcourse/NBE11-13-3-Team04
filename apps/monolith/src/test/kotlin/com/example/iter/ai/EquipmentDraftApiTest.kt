@@ -42,6 +42,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.transaction.support.TransactionSynchronizationManager
+import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 import java.util.concurrent.Callable
@@ -59,6 +60,7 @@ class EquipmentDraftApiTest {
     @Autowired lateinit var jobs: EquipmentDraftJobRepository
     @Autowired lateinit var service: EquipmentDraftService
     @Autowired lateinit var tokens: JwtTokenProvider
+    @Autowired lateinit var clock: Clock
     @MockitoBean lateinit var client: AiServiceClient
     @MockitoBean lateinit var images: EquipmentImageStorage
     private lateinit var owner: User
@@ -73,7 +75,7 @@ class EquipmentDraftApiTest {
                 "equipment/temp/${owner.id}/${UUID.randomUUID()}.jpg",
                 "image/jpeg",
                 123,
-                LocalDateTime.now().plusMinutes(5)
+                LocalDateTime.now(clock).plusMinutes(5)
             )
         )
         whenever(images.validateTemporaryUpload(any(), any(), any())).thenAnswer { call ->
@@ -125,7 +127,7 @@ class EquipmentDraftApiTest {
 
     @Test
     fun 만료되거나_사용한_사진과_중복_키를_차단한다() {
-        upload.use(LocalDateTime.now()); uploads.saveAndFlush(upload)
+        upload.use(LocalDateTime.now(clock)); uploads.saveAndFlush(upload)
         assertError(ErrorCode.IMAGE_UPLOAD_ALREADY_USED) { service.create(owner.id, request()) }
         val expired = uploads.saveAndFlush(
             EquipmentImageUpload(
@@ -133,7 +135,7 @@ class EquipmentDraftApiTest {
                 "equipment/temp/expired-${UUID.randomUUID()}",
                 "image/jpeg",
                 123,
-                LocalDateTime.now().minusMinutes(1)
+                LocalDateTime.now(clock).minusMinutes(1)
             )
         )
         assertError(ErrorCode.IMAGE_UPLOAD_EXPIRED) {
@@ -162,7 +164,7 @@ class EquipmentDraftApiTest {
         whenever(client.getJob(jobId)).thenThrow(AiServiceException(404))
         doReturn(AiJobAccepted(jobId, AiJobStatus.Status.PENDING, false)).whenever(client).createJob(any())
         assertThat(service.retry(owner.id, jobId).jobId).isEqualTo(jobId)
-        assertThat(jobs.countByOwnerIdAndCreatedAtGreaterThanEqual(owner.id, LocalDateTime.now().minusDays(1))).isEqualTo(1)
+        assertThat(jobs.countByOwnerIdAndCreatedAtGreaterThanEqual(owner.id, LocalDateTime.now(clock).minusDays(1))).isEqualTo(1)
         verify(client, times(2)).createJob(argThat { this.jobId == jobId })
     }
 
