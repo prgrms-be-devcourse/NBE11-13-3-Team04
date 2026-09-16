@@ -94,8 +94,8 @@ public class EquipmentManagementService {
             StoredImage storedImage = storedImages.get(index);
             equipmentImageRepository.save(new EquipmentImage(
                     equipment,
-                    storedImage.imageUrl(),
-                    storedImage.objectKey(),
+                    storedImage.getImageUrl(),
+                    storedImage.getObjectKey(),
                     index,
                     index == request.getThumbnailIndex()));
         }
@@ -143,8 +143,8 @@ public class EquipmentManagementService {
             StoredImage storedImage = storedImages.get(index);
             equipmentImageRepository.save(new EquipmentImage(
                     equipment,
-                    storedImage.imageUrl(),
-                    storedImage.objectKey(),
+                    storedImage.getImageUrl(),
+                    storedImage.getObjectKey(),
                     nextSortOrder + index,
                     request.getThumbnailIndex() != null
                             && index == request.getThumbnailIndex()));
@@ -419,7 +419,7 @@ public class EquipmentManagementService {
             return List.copyOf(promoted);
         } catch (RuntimeException exception) {
             promoted.forEach(image -> deleteQuietly(
-                    image.objectKey(), "부분 승격된 장비 이미지 삭제 실패"));
+                    image.getObjectKey(), "부분 승격된 장비 이미지 삭제 실패"));
             throw exception;
         }
     }
@@ -430,7 +430,7 @@ public class EquipmentManagementService {
     ) {
         List<String> temporaryKeys = List.copyOf(temporaryObjectKeys);
         List<String> storedKeys = storedImages.stream()
-                .map(StoredImage::objectKey)
+                .map(StoredImage::getObjectKey)
                 .toList();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
