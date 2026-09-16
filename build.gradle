@@ -4,9 +4,10 @@ plugins {
 }
 
 dependencies {
-    // apps:chat은 아직 안 넣었다 — 지금은 스켈레톤(설정·엔티티·리포지토리 인터페이스)뿐이라
-    // 유닛 테스트로 커버할 로직이 거의 없다. 현재 집계 커버리지가 82%대라 헤드룸이
-    // 크지 않아서, 정책 엔진(CH6)처럼 실제로 테스트할 로직이 들어오면 그때 추가한다.
+    // apps:chat은 CH3(스켈레톤) 시점엔 유닛 테스트로 커버할 로직이 거의 없어서
+    // 두 번(CH3, CH6) 다 79%대로 80% 게이트를 못 넘어 빼뒀었다. CH6(정책 엔진)·
+    // CH7(Redis Stream 이벤트 소비자)로 실제 테스트된 로직이 늘어난 뒤 다시 재보니
+    // 80.2%로 게이트를 넘어서 정식으로 편입한다.
     // (리포지토리는 Testcontainers 통합 테스트로 검증하는데, 그 실행 결과는 별도
     // integrationTest 태스크라 이 집계에 안 잡힌다 — apps/chat/build.gradle 참고)
     jacocoAggregation project(':apps:monolith')
@@ -22,6 +23,7 @@ dependencies {
     jacocoAggregation project(':services:device')
     jacocoAggregation project(':services:reservation')
     jacocoAggregation project(':services:ai')
+    jacocoAggregation project(':apps:chat')
 }
 
 // jacoco-report-aggregation 플러그인은 리포트 태스크를 자동으로 만들어주지 않는다.
