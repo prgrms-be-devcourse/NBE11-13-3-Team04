@@ -171,12 +171,12 @@ class ReturnServiceTest {
         stubComparisonData(rental, receipt, returnReceipt);
         when(receiptImageRepository.findByReceipt_IdOrderBySortOrderAscIdAsc(30L))
                 .thenReturn(List.of(
-                        ReceiptImage.builder().id(31L).receipt(receipt).imageUrl("receipt-1.jpg").sortOrder(1).build(),
-                        ReceiptImage.builder().id(32L).receipt(receipt).imageUrl("receipt-2.jpg").sortOrder(2).build()
+                        new ReceiptImage(receipt, "receipt-1.jpg", 1, 31L),
+                        new ReceiptImage(receipt, "receipt-2.jpg", 2, 32L)
                 ));
         when(returnReceiptImageRepository.findByReturnReceipt_IdOrderBySortOrderAscIdAsc(40L))
                 .thenReturn(List.of(
-                        ReturnReceiptImage.builder().id(41L).returnReceipt(returnReceipt).imageUrl("return-1.jpg").sortOrder(1).build()
+                        new ReturnReceiptImage(returnReceipt, "return-1.jpg", 1, 41L)
                 ));
 
         var response = returnService.getReturnComparison(RENTER_ID, RENTAL_ID);
@@ -353,19 +353,28 @@ class ReturnServiceTest {
     }
 
     private Rental rental(RentalStatus status) {
-        return Rental.builder()
-                .id(RENTAL_ID)
-                .equipmentId(EQUIPMENT_ID)
-                .renterId(RENTER_ID)
-                .startDate(LocalDate.of(2026, 8, 1))
-                .endDate(LocalDate.of(2026, 8, 10))
-                .productNameSnapshot("예약 당시 맥북")
-                .categorySnapshot("노트북")
-                .dailyPriceSnapshot(BigDecimal.valueOf(30000))
-                .rentalDays(10)
-                .totalPrice(BigDecimal.valueOf(300000))
-                .status(status)
-                .build();
+        return new Rental(
+                EQUIPMENT_ID,
+                0L,
+                RENTER_ID,
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 10),
+                "예약 당시 맥북",
+                BigDecimal.valueOf(30000),
+                10,
+                BigDecimal.valueOf(300000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                "노트북",
+                null,
+                RENTAL_ID);
     }
 
     private EquipmentInfo equipment() {
@@ -380,22 +389,20 @@ class ReturnServiceTest {
     }
 
     private Receipt receipt(Rental rental) {
-        return Receipt.builder()
-                .id(30L)
-                .rental(rental)
-                .productCondition(ProductConditionType.NORMAL)
-                .conditionDetail("수령 시 정상")
-                .receivedAt(LocalDateTime.of(2026, 8, 1, 14, 30))
-                .build();
+        return new Receipt(
+                rental,
+                ProductConditionType.NORMAL,
+                "수령 시 정상",
+                LocalDateTime.of(2026, 8, 1, 14, 30),
+                30L);
     }
 
     private ReturnReceipt returnReceipt(Rental rental) {
-        return ReturnReceipt.builder()
-                .id(40L)
-                .rental(rental)
-                .productCondition(ProductConditionType.DAMAGED)
-                .conditionDetail("반납 시 모서리 파손")
-                .returnDate(LocalDate.of(2026, 8, 10))
-                .build();
+        return new ReturnReceipt(
+                rental,
+                ProductConditionType.DAMAGED,
+                "반납 시 모서리 파손",
+                LocalDate.of(2026, 8, 10),
+                40L);
     }
 }

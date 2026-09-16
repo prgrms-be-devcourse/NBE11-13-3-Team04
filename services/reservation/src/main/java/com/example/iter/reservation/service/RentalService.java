@@ -113,24 +113,26 @@ public class RentalService {
         int rentalDays = (int) ChronoUnit.DAYS.between(startDate, endDate) + 1;
         BigDecimal totalPrice = equipment.dailyPrice().multiply(BigDecimal.valueOf(rentalDays));
 
-        Rental rental = Rental.builder()
-                .equipmentId(equipment.equipmentId())
-                .ownerIdSnapshot(equipment.ownerId())
-                .renterId(renterId)
-                .startDate(startDate)
-                .endDate(endDate)
-                .productNameSnapshot(equipment.name())
-                .categorySnapshot(equipment.categoryName())
-                .dailyPriceSnapshot(equipment.dailyPrice())
-                .rentalDays(rentalDays)
-                .totalPrice(totalPrice)
-                .receiverName(request.receiverName())
-                .receiverPhone(request.receiverPhone())
-                .zipcode(request.zipcode())
-                .address(request.address())
-                .detailAddress(request.detailAddress())
-                .requestMessage(request.requestMessage())
-                .build();
+        Rental rental = new Rental(
+                equipment.equipmentId(),
+                equipment.ownerId(),
+                renterId,
+                startDate,
+                endDate,
+                equipment.name(),
+                equipment.dailyPrice(),
+                rentalDays,
+                totalPrice,
+                request.receiverName(),
+                request.receiverPhone(),
+                request.zipcode(),
+                request.address(),
+                request.detailAddress(),
+                request.requestMessage(),
+                null,
+                null,
+                RentalStatus.PENDING,
+                equipment.categoryName());
 
         Rental savedRental = rentalRepository.save(rental);
         equipmentOccupancyCommandPort.markOccupied(

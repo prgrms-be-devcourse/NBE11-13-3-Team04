@@ -81,12 +81,8 @@ public class RentalFulfillmentService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        Receipt receipt = receiptRepository.save(Receipt.builder()
-                .rental(rental)
-                .productCondition(request.productCondition())
-                .conditionDetail(request.conditionDetail())
-                .receivedAt(now)
-                .build());
+        Receipt receipt = receiptRepository.save(
+                new Receipt(rental, request.productCondition(), request.conditionDetail(), now));
         saveReceiptImages(receipt, request.imageUrls());
 
         rental.changeStatus(RentalStatus.RENTING);
@@ -125,12 +121,8 @@ public class RentalFulfillmentService {
 
         LocalDateTime now = LocalDateTime.now();
         LocalDate today = now.toLocalDate();
-        ReturnReceipt returnReceipt = returnReceiptRepository.save(ReturnReceipt.builder()
-                .rental(rental)
-                .productCondition(request.productCondition())
-                .conditionDetail(request.conditionDetail())
-                .returnDate(today)
-                .build());
+        ReturnReceipt returnReceipt = returnReceiptRepository.save(
+                new ReturnReceipt(rental, request.productCondition(), request.conditionDetail(), today));
         saveReturnReceiptImages(returnReceipt, request.imageUrls());
 
         shippingCommandPort.recordReturnDelivered(rental.getId(), now);
@@ -144,22 +136,14 @@ public class RentalFulfillmentService {
 
     private void saveReceiptImages(Receipt receipt, List<String> imageUrls) {
         List<ReceiptImage> images = IntStream.range(0, imageUrls.size())
-                .mapToObj(index -> ReceiptImage.builder()
-                        .receipt(receipt)
-                        .imageUrl(imageUrls.get(index))
-                        .sortOrder(index)
-                        .build())
+                .mapToObj(index -> new ReceiptImage(receipt, imageUrls.get(index), index))
                 .toList();
         receiptImageRepository.saveAll(images);
     }
 
     private void saveReturnReceiptImages(ReturnReceipt returnReceipt, List<String> imageUrls) {
         List<ReturnReceiptImage> images = IntStream.range(0, imageUrls.size())
-                .mapToObj(index -> ReturnReceiptImage.builder()
-                        .returnReceipt(returnReceipt)
-                        .imageUrl(imageUrls.get(index))
-                        .sortOrder(index)
-                        .build())
+                .mapToObj(index -> new ReturnReceiptImage(returnReceipt, imageUrls.get(index), index))
                 .toList();
         returnReceiptImageRepository.saveAll(images);
     }
