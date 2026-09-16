@@ -6,6 +6,7 @@ import com.example.iter.chat.security.CHAT_PRINCIPAL_ATTRIBUTE
 import com.example.iter.chat.security.ChatPrincipal
 import com.example.iter.chat.service.ChatMessageWriteService
 import com.example.iter.chat.service.ChatRoomService
+import com.example.iter.chat.service.ViolationService
 import java.net.URI
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -37,6 +38,9 @@ class ChatWebSocketHandlerTest {
 
     @Mock
     private lateinit var chatMessageWriteService: ChatMessageWriteService
+
+    @Mock
+    private lateinit var violationService: ViolationService
 
     @Mock
     private lateinit var roomBroadcaster: RoomBroadcaster
