@@ -9,10 +9,11 @@ data class UserReviewStatsResponse(
     companion object {
         @JvmStatic
         fun from(stats: RentalReviewRepository.RatingStats?): UserReviewStatsResponse {
-            if (stats == null || stats.reviewCount == null || stats.reviewCount == 0L) {
+            val reviewCount = stats?.reviewCount
+            if (reviewCount == null || reviewCount == 0L) {
                 return UserReviewStatsResponse(0.0, 0L)
             }
-            return UserReviewStatsResponse(stats.averageRating, stats.reviewCount)
+            return UserReviewStatsResponse(stats.averageRating ?: 0.0, reviewCount)
         }
     }
 }
