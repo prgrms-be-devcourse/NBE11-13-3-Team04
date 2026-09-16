@@ -260,14 +260,16 @@ class ReportServiceTest {
     }
 
     private Report report(Long reportId, Long reporterId, ReportStatus status) {
-        return Report.builder()
-                .id(reportId)
-                .reporterId(reporterId)
-                .targetType(ReportTargetType.EQUIPMENT)
-                .targetId(TARGET_ID)
-                .reason("허위 정보")
-                .description("실제 장비 상태가 설명과 다릅니다.")
-                .status(status)
-                .build();
+        return new Report(
+                reporterId,
+                ReportTargetType.EQUIPMENT,
+                TARGET_ID,
+                "허위 정보",
+                "실제 장비 상태가 설명과 다릅니다.",
+                status,
+                null,
+                null,
+                reportId
+        );
     }
 }

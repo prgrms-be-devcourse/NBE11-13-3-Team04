@@ -187,13 +187,13 @@ class AdminUserAggregationRepositoryTest {
             ReportTargetType targetType,
             Long targetId
     ) {
-        return Report.builder()
-                .reporterId(reporterId)
-                .targetType(targetType)
-                .targetId(targetId)
-                .reason("테스트 신고")
-                .description("테스트 신고 내용입니다.")
-                .status(ReportStatus.RECEIVED)
-                .build();
+        return new Report(
+                reporterId,
+                targetType,
+                targetId,
+                "테스트 신고",
+                "테스트 신고 내용입니다.",
+                ReportStatus.RECEIVED
+        );
     }
 }

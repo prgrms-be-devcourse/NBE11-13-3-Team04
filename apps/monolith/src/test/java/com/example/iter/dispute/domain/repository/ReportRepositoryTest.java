@@ -128,7 +128,7 @@ class ReportRepositoryTest {
 
         assertThat(result.getTotalElements()).isEqualTo(2);
         assertThat(result.getContent())
-                .allMatch(report -> report.getReporterId().equals(REPORTER_ID));
+                .allMatch(report -> report.getReporterId() == REPORTER_ID);
     }
 
     @Test
@@ -326,13 +326,13 @@ class ReportRepositoryTest {
             Long targetId,
             ReportStatus status
     ) {
-        return Report.builder()
-                .reporterId(reporterId)
-                .targetType(targetType)
-                .targetId(targetId)
-                .reason("테스트 신고 사유")
-                .description("테스트 신고 내용입니다.")
-                .status(status)
-                .build();
+        return new Report(
+                reporterId,
+                targetType,
+                targetId,
+                "테스트 신고 사유",
+                "테스트 신고 내용입니다.",
+                status
+        );
     }
 }
