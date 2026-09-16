@@ -47,7 +47,7 @@ class RentalReviewService(
             )
         )
 
-        eventPublisher.publishEvent(RentalReviewCreatedEvent(saved.id))
+        eventPublisher.publishEvent(RentalReviewCreatedEvent(saved.id!!))
 
         return RentalReviewResponse.from(saved)
     }
@@ -124,7 +124,7 @@ class RentalReviewService(
     // 리뷰 작성이 가능한 상태인지(반납 완료 여부, 중복 작성 여부) 검증합니다.
     private fun resolveRevieweeId(reviewerId: Long, rental: Rental, equipment: EquipmentInfo): Long {
         val revieweeId = if (rental.isRenter(reviewerId)) {
-            equipment.ownerId()
+            equipment.ownerId
         } else if (equipment.isOwnedBy(reviewerId)) {
             rental.renterId
         } else {

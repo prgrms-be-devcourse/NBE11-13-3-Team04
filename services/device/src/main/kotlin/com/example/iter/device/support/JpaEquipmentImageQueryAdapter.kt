@@ -17,7 +17,7 @@ class JpaEquipmentImageQueryAdapter(
         return equipmentImageRepository.findByEquipmentIdOrderBySortOrderAscIdAsc(equipmentId)
             .map { image ->
                 EquipmentImageInfo(
-                    image.id,
+                    image.id!!,
                     image.captureView?.name,
                     imageUrlResolver.resolve(image),
                     image.thumbnail,

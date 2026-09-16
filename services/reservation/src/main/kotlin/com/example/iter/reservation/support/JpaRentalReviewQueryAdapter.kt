@@ -21,5 +21,5 @@ class JpaRentalReviewQueryAdapter(
         rentalReviewRepository.findById(reviewId).map { toInfo(it) }
 
     private fun toInfo(review: RentalReview): RentalReviewInfo =
-        RentalReviewInfo(review.id, review.rentalId, review.reviewerId, review.revieweeId, review.rating)
+        RentalReviewInfo(review.id!!, review.rentalId, review.reviewerId, review.revieweeId, review.rating)
 }

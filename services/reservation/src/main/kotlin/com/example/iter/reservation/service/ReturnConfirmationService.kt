@@ -39,7 +39,7 @@ class ReturnConfirmationService(
         // 이상이 없을 때만 거래와 장비 점유를 종료합니다. 이상 반납은 등록자의 분쟁 판단을 보존합니다.
         if (request.hasIssue == false) {
             rental.completeReturn()
-            equipmentOccupancyCommandPort.markVacated(rental.id)
+            equipmentOccupancyCommandPort.markVacated(rental.id!!)
             log.info(
                 "대여 반납 확인 처리: rentalId={}, ownerId={}, status={}, hasIssue={}",
                 rentalId,
@@ -58,11 +58,11 @@ class ReturnConfirmationService(
             "대여 반납 분쟁 전환 처리: rentalId={}, ownerId={}, disputeId={}, status={}",
             rentalId,
             ownerId,
-            result.disputeId(),
+            result.disputeId,
             rental.status
         )
 
-        return returnMapper.toConfirmation(rental, result.disputeId(), result.reportId())
+        return returnMapper.toConfirmation(rental, result.disputeId, result.reportId)
     }
 
     private fun findRentalWithLock(rentalId: Long): Rental =
@@ -80,7 +80,7 @@ class ReturnConfirmationService(
         request: ReturnConfirmationRequest
     ): ReturnDisputeResult = disputeCommandPort.openReturnDispute(
         ReturnDisputeCommand(
-            rental.id,
+            rental.id!!,
             ownerId,
             rental.renterId,
             requireNotNull(request.disputeReason).trim(),

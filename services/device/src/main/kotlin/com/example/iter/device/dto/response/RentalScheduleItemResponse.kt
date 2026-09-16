@@ -15,10 +15,10 @@ data class RentalScheduleItemResponse(
         @JvmStatic
         fun from(item: RentalScheduleItem): RentalScheduleItemResponse =
             RentalScheduleItemResponse(
-                rentalId = item.rentalId(),
-                startDate = item.startDate(),
-                endDate = item.endDate(),
-                status = item.status(),
+                rentalId = item.rentalId,
+                startDate = item.startDate,
+                endDate = item.endDate,
+                status = item.status,
             )
     }
 }

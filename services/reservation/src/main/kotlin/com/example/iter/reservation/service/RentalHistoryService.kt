@@ -108,14 +108,14 @@ class RentalHistoryService(
         val equipmentIds = rentals.content.map { it.equipmentId }.toSet()
         val equipmentMap = equipmentQueryPort.findAll(equipmentIds)
 
-        val ownerIds = rentals.content.map { getEquipment(equipmentMap, it.equipmentId).ownerId() }.toSet()
+        val ownerIds = rentals.content.map { getEquipment(equipmentMap, it.equipmentId).ownerId }.toSet()
 
         val userMap = userQueryPort.findSummaries(ownerIds)
         val thumbnailMap = loadThumbnails(equipmentIds)
 
         val responses = rentals.content.map { rental ->
             val equipment = getEquipment(equipmentMap, rental.equipmentId)
-            val owner = getUser(userMap, equipment.ownerId())
+            val owner = getUser(userMap, equipment.ownerId)
 
             rentalHistoryMapper.toResponse(
                 rental,

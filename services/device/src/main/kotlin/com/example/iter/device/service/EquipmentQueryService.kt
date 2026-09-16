@@ -121,7 +121,7 @@ class EquipmentQueryService(
             equipment.productCondition,
             equipment.conditionDetail,
             images,
-            EquipmentOwnerResponse(owner.userId(), owner.nickName()),
+            EquipmentOwnerResponse(owner.userId, owner.nickName),
             0.0,
             0L,
             equipment.createdAt,
@@ -210,7 +210,7 @@ class EquipmentQueryService(
 
         // 일정에 표시하지 않는 상태(취소·거절 등)는 reservation 이 걸러서 준다.
         val rentals = rentalQueryPort
-            .findSchedule(equipmentId, request.from, request.to)
+            .findSchedule(equipmentId, request.from!!, request.to!!)
             .map { RentalScheduleItemResponse.from(it) }
         return EquipmentScheduleResponse(equipmentId, request.from, request.to, rentals)
     }

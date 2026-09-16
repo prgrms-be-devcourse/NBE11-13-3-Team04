@@ -27,22 +27,22 @@ class JpaDisputeCommandAdapter(
     override fun openReturnDispute(command: ReturnDisputeCommand): ReturnDisputeResult {
         val dispute = disputeRepository.save(
             Dispute(
-                rentalId = command.rentalId(),
-                reporterId = command.reporterId(),
-                respondentId = command.respondentId(),
-                reason = command.reason(),
-                description = command.description(),
+                rentalId = command.rentalId,
+                reporterId = command.reporterId,
+                respondentId = command.respondentId,
+                reason = command.reason,
+                description = command.description,
             ),
         )
         val report = reportRepository.save(
             Report(
-                reporterId = command.reporterId(),
+                reporterId = command.reporterId,
                 targetType = ReportTargetType.RENTAL,
-                targetId = command.rentalId(),
-                reason = command.reason(),
-                description = command.description(),
+                targetId = command.rentalId,
+                reason = command.reason,
+                description = command.description,
             ),
         )
-        return ReturnDisputeResult(dispute.id, report.id)
+        return ReturnDisputeResult(dispute.id!!, report.id!!)
     }
 }

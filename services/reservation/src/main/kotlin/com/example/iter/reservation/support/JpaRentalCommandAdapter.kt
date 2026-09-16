@@ -25,8 +25,9 @@ class JpaRentalCommandAdapter(
 ) : RentalCommandPort {
 
     @Transactional(propagation = Propagation.MANDATORY)
-    override fun markPaymentConfirmed(rentalId: Long): Optional<RentalInfo> =
-        rentalRepository.findById(rentalId).map { rental ->
+    override fun markPaymentConfirmed(rentalId: Long?): Optional<RentalInfo> {
+        val rentalId = rentalId!!
+        return rentalRepository.findById(rentalId).map { rental ->
             rental.changeStatus(RentalStatus.REQUESTED)
             // 변경 후 상태를 담아 돌려준다 — 호출부 응답이 전 상태를 싣지 않도록.
             RentalInfo(
@@ -42,4 +43,5 @@ class JpaRentalCommandAdapter(
                 rental.endDate,
             )
         }
+    }
 }

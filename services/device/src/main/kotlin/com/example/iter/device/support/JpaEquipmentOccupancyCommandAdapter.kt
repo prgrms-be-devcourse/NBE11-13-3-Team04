@@ -21,11 +21,12 @@ class JpaEquipmentOccupancyCommandAdapter(
 
     @Transactional(propagation = Propagation.MANDATORY)
     override fun markOccupied(
-        rentalId: Long,
+        rentalId: Long?,
         equipmentId: Long,
         startDate: LocalDate,
         endDate: LocalDate,
     ) {
+        val rentalId = rentalId!!
         equipmentOccupancyRepository.save(
             EquipmentOccupancy(equipmentId, rentalId, startDate, endDate)
         )
