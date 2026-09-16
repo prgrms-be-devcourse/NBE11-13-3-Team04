@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0",
+  "jobId": "01980000-0000-7000-8000-000000000021",
+  "featureType": "EQUIPMENT_DRAFT_V1",
+  "source": {
+    "type": "UPLOAD_BUNDLE",
+    "id": "bundle-101"
+  },
+  "inputHash": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "payload": {
+    "images": [
+      {
+        "imageId": "equipment-image-1",
+        "objectKey": "equipment/private/image-1.jpg",
+        "captureSlot": "OVERVIEW",
+        "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "contentType": "image/jpeg",
+        "sizeBytes": 2048
+      }
+    ],
+    "hints": {
+      "name": null,
+      "category": "VR"
+    }
+  }
+}

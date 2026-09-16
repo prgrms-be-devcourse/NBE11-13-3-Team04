@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1.0",
+  "jobId": "01980000-0000-7000-8000-000000000011",
+  "featureType": "REPORT_TRIAGE_V1",
+  "source": {
+    "type": "REPORT",
+    "id": "501"
+  },
+  "inputHash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "payload": {
+    "reason": "장비 상태가 다름",
+    "description": "반납된 장비에 새로운 흠집이 있다고 주장합니다.",
+    "targetContext": {
+      "rental": {
+        "status": "RETURNED"
+      }
+    }
+  }
+}

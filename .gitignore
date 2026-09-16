@@ -1,4 +1,6 @@
 .gradle/
+.gradle-test-cache/
+.kotlin/
 build/
 # IntelliJ 내장 컴파일러 산출물. 빌드를 Gradle 에 위임하면 안 생기지만,
 # 위임 설정이 풀린 IDE 에서 한 번이라도 빌드하면 만들어진다.
