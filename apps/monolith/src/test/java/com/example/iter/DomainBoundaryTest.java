@@ -52,18 +52,26 @@ class DomainBoundaryTest {
     //
     // libs/core·libs/security·libs/storage 는 제외한다 — 이들은 처음부터
     // 별도 모듈이었고 패키지가 전부 common.* 라 NOT_A_DOMAIN 에 어차피 걸린다.
-    private static final List<Path> SOURCE_ROOTS = List.of(
-                    "apps/monolith",
-                    "services/domain-api",
-                    "services/delivery",
-                    "services/notification",
-                    "services/dispute",
-                    "services/auth",
-                    "services/payment",
-                    "services/device",
-                    "services/reservation")
-            .stream()
-            .map(module -> repoRoot().resolve(module).resolve("src/main/java/com/example/iter"))
+    private static final List<String> MODULES = List.of(
+            "apps/monolith",
+            "services/domain-api",
+            "services/delivery",
+            "services/notification",
+            "services/dispute",
+            "services/auth",
+            "services/payment",
+            "services/device",
+            "services/reservation");
+
+    // java 와 kotlin 소스셋을 둘 다 훑는다. 한 모듈 안에서 둘이 공존하며,
+    // 코틀린 전환이 진행될수록 kotlin 쪽 비중이 커진다. java 만 보면 전환된
+    // 파일이 검사에서 조용히 빠진다 — 테스트는 초록인데 규칙은 안 지켜지는 상태가 된다.
+    private static final List<String> SOURCE_SETS = List.of("java", "kotlin");
+
+    private static final List<Path> SOURCE_ROOTS = MODULES.stream()
+            .flatMap(module -> SOURCE_SETS.stream()
+                    .map(sourceSet -> repoRoot().resolve(module)
+                            .resolve("src/main/" + sourceSet + "/com/example/iter")))
             .toList();
 
     private static Path repoRoot() {
@@ -84,8 +92,13 @@ class DomainBoundaryTest {
     // 도메인이 아닌 패키지. 근거는 클래스 주석 참고.
     private static final Set<String> NOT_A_DOMAIN = Set.of("common", "config", "admin");
 
+    // 끝의 세미콜론은 optional 이다 — 코틀린 import 에는 세미콜론이 없다.
+    // 경로에 * 를 허용하는 것은 `import com.example.iter.auth.domain.entity.*` 처럼
+    // 패키지를 통째로 가져오는 형태를 잡기 위해서다. 금지된 패키지를 통으로 여는
+    // 가장 위험한 형태인데, 코틀린은 IDE 가 import 가 일정 개수를 넘으면 기본 설정으로
+    // 스타 임포트로 접기 때문에 자바보다 실제로 생기기 쉽다.
     private static final Pattern IMPORT =
-            Pattern.compile("^\\s*import\\s+(?:static\\s+)?com\\.example\\.iter\\.([a-z]+)\\.([\\w.]+);",
+            Pattern.compile("^\\s*import\\s+(?:static\\s+)?com\\.example\\.iter\\.([a-z]+)\\.([\\w.*]+);?",
                     Pattern.MULTILINE);
 
     @Test
@@ -114,36 +127,83 @@ class DomainBoundaryTest {
                 .isEmpty();
     }
 
+    // 위 세 규칙은 위반이 0건이면 초록이다. 그래서 "위반이 없어서 초록"과
+    // "아무것도 안 읽어서 초록"을 구분하지 못한다. 실제로 이 테스트는 한 번
+    // 그렇게 조용히 멈춘 적이 있다(모듈 분리 때 services/* 를 못 훑던 건).
+    // 아래 두 개는 검사가 눈을 뜨고 있는지를 검사한다.
+
+    @Test
+    @DisplayName("코틀린 소스도 스캔 대상에 들어온다")
+    void 코틀린_소스가_스캔된다() {
+        List<String> kotlinSources = new ArrayList<>();
+        forEachSource((relativePath, source) -> {
+            if (relativePath.endsWith(".kt")) {
+                kotlinSources.add(relativePath);
+            }
+        });
+
+        assertThat(kotlinSources)
+                .as("코틀린 소스가 한 건도 안 읽혔다. SOURCE_ROOTS 의 src/main/kotlin 경로를 확인할 것")
+                .isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("코틀린 문법의 크로스 도메인 import 도 위반으로 잡힌다")
+    void 코틀린_import_위반이_잡힌다() {
+        String 세미콜론_없는_import = """
+                package com.example.iter.device.dto.response
+
+                import com.example.iter.auth.domain.entity.User
+                """;
+        assertThat(violationsIn("device/dto/response/Sample.kt", 세미콜론_없는_import, "domain.entity"))
+                .containsExactly("device/dto/response/Sample.kt -> auth.domain.entity.User");
+
+        String 스타_import = """
+                import com.example.iter.auth.domain.entity.*
+                """;
+        assertThat(violationsIn("device/dto/response/Sample.kt", 스타_import, "domain.entity"))
+                .containsExactly("device/dto/response/Sample.kt -> auth.domain.entity.*");
+
+        String api_경유 = """
+                import com.example.iter.auth.api.UserSummary
+                """;
+        assertThat(violationsIn("device/dto/response/Sample.kt", api_경유, "domain.entity")).isEmpty();
+    }
+
     // ---------------------------------------------------------------
 
     // "<소비자 파일> -> <제공자 도메인>.<경로>" 형태로 위반을 모은다.
     private List<String> crossDomainReferences(String forbiddenSubPackage) {
         List<String> violations = new ArrayList<>();
+        forEachSource((relativePath, source) ->
+                violations.addAll(violationsIn(relativePath, source, forbiddenSubPackage)));
+        return violations;
+    }
 
-        forEachSource((relativePath, source) -> {
-            String domain = relativePath.split("/")[0];
-            if (NOT_A_DOMAIN.contains(domain)) {
-                return;
+    // 소스 한 건의 위반만 판정한다. 파일을 읽지 않으므로 테스트에서 직접 부를 수 있다.
+    private static List<String> violationsIn(String relativePath, String source, String forbiddenSubPackage) {
+        String domain = relativePath.split("/")[0];
+        if (NOT_A_DOMAIN.contains(domain)) {
+            return List.of();
+        }
+
+        List<String> violations = new ArrayList<>();
+        Matcher matcher = IMPORT.matcher(source);
+        while (matcher.find()) {
+            String provider = matcher.group(1);
+            String rest = matcher.group(2);
+
+            if (provider.equals(domain) || NOT_A_DOMAIN.contains(provider)) {
+                continue;
             }
-
-            Matcher matcher = IMPORT.matcher(source);
-            while (matcher.find()) {
-                String provider = matcher.group(1);
-                String rest = matcher.group(2);
-
-                if (provider.equals(domain) || NOT_A_DOMAIN.contains(provider)) {
-                    continue;
-                }
-                // 제공자가 공개한 창구는 허용이다.
-                if (rest.startsWith("api.")) {
-                    continue;
-                }
-                if (rest.startsWith(forbiddenSubPackage)) {
-                    violations.add(relativePath + " -> " + provider + "." + rest);
-                }
+            // 제공자가 공개한 창구는 허용이다.
+            if (rest.startsWith("api.")) {
+                continue;
             }
-        });
-
+            if (rest.startsWith(forbiddenSubPackage)) {
+                violations.add(relativePath + " -> " + provider + "." + rest);
+            }
+        }
         return violations;
     }
 
@@ -182,7 +242,11 @@ class DomainBoundaryTest {
         forEachSource((relativePath, source) -> {
             if (source.contains("@Entity")) {
                 String fileName = relativePath.substring(relativePath.lastIndexOf('/') + 1);
-                owners.put(fileName.replace(".java", ""), relativePath.split("/")[0]);
+                // 확장자를 일반적으로 잘라낸다. .java 만 잘라내면 Equipment.kt 가
+                // "Equipment.kt" 인 채로 키가 되어, 아래 JPQL 검사의 \bEquipment\b
+                // 매칭이 전부 빗나간다 — 엔티티 하나가 코틀린으로 넘어가는 순간
+                // 그 엔티티를 조인하는 다른 도메인의 쿼리까지 통째로 안 잡히게 된다.
+                owners.put(fileName.substring(0, fileName.lastIndexOf('.')), relativePath.split("/")[0]);
             }
         });
         return owners;
@@ -203,7 +267,7 @@ class DomainBoundaryTest {
                 continue;
             }
             try (Stream<Path> paths = Files.walk(root)) {
-                paths.filter(path -> path.toString().endsWith(".java")).forEach(path -> {
+                paths.filter(DomainBoundaryTest::isSourceFile).forEach(path -> {
                     try {
                         visitor.visit(
                                 root.relativize(path).toString().replace('\\', '/'),
@@ -216,6 +280,11 @@ class DomainBoundaryTest {
                 throw new UncheckedIOException(e);
             }
         }
+    }
+
+    private static boolean isSourceFile(Path path) {
+        String name = path.toString();
+        return name.endsWith(".java") || name.endsWith(".kt");
     }
 
     @FunctionalInterface
