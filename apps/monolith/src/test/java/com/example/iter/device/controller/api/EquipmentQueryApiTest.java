@@ -251,19 +251,28 @@ class EquipmentQueryApiTest {
             RentalStatus status,
             Long renterId
     ) {
-        Rental rental = rentalRepository.save(Rental.builder()
-                .equipmentId(equipment.getId())
-                .ownerIdSnapshot(equipment.getOwnerId())
-                .renterId(renterId)
-                .startDate(startDate)
-                .endDate(endDate)
-                .productNameSnapshot(equipment.getName())
-                .categorySnapshot(equipment.getCategory().name())
-                .dailyPriceSnapshot(equipment.getDailyPrice())
-                .rentalDays((int) (endDate.toEpochDay() - startDate.toEpochDay() + 1))
-                .totalPrice(equipment.getDailyPrice())
-                .status(status)
-                .build());
+        Rental rental = rentalRepository.save(new Rental(
+                equipment.getId(),
+                equipment.getOwnerId(),
+                renterId,
+                startDate,
+                endDate,
+                equipment.getName(),
+                equipment.getDailyPrice(),
+                (int) (endDate.toEpochDay() - startDate.toEpochDay() + 1),
+                equipment.getDailyPrice(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                equipment.getCategory().name(),
+                null,
+                null));
 
         // 검색 가용성 필터는 이제 EquipmentOccupancy 프로젝션만 본다 — 실제 서비스(RentalService)라면
         // 생성 시점에 같이 채우지만, 여기서는 Repository로 직접 픽스처를 심으므로 같이 채워줘야 한다.
