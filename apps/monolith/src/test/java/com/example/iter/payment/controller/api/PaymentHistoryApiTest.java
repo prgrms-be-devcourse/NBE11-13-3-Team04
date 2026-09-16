@@ -156,24 +156,28 @@ class PaymentHistoryApiTest {
     }
 
     private Rental saveRental(Long renterId, String equipmentName) {
-        return rentalRepository.saveAndFlush(Rental.builder()
-                .equipmentId(equipmentIdSequence++)
-                .ownerIdSnapshot(1L)
-                .renterId(renterId)
-                .startDate(LocalDate.now().plusDays(1))
-                .endDate(LocalDate.now().plusDays(3))
-                .productNameSnapshot(equipmentName)
-                .categorySnapshot("CAMERA")
-                .dailyPriceSnapshot(BigDecimal.valueOf(10_000))
-                .rentalDays(3)
-                .totalPrice(BigDecimal.valueOf(30_000))
-                .receiverName("수령인")
-                .receiverPhone("010-2222-3333")
-                .zipcode("12345")
-                .address("서울시 테스트구")
-                .detailAddress("101호")
-                .status(RentalStatus.REQUESTED)
-                .build());
+        return rentalRepository.saveAndFlush(new Rental(
+                equipmentIdSequence++,
+                1L,
+                renterId,
+                LocalDate.now().plusDays(1),
+                LocalDate.now().plusDays(3),
+                equipmentName,
+                BigDecimal.valueOf(10_000),
+                3,
+                BigDecimal.valueOf(30_000),
+                "수령인",
+                "010-2222-3333",
+                "12345",
+                "서울시 테스트구",
+                "101호",
+                null,
+                null,
+                null,
+                RentalStatus.REQUESTED,
+                "CAMERA",
+                null,
+                null));
     }
 
     private Payment savePayment(Rental rental, PaymentStatus status, String suffix) {

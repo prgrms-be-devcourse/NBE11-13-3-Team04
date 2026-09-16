@@ -60,15 +60,28 @@ class PaymentServiceIntegrationTest {
                 "A7C2",
                 null,
                 BigDecimal.valueOf(10000)));
-        Rental rental = rentalRepository.save(Rental.builder()
-                .equipmentId(equipment.getId()).ownerIdSnapshot(owner.getId()).renterId(renter.getId())
-                .startDate(LocalDate.now().plusDays(1)).endDate(LocalDate.now().plusDays(2))
-                .productNameSnapshot("A7C2").categorySnapshot("카메라")
-                .dailyPriceSnapshot(BigDecimal.valueOf(10000))
-                .rentalDays(1).totalPrice(BigDecimal.valueOf(10000))
-                .receiverName("n").receiverPhone("p").zipcode("z").address("a").detailAddress("d")
-                .status(RentalStatus.PENDING)
-                .build());
+        Rental rental = rentalRepository.save(new Rental(
+                equipment.getId(),
+                owner.getId(),
+                renter.getId(),
+                LocalDate.now().plusDays(1),
+                LocalDate.now().plusDays(2),
+                "A7C2",
+                BigDecimal.valueOf(10000),
+                1,
+                BigDecimal.valueOf(10000),
+                "n",
+                "p",
+                "z",
+                "a",
+                "d",
+                null,
+                null,
+                null,
+                RentalStatus.PENDING,
+                "카메라",
+                null,
+                null));
 
         paymentService.ready(rental.getId(), renter.getId());
         Payment readyPayment = paymentRepository.findByRentalId(rental.getId()).orElseThrow();

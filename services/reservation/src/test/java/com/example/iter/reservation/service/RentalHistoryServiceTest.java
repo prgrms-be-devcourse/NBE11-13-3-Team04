@@ -7,6 +7,8 @@ import com.example.iter.auth.api.UserSummary;
 import com.example.iter.common.dto.request.PagingRequest;
 import com.example.iter.common.exception.CustomException;
 import com.example.iter.common.exception.ErrorCode;
+import com.example.iter.device.api.EquipmentInfo;
+import com.example.iter.device.api.EquipmentQueryPort;
 import com.example.iter.device.api.EquipmentThumbnailQueryPort;
 import com.example.iter.reservation.domain.entity.Rental;
 import com.example.iter.reservation.api.RentalStatus;
@@ -15,7 +17,6 @@ import com.example.iter.reservation.dto.request.RentalHistorySearchRequest;
 import com.example.iter.reservation.util.RentalHistoryMapper;
 import com.example.iter.reservation.util.RentalOverduePolicy;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -29,10 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,7 +46,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class RentalHistoryServiceTest {
@@ -56,10 +53,12 @@ class RentalHistoryServiceTest {
     private static final Long RENTER_ID = 1L;
     private static final Long OWNER_ID = 2L;
     private static final Long EQUIPMENT_ID = 10L;
-    private static final LocalDate TODAY = LocalDate.of(2026, 8, 20);
 
     @Mock
     private RentalHistoryRepository rentalHistoryRepository;
+
+    @Mock
+    private EquipmentQueryPort equipmentQueryPort;
 
     @Mock
     private EquipmentThumbnailQueryPort equipmentThumbnailQueryPort;
@@ -70,21 +69,12 @@ class RentalHistoryServiceTest {
     @Spy
     private RentalHistoryMapper rentalHistoryMapper = new RentalHistoryMapper();
 
-    @Mock
-    private Clock clock;
-
     @InjectMocks
     private RentalHistoryService rentalHistoryService;
 
-    @BeforeEach
-    void setUpClock() {
-        lenient().when(clock.instant()).thenReturn(Instant.parse("2026-08-20T00:00:00Z"));
-        lenient().when(clock.getZone()).thenReturn(ZoneId.of("Asia/Seoul"));
-    }
-
     @Test
     void 빌린_장비_이력은_예약_스냅샷과_장비_등록자를_반환한다() {
-        LocalDate today = TODAY;
+        LocalDate today = LocalDate.now();
         Rental rental = rental(
                 100L,
                 EQUIPMENT_ID,
@@ -93,6 +83,7 @@ class RentalHistoryServiceTest {
                 today.minusDays(3),
                 "예약 당시 맥북"
         );
+        EquipmentInfo equipment = equipment(EQUIPMENT_ID, OWNER_ID, "현재 변경된 장비명");
         UserSummary owner = user(OWNER_ID, "등록자");
 
 
@@ -100,6 +91,7 @@ class RentalHistoryServiceTest {
                 any(Specification.class),
                 any(Pageable.class)
         )).thenReturn(page(rental));
+        when(equipmentQueryPort.findAll(any())).thenReturn(Map.of(equipment.equipmentId(), equipment));
         when(userQueryPort.findSummaries(any())).thenReturn(Map.of(owner.userId(), owner));
         when(equipmentThumbnailQueryPort.findThumbnailUrls(anyCollection()))
                 .thenReturn(Map.of(EQUIPMENT_ID, "https://example.com/macbook.jpg"));
@@ -114,7 +106,7 @@ class RentalHistoryServiceTest {
         assertThat(history.rentalId()).isEqualTo(100L);
         assertThat(history.equipmentId()).isEqualTo(EQUIPMENT_ID);
         assertThat(history.equipmentName()).isEqualTo("예약 당시 맥북");
-        assertThat(history.equipmentName()).isNotEqualTo("현재 변경된 장비명");
+        assertThat(history.equipmentName()).isNotEqualTo(equipment.name());
         assertThat(history.thumbnailUrl()).isEqualTo("https://example.com/macbook.jpg");
         assertThat(history.counterparty().userId()).isEqualTo(OWNER_ID);
         assertThat(history.counterparty().nickName()).isEqualTo("등록자");
@@ -132,12 +124,13 @@ class RentalHistoryServiceTest {
 
     @Test
     void 빌려준_장비_이력은_대여자를_상대방으로_반환한다() {
+        EquipmentInfo equipment = equipment(EQUIPMENT_ID, OWNER_ID, "카메라");
         Rental rental = rental(
                 101L,
                 EQUIPMENT_ID,
                 RENTER_ID,
                 RentalStatus.COMPLETED,
-                TODAY.minusDays(10),
+                LocalDate.now().minusDays(10),
                 "예약 당시 카메라"
         );
         UserSummary renter = user(RENTER_ID, "대여자");
@@ -164,6 +157,7 @@ class RentalHistoryServiceTest {
             assertThat(history.thumbnailUrl()).isEqualTo("https://example.com/camera.jpg");
             assertThat(history.overdueDays()).isZero();
         });
+        verify(equipmentQueryPort, never()).findAll(any());
     }
 
     @Test
@@ -184,37 +178,35 @@ class RentalHistoryServiceTest {
         assertThat(response.size()).isEqualTo(5);
         assertThat(response.totalElements()).isZero();
         assertThat(response.totalPages()).isZero();
-        verifyNoInteractions(equipmentThumbnailQueryPort, userQueryPort);
+        verifyNoInteractions(equipmentQueryPort, equipmentThumbnailQueryPort, userQueryPort);
         verify(rentalHistoryMapper, never()).toResponse(any(), any(), any(), any(Integer.class));
     }
 
     @Test
-    void 현재_장비가_없어도_빌린_이력은_등록자_스냅샷으로_조회한다() {
+    void 빌린_이력의_장비가_없으면_예외가_발생한다() {
         Rental rental = rental(
                 102L,
                 EQUIPMENT_ID,
                 RENTER_ID,
                 RentalStatus.COMPLETED,
-                TODAY,
+                LocalDate.now(),
                 "삭제된 장비"
         );
         when(rentalHistoryRepository.findAll(
                 any(Specification.class),
                 any(Pageable.class)
         )).thenReturn(page(rental));
-        when(userQueryPort.findSummaries(any())).thenReturn(Map.of(OWNER_ID, user(OWNER_ID, "등록자")));
-        when(equipmentThumbnailQueryPort.findThumbnailUrls(anyCollection())).thenReturn(Map.of());
+        when(equipmentQueryPort.findAll(any())).thenReturn(Map.of());
 
-        var response = rentalHistoryService.getBorrowedHistory(
+        assertThatThrownBy(() -> rentalHistoryService.getBorrowedHistory(
                 RENTER_ID,
                 new RentalHistorySearchRequest(null, null, 0, 20)
-        );
+        ))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.EQUIPMENT_NOT_FOUND);
 
-        assertThat(response.content()).singleElement().satisfies(history -> {
-            assertThat(history.equipmentName()).isEqualTo("삭제된 장비");
-            assertThat(history.counterparty().userId()).isEqualTo(OWNER_ID);
-            assertThat(history.thumbnailUrl()).isNull();
-        });
+        verifyNoInteractions(userQueryPort, equipmentThumbnailQueryPort);
     }
 
     @Test
@@ -224,13 +216,15 @@ class RentalHistoryServiceTest {
                 EQUIPMENT_ID,
                 RENTER_ID,
                 RentalStatus.COMPLETED,
-                TODAY,
+                LocalDate.now(),
                 "장비"
         );
+        EquipmentInfo equipment = equipment(EQUIPMENT_ID, OWNER_ID, "장비");
         when(rentalHistoryRepository.findAll(
                 any(Specification.class),
                 any(Pageable.class)
         )).thenReturn(page(rental));
+        when(equipmentQueryPort.findAll(any())).thenReturn(Map.of(equipment.equipmentId(), equipment));
         when(userQueryPort.findSummaries(any())).thenReturn(Map.of());
         when(equipmentThumbnailQueryPort.findThumbnailUrls(anyCollection()))
                 .thenReturn(Map.of());
@@ -251,7 +245,7 @@ class RentalHistoryServiceTest {
                 EQUIPMENT_ID,
                 RENTER_ID,
                 RentalStatus.COMPLETED,
-                TODAY,
+                LocalDate.now(),
                 "장비"
         );
         when(rentalHistoryRepository.findLentHistory(
@@ -275,6 +269,7 @@ class RentalHistoryServiceTest {
 
     @Test
     void 빌린_장비_연체_이력은_연체_상태와_종료일_순으로_조회한다() {
+        EquipmentInfo equipment = equipment(EQUIPMENT_ID, OWNER_ID, "연체 장비");
         UserSummary owner = user(OWNER_ID, "등록자");
 
         when(rentalHistoryRepository.findByRenterIdAndEndDateBeforeAndStatusIn(
@@ -295,6 +290,7 @@ class RentalHistoryServiceTest {
             );
             return new PageImpl<>(List.of(overdueRental), pageable, 1);
         });
+        when(equipmentQueryPort.findAll(any())).thenReturn(Map.of(equipment.equipmentId(), equipment));
         when(userQueryPort.findSummaries(any())).thenReturn(Map.of(owner.userId(), owner));
         when(equipmentThumbnailQueryPort.findThumbnailUrls(anyCollection()))
                 .thenReturn(Map.of());
@@ -316,7 +312,7 @@ class RentalHistoryServiceTest {
                 eq(RentalOverduePolicy.statuses()),
                 pageableCaptor.capture()
         );
-        assertThat(dateCaptor.getValue()).isEqualTo(TODAY);
+        assertThat(dateCaptor.getValue()).isEqualTo(LocalDate.now());
         assertThat(sortDescription(pageableCaptor.getValue()))
                 .containsExactly("endDate: ASC", "createdAt: DESC", "id: DESC");
     }
@@ -365,22 +361,22 @@ class RentalHistoryServiceTest {
 
     @Test
     void 여러_빌린_이력도_장비_회원_썸네일을_각각_한_번만_일괄_조회한다() {
-        Rental firstRental = rentalWithOwner(
+        EquipmentInfo firstEquipment = equipment(10L, 2L, "첫 장비");
+        EquipmentInfo secondEquipment = equipment(20L, 3L, "둘째 장비");
+        Rental firstRental = rental(
                 201L,
                 10L,
-                2L,
                 RENTER_ID,
                 RentalStatus.COMPLETED,
-                TODAY,
+                LocalDate.now(),
                 "첫 장비 스냅샷"
         );
-        Rental secondRental = rentalWithOwner(
+        Rental secondRental = rental(
                 202L,
                 20L,
-                3L,
                 RENTER_ID,
                 RentalStatus.COMPLETED,
-                TODAY,
+                LocalDate.now(),
                 "둘째 장비 스냅샷"
         );
 
@@ -388,6 +384,9 @@ class RentalHistoryServiceTest {
                 any(Specification.class),
                 any(Pageable.class)
         )).thenReturn(new PageImpl<>(List.of(firstRental, secondRental), PageRequest.of(0, 20), 2));
+        when(equipmentQueryPort.findAll(any())).thenReturn(Map.of(
+                firstEquipment.equipmentId(), firstEquipment,
+                secondEquipment.equipmentId(), secondEquipment));
         when(userQueryPort.findSummaries(any())).thenReturn(Map.of(2L, user(2L, "첫 등록자"), 3L, user(3L, "둘째 등록자")));
         // 장비마다 대표 썸네일을 고르는 규칙(sortOrder 가 앞선 것이 이김)은
         // JpaEquipmentThumbnailQueryAdapterTest 로 옮겼다. 여기서는 포트가 준 값을 그대로 쓰는지만 본다.
@@ -402,6 +401,7 @@ class RentalHistoryServiceTest {
         assertThat(response.content()).hasSize(2);
         assertThat(response.content().get(0).thumbnailUrl()).isEqualTo("first-old.jpg");
         assertThat(response.content().get(1).thumbnailUrl()).isEqualTo("second.jpg");
+        verify(equipmentQueryPort, times(1)).findAll(any());
         verify(userQueryPort, times(1)).findSummaries(any());
         verify(equipmentThumbnailQueryPort, times(1))
                 .findThumbnailUrls(anyCollection());
@@ -419,32 +419,35 @@ class RentalHistoryServiceTest {
             LocalDate endDate,
             String productNameSnapshot
     ) {
-        return rentalWithOwner(id, equipmentId, OWNER_ID, renterId, status, endDate, productNameSnapshot);
+        return new Rental(
+                equipmentId,
+                0L,
+                renterId,
+                endDate.minusDays(2),
+                endDate,
+                productNameSnapshot,
+                BigDecimal.valueOf(10_000),
+                3,
+                BigDecimal.valueOf(30_000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                "디지털기기",
+                null,
+                id);
     }
 
-    private Rental rentalWithOwner(
-            Long id,
-            Long equipmentId,
-            Long ownerId,
-            Long renterId,
-            RentalStatus status,
-            LocalDate endDate,
-            String productNameSnapshot
-    ) {
-        return Rental.builder()
-                .id(id)
-                .equipmentId(equipmentId)
-                .ownerIdSnapshot(ownerId)
-                .renterId(renterId)
-                .startDate(endDate.minusDays(2))
-                .endDate(endDate)
-                .productNameSnapshot(productNameSnapshot)
-                .categorySnapshot("디지털기기")
-                .dailyPriceSnapshot(BigDecimal.valueOf(10_000))
-                .rentalDays(3)
-                .totalPrice(BigDecimal.valueOf(30_000))
-                .status(status)
-                .build();
+    private EquipmentInfo equipment(Long id, Long ownerId, String name) {
+        return new EquipmentInfo(
+                id, ownerId, name, "OTHER",
+                BigDecimal.valueOf(99_999), true, false
+        );
     }
 
     private UserSummary user(Long id, String nickname) {

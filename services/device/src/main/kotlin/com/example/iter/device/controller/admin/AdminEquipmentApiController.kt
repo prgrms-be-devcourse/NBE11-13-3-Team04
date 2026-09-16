@@ -24,33 +24,32 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/v1/admin/equipment")
 @PreAuthorize("hasRole('ADMIN')")
-class AdminEquipmentApiController(private val adminEquipmentService: AdminEquipmentService) : AdminEquipmentApiSpec {
+class AdminEquipmentApiController(
+    private val adminEquipmentService: AdminEquipmentService,
+) : AdminEquipmentApiSpec {
 
     // 관리자가 검색 조건과 페이지 정보로 전체 장비 목록을 조회합니다.
     @GetMapping
     override fun getEquipments(
-        @ModelAttribute
-        request: AdminEquipmentSearchRequest
+        @ModelAttribute request: AdminEquipmentSearchRequest,
     ): ResponseEntity<CursorPageResponse<AdminEquipmentSummaryResponse>> =
         ResponseEntity.ok(adminEquipmentService.getEquipments(request))
 
     // 관리자가 특정 장비의 등록자, 상태, 이미지 등 상세 정보를 조회합니다.
     @GetMapping("/{equipmentId}")
-    override fun getEquipmentDetail(@PathVariable equipmentId: Long): ResponseEntity<AdminEquipmentDetailResponse> =
+    override fun getEquipmentDetail(
+        @PathVariable("equipmentId") equipmentId: Long,
+    ): ResponseEntity<AdminEquipmentDetailResponse> =
         ResponseEntity.ok(adminEquipmentService.getEquipmentDetail(equipmentId))
 
     // 관리자가 장비를 차단하거나 차단을 해제하고 처리 이력을 저장합니다.
     @PatchMapping("/{equipmentId}/status")
     override fun updateEquipmentStatus(
-        @AuthenticationPrincipal
-        principal: CustomUserDetails,
-
-        @PathVariable
-        equipmentId: Long,
-
-        @RequestBody
-        request: AdminEquipmentStatusRequest
-    ): ResponseEntity<AdminEquipmentDetailResponse> = ResponseEntity.ok(
-        adminEquipmentService.updateEquipmentStatus(principal.user.id, equipmentId, request)
-    )
+        @AuthenticationPrincipal principal: CustomUserDetails,
+        @PathVariable("equipmentId") equipmentId: Long,
+        @RequestBody request: AdminEquipmentStatusRequest,
+    ): ResponseEntity<AdminEquipmentDetailResponse> {
+        val adminId = principal.user.id
+        return ResponseEntity.ok(adminEquipmentService.updateEquipmentStatus(adminId, equipmentId, request))
+    }
 }
