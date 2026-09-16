@@ -30,8 +30,9 @@ class JpaRentalCommandAdapter(
             rental.changeStatus(RentalStatus.REQUESTED)
             // 변경 후 상태를 담아 돌려준다 — 호출부 응답이 전 상태를 싣지 않도록.
             RentalInfo(
-                rental.id,
+                rental.id!!,
                 rental.equipmentId,
+                rental.ownerIdSnapshot,
                 rental.renterId,
                 rental.productNameSnapshot,
                 rental.rejectReason,

@@ -18,6 +18,7 @@ import com.example.iter.dispute.dto.response.AdminReportDetailResponse;
 import com.example.iter.dispute.dto.response.ReportSummaryResponse;
 import com.example.iter.dispute.util.AdminReportMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -28,6 +29,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,6 +45,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class AdminReportServiceTest {
@@ -61,8 +66,17 @@ class AdminReportServiceTest {
     @Mock
     private AdminReportMapper adminReportMapper;
 
+    @Mock
+    private Clock clock;
+
     @InjectMocks
     private AdminReportService adminReportService;
+
+    @BeforeEach
+    void setUpClock() {
+        lenient().when(clock.instant()).thenReturn(Instant.parse("2026-08-20T00:00:00Z"));
+        lenient().when(clock.getZone()).thenReturn(ZoneId.of("Asia/Seoul"));
+    }
 
     @Test
     void 신고_목록을_조건과_최신순으로_조회하고_신고자를_일괄_조회한다() {
@@ -283,7 +297,7 @@ class AdminReportServiceTest {
     private ReportSummaryResponse summary(Long reportId) {
         return new ReportSummaryResponse(
                 reportId,
-                null,
+                reporter(),
                 ReportTargetType.EQUIPMENT,
                 100L,
                 "신고 사유",

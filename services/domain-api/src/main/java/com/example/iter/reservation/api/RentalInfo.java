@@ -16,6 +16,7 @@ import java.util.Objects;
 public record RentalInfo(
         Long rentalId,
         Long equipmentId,
+        Long ownerIdSnapshot,
         Long renterId,
         String productName,
         String rejectReason,
@@ -27,6 +28,7 @@ public record RentalInfo(
     public RentalInfo {
         Objects.requireNonNull(rentalId, "rentalId");
         Objects.requireNonNull(equipmentId, "equipmentId");
+        Objects.requireNonNull(ownerIdSnapshot, "ownerIdSnapshot");
         Objects.requireNonNull(renterId, "renterId");
         // status 가 null 이면 결제 가능 여부·상태 전이 판정이 조용히 뒤집힌다.
         Objects.requireNonNull(status, "status");
@@ -35,5 +37,9 @@ public record RentalInfo(
 
     public boolean isRenter(Long userId) {
         return renterId.equals(userId);
+    }
+
+    public boolean isOwner(Long userId) {
+        return ownerIdSnapshot.equals(userId);
     }
 }
