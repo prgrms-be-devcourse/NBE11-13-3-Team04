@@ -48,7 +48,7 @@ class ChatInquiryGrantServiceTest {
     private UserQueryPort userQueryPort;
 
     @Spy
-    private JsonMapper jsonMapper = JsonMapper.builder().build();
+    private JsonMapper jsonMapper = JsonMapper.builder().findAndAddModules().build();
 
     @InjectMocks
     private ChatInquiryGrantService chatInquiryGrantService;

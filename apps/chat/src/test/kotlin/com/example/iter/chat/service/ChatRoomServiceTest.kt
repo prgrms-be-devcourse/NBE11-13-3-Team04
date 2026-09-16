@@ -115,6 +115,47 @@ class ChatRoomServiceTest {
         assertThat(exception.errorCode).isEqualTo(ChatErrorCode.ROOM_ACCESS_DENIED)
     }
 
+    @Test
+    fun `결제 확정 시 문의방이 있으면 stage를 TRADE로 전환하고 rentalId를 채운다`() = runTest {
+        val room = ChatRoom(
+            id = ROOM_ID, equipmentId = EQUIPMENT_ID, equipmentName = "드릴",
+            ownerId = OWNER_ID, requesterId = REQUESTER_ID,
+        )
+        whenever(chatRoomRepository.findByEquipmentIdAndRequesterId(EQUIPMENT_ID, REQUESTER_ID)).thenReturn(room)
+        whenever(chatRoomRepository.save(any())).thenAnswer { it.arguments[0] }
+
+        chatRoomService.markPaymentConfirmed(EQUIPMENT_ID, REQUESTER_ID, rentalId = 999L)
+
+        verify(chatRoomRepository).save(
+            org.mockito.kotlin.argThat<ChatRoom> {
+                stage == com.example.iter.chat.domain.RoomStage.TRADE && rentalId == 999L
+            },
+        )
+    }
+
+    @Test
+    fun `이미 TRADE 단계면 결제 확정 이벤트를 다시 받아도 아무 것도 하지 않는다(멱등)`() = runTest {
+        val room = ChatRoom(
+            id = ROOM_ID, equipmentId = EQUIPMENT_ID, equipmentName = "드릴",
+            ownerId = OWNER_ID, requesterId = REQUESTER_ID,
+            stage = com.example.iter.chat.domain.RoomStage.TRADE, rentalId = 999L,
+        )
+        whenever(chatRoomRepository.findByEquipmentIdAndRequesterId(EQUIPMENT_ID, REQUESTER_ID)).thenReturn(room)
+
+        chatRoomService.markPaymentConfirmed(EQUIPMENT_ID, REQUESTER_ID, rentalId = 999L)
+
+        verify(chatRoomRepository, never()).save(any())
+    }
+
+    @Test
+    fun `문의방이 없으면 결제 확정이어도 방을 새로 만들지 않는다`() = runTest {
+        whenever(chatRoomRepository.findByEquipmentIdAndRequesterId(EQUIPMENT_ID, REQUESTER_ID)).thenReturn(null)
+
+        chatRoomService.markPaymentConfirmed(EQUIPMENT_ID, REQUESTER_ID, rentalId = 999L)
+
+        verify(chatRoomRepository, never()).save(any())
+    }
+
     // AssertJ의 assertThatThrownBy는 suspend 람다를 못 받는다. runTest를 중첩 호출하면
     // "Only a single call to runTest can be performed during one test"로 깨진다
     // (실제로 겪음) — 이미 열려 있는 suspend 컨텍스트 안에서 그냥 try/catch로 잡는다.

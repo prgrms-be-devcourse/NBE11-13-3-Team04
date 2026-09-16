@@ -22,7 +22,7 @@ class GrantStoreTest {
     @Mock
     private lateinit var valueOperations: ReactiveValueOperations<String, String>
 
-    private val jsonMapper: JsonMapper = JsonMapper.builder().build()
+    private val jsonMapper: JsonMapper = JsonMapper.builder().findAndAddModules().build()
 
     @Test
     fun `그랜트를 GETDEL로 소비하면 GrantPayload로 역직렬화되고 다시 조회하지 않는다`() = runTest {

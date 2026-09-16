@@ -18,6 +18,7 @@ dependencies {
     implementation project(':libs:core')
     implementation project(':libs:security')
     implementation project(':libs:storage')
+    implementation project(':libs:event-contract')
     implementation project(':services:domain-api')
     implementation project(':services:delivery')
     implementation project(':services:notification')
