@@ -18,19 +18,28 @@ class RentalHistoryMapperTest {
 
     @Test
     void 거래와_상대방_정보를_대여_이력_응답으로_변환한다() {
-        Rental rental = Rental.builder()
-                .id(100L)
-                .equipmentId(10L)
-                .renterId(1L)
-                .startDate(LocalDate.of(2026, 8, 1))
-                .endDate(LocalDate.of(2026, 8, 5))
-                .productNameSnapshot("예약 당시 맥북")
-                .categorySnapshot("노트북")
-                .dailyPriceSnapshot(BigDecimal.valueOf(30_000))
-                .rentalDays(5)
-                .totalPrice(BigDecimal.valueOf(150_000))
-                .status(RentalStatus.RETURNING)
-                .build();
+        Rental rental = new Rental(
+                10L,
+                0L,
+                1L,
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 5),
+                "예약 당시 맥북",
+                BigDecimal.valueOf(30_000),
+                5,
+                BigDecimal.valueOf(150_000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                RentalStatus.RETURNING,
+                "노트북",
+                null,
+                100L);
         UserSummary counterparty = new UserSummary(2L, "등록자닉네임");
 
         var response = rentalHistoryMapper.toResponse(
@@ -55,18 +64,28 @@ class RentalHistoryMapperTest {
 
     @Test
     void 썸네일이_없으면_null을_그대로_반환한다() {
-        Rental rental = Rental.builder()
-                .id(101L)
-                .equipmentId(11L)
-                .renterId(1L)
-                .startDate(LocalDate.of(2026, 8, 10))
-                .endDate(LocalDate.of(2026, 8, 10))
-                .productNameSnapshot("장비")
-                .dailyPriceSnapshot(BigDecimal.valueOf(10_000))
-                .rentalDays(1)
-                .totalPrice(BigDecimal.valueOf(10_000))
-                .status(RentalStatus.COMPLETED)
-                .build();
+        Rental rental = new Rental(
+                11L,
+                0L,
+                1L,
+                LocalDate.of(2026, 8, 10),
+                LocalDate.of(2026, 8, 10),
+                "장비",
+                BigDecimal.valueOf(10_000),
+                1,
+                BigDecimal.valueOf(10_000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                RentalStatus.COMPLETED,
+                null,
+                null,
+                101L);
         UserSummary counterparty = new UserSummary(3L, "대여자닉네임");
 
         var response = rentalHistoryMapper.toResponse(rental, counterparty, null, 0);

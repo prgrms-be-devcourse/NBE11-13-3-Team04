@@ -25,38 +25,41 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/v1/rentals")
 @PreAuthorize("hasRole('USER')")
-class ReturnApiController(private val returnService: ReturnService) : ReturnApiSpec {
+class ReturnApiController(
+    private val returnService: ReturnService,
+) : ReturnApiSpec {
 
+    // 등록자가 확인해야 하는 반납 거래 목록을 조회합니다.
     @GetMapping("/returns")
     override fun getReturnTargets(
-        @AuthenticationPrincipal
-        principal: CustomUserDetails,
+        @AuthenticationPrincipal principal: CustomUserDetails,
+        @ModelAttribute request: PagingRequest,
+    ): ResponseEntity<PageResponse<ReturnTargetResponse>> {
+        val ownerId = principal.user.id
 
-        @ModelAttribute
-        request: PagingRequest
-    ): ResponseEntity<PageResponse<ReturnTargetResponse>> =
-        ResponseEntity.ok(returnService.getReturnTargets(principal.user.id, request))
+        return ResponseEntity.ok(returnService.getReturnTargets(ownerId, request))
+    }
 
+    // 수령 당시 증빙과 반납 당시 증빙을 비교 조회합니다.
     @GetMapping("/{rentalId}/return-comparison")
     override fun getReturnComparison(
-        @AuthenticationPrincipal
-        principal: CustomUserDetails,
+        @AuthenticationPrincipal principal: CustomUserDetails,
+        @PathVariable("rentalId") rentalId: Long,
+    ): ResponseEntity<ReturnComparisonResponse> {
+        val userId = principal.user.id
 
-        @PathVariable
-        rentalId: Long
-    ): ResponseEntity<ReturnComparisonResponse> =
-        ResponseEntity.ok(returnService.getReturnComparison(principal.user.id, rentalId))
+        return ResponseEntity.ok(returnService.getReturnComparison(userId, rentalId))
+    }
 
+    // 등록자가 반납을 정상 또는 비정상으로 최종 확인합니다.
     @PostMapping("/{rentalId}/return-confirmation")
     override fun confirmReturn(
-        @AuthenticationPrincipal
-        principal: CustomUserDetails,
+        @AuthenticationPrincipal principal: CustomUserDetails,
+        @PathVariable("rentalId") rentalId: Long,
+        @RequestBody request: ReturnConfirmationRequest,
+    ): ResponseEntity<ReturnConfirmationResponse> {
+        val ownerId = principal.user.id
 
-        @PathVariable
-        rentalId: Long,
-
-        @RequestBody
-        request: ReturnConfirmationRequest
-    ): ResponseEntity<ReturnConfirmationResponse> =
-        ResponseEntity.ok(returnService.confirmReturn(principal.user.id, rentalId, request))
+        return ResponseEntity.ok(returnService.confirmReturn(ownerId, rentalId, request))
+    }
 }

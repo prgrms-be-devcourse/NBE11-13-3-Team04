@@ -661,19 +661,28 @@ class EquipmentManagementApiTest {
             LocalDate startDate,
             LocalDate endDate
     ) {
-        rentalRepository.saveAndFlush(Rental.builder()
-                .equipmentId(equipment.getId())
-                .ownerIdSnapshot(equipment.getOwnerId())
-                .renterId(999L)
-                .startDate(startDate)
-                .endDate(endDate)
-                .productNameSnapshot(equipment.getName())
-                .categorySnapshot(equipment.getCategory().name())
-                .dailyPriceSnapshot(equipment.getDailyPrice())
-                .rentalDays((int) (endDate.toEpochDay() - startDate.toEpochDay() + 1))
-                .totalPrice(equipment.getDailyPrice())
-                .status(status)
-                .build());
+        rentalRepository.saveAndFlush(new Rental(
+                equipment.getId(),
+                equipment.getOwnerId(),
+                999L,
+                startDate,
+                endDate,
+                equipment.getName(),
+                equipment.getDailyPrice(),
+                (int) (endDate.toEpochDay() - startDate.toEpochDay() + 1),
+                equipment.getDailyPrice(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                equipment.getCategory().name(),
+                null,
+                null));
     }
 
     private String createRequestJson(List<String> imageKeys, int ignoredThumbnailIndex) {

@@ -255,19 +255,28 @@ class UserWithdrawalApiTest {
     }
 
     private Rental saveRental(Equipment equipment, Long renterId, RentalStatus status) {
-        return rentalRepository.saveAndFlush(Rental.builder()
-                .equipmentId(equipment.getId())
-                .ownerIdSnapshot(equipment.getOwnerId())
-                .renterId(renterId)
-                .startDate(LocalDate.now().plusDays(2))
-                .endDate(LocalDate.now().plusDays(4))
-                .productNameSnapshot("테스트 장비")
-                .categorySnapshot("CAMERA")
-                .dailyPriceSnapshot(BigDecimal.valueOf(10_000))
-                .rentalDays(3)
-                .totalPrice(BigDecimal.valueOf(30_000))
-                .status(status)
-                .build());
+        return rentalRepository.saveAndFlush(new Rental(
+                equipment.getId(),
+                equipment.getOwnerId(),
+                renterId,
+                LocalDate.now().plusDays(2),
+                LocalDate.now().plusDays(4),
+                "테스트 장비",
+                BigDecimal.valueOf(10_000),
+                3,
+                BigDecimal.valueOf(30_000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                "CAMERA",
+                null,
+                null));
     }
 
     private String bearer(User user) {

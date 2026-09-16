@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service
 @Service
 class ReturnService(
     private val returnQueryService: ReturnQueryService,
-    private val returnConfirmationService: ReturnConfirmationService
+    private val returnConfirmationService: ReturnConfirmationService,
 ) {
     fun getReturnTargets(ownerId: Long, request: PagingRequest): PageResponse<ReturnTargetResponse> =
         returnQueryService.getReturnTargets(ownerId, request)

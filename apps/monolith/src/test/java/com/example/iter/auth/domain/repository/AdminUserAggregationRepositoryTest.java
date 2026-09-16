@@ -158,19 +158,28 @@ class AdminUserAggregationRepositoryTest {
             LocalDate endDate,
             RentalStatus status
     ) {
-        return Rental.builder()
-                .equipmentId(equipment.getId())
-                .ownerIdSnapshot(equipment.getOwnerId())
-                .renterId(renterId)
-                .startDate(endDate.minusDays(3))
-                .endDate(endDate)
-                .productNameSnapshot("테스트 장비")
-                .categorySnapshot("노트북")
-                .dailyPriceSnapshot(BigDecimal.valueOf(10_000))
-                .rentalDays(4)
-                .totalPrice(BigDecimal.valueOf(40_000))
-                .status(status)
-                .build();
+        return new Rental(
+                equipment.getId(),
+                equipment.getOwnerId(),
+                renterId,
+                endDate.minusDays(3),
+                endDate,
+                "테스트 장비",
+                BigDecimal.valueOf(10_000),
+                4,
+                BigDecimal.valueOf(40_000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                "노트북",
+                null,
+                null);
     }
 
     private Report report(
