@@ -414,13 +414,13 @@ class AdminActionRepositoryAdminTest {
             String reason
     ) {
         return adminActionRepository.saveAndFlush(
-                AdminAction.builder()
-                        .adminId(adminId)
-                        .targetType(targetType)
-                        .targetId(targetId)
-                        .action(action)
-                        .reason(reason)
-                        .build()
+                new AdminAction(
+                        adminId,
+                        targetType,
+                        targetId,
+                        action,
+                        reason
+                )
         );
     }
 
