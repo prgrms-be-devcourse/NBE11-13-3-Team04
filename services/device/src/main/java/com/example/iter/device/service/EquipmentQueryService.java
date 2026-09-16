@@ -37,6 +37,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -62,12 +63,12 @@ public class EquipmentQueryService {
     ) {
         Equipment equipment = findPublicEquipment(equipmentId);
         AvailabilityReason reason = findUnavailabilityReason(
-                equipment, request.startDate(), request.endDate());
+                equipment, request.getStartDate(), request.getEndDate());
 
         return new EquipmentAvailabilityResponse(
                 equipmentId,
-                request.startDate(),
-                request.endDate(),
+                request.getStartDate(),
+                request.getEndDate(),
                 reason == null,
                 reason
         );
@@ -79,19 +80,19 @@ public class EquipmentQueryService {
     ) {
         Equipment equipment = findPublicEquipment(equipmentId);
         AvailabilityReason reason = findUnavailabilityReason(
-                equipment, request.startDate(), request.endDate());
+                equipment, request.getStartDate(), request.getEndDate());
         if (reason != null) {
             throw new CustomException(ErrorCode.EQUIPMENT_RENTAL_PERIOD_UNAVAILABLE);
         }
 
         int rentalDays = Math.toIntExact(
-                ChronoUnit.DAYS.between(request.startDate(), request.endDate()) + 1);
+                ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1);
         BigDecimal totalPrice = equipment.getDailyPrice().multiply(BigDecimal.valueOf(rentalDays));
 
         return new EquipmentEstimateResponse(
                 equipmentId,
-                request.startDate(),
-                request.endDate(),
+                request.getStartDate(),
+                request.getEndDate(),
                 rentalDays,
                 equipment.getDailyPrice(),
                 totalPrice
@@ -221,12 +222,12 @@ public class EquipmentQueryService {
 
         // 일정에 표시하지 않는 상태(취소·거절 등)는 reservation 이 걸러서 준다.
         List<RentalScheduleItemResponse> rentals = rentalQueryPort
-                .findSchedule(equipmentId, request.from(), request.to())
+                .findSchedule(equipmentId, request.getFrom(), request.getTo())
                 .stream()
                 .map(RentalScheduleItemResponse::from)
                 .toList();
         return new EquipmentScheduleResponse(
-                equipmentId, request.from(), request.to(), rentals);
+                equipmentId, request.getFrom(), request.getTo(), rentals);
     }
 
     private Map<Long, String> findThumbnailUrls(List<Long> equipmentIds) {
@@ -243,15 +244,15 @@ public class EquipmentQueryService {
     }
 
     private Page<Equipment> findPublicEquipment(EquipmentSearchRequest request) {
-        String keyword = escapeLikePattern(request.keyword());
+        String keyword = escapeLikePattern(normalize(request.getKeyword()));
         return equipmentRepository.searchPublicEquipment(
                 keyword,
-                request.category(),
-                request.minPrice(),
-                request.maxPrice(),
-                request.startDate(),
-                request.endDate(),
-                PageRequest.of(request.page(), request.size(), equipmentSort(request.sort()))
+                request.getCategory(),
+                request.getMinPrice(),
+                request.getMaxPrice(),
+                request.getStartDate(),
+                request.getEndDate(),
+                PageRequest.of(request.getPage(), request.getSize(), equipmentSort(request.getSort()))
         );
     }
 
@@ -260,13 +261,20 @@ public class EquipmentQueryService {
             MyEquipmentSearchRequest request
     ) {
         Pageable pageable = PageRequest.of(
-                request.page(),
-                request.size(),
-                equipmentSort(request.sort())
+                request.getPage(),
+                request.getSize(),
+                equipmentSort(request.getSort())
         );
-        return request.status() == null
+        return request.getStatus() == null
                 ? equipmentRepository.findByOwnerId(ownerId, pageable)
-                : equipmentRepository.findByOwnerIdAndStatus(ownerId, request.status(), pageable);
+                : equipmentRepository.findByOwnerIdAndStatus(ownerId, request.getStatus(), pageable);
+    }
+
+    // 검색어의 앞뒤 공백을 제거하고 빈 문자열은 조회 조건에서 제외합니다.
+    // 코틀린 data class 의 compact constructor 부재로 EquipmentSearchRequest 에서
+    // 이 서비스로 옮겨온 정규화 로직이다.
+    private String normalize(String value) {
+        return StringUtils.hasText(value) ? value.trim() : null;
     }
 
     private Sort equipmentSort(EquipmentSort sort) {

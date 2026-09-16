@@ -30,5 +30,21 @@ kotlin {
         jvmTarget = JvmTarget.JVM_25
         // 자바 쪽 @Nullable/@NonNull 애너테이션을 코틀린 null 안전성에 엄격하게 반영한다.
         freeCompilerArgs.add('-Xjsr305=strict')
+        // kotlinc 는 기본 설정에서 List<@NotBlank String> 같은 타입-유즈(type-use) 애너테이션을
+        // 바이트코드에 남기지 않는다. 이 플래그가 없으면 Hibernate Validator 가 컬렉션 원소
+        // 제약을 못 봐서 검증이 컴파일은 통과한 채로 조용히 꺼진다.
+        freeCompilerArgs.add('-Xemit-jvm-type-annotations')
     }
+}
+
+dependencies {
+    // 코틀린 data class 는 JavaBean 관례(기본 생성자 + setter)를 안 따르고 주 생성자 하나로만
+    // 만들어진다. Jackson 은 이 모듈이 없으면 그 생성자를 찾는 방법을 몰라서, HTTP 요청 바디를
+    // 코틀린 DTO 로 역직렬화하려 할 때 "no Creators, like default constructor, exist" 로
+    // 500 이 난다(컴파일은 통과하고 런타임에만 터져서 놓치기 쉽다).
+    //
+    // Boot 4.1 의 웹 스타터가 Jackson 3(tools.jackson 패키지)를 쓰므로 그 계열 모듈이 필요하다 —
+    // com.fasterxml.jackson.module:jackson-module-kotlin(Jackson 2용)을 넣으면 조용히 안 먹는다.
+    // 버전은 명시하지 않는다 — Boot BOM이 임포트하는 tools.jackson:jackson-bom이 관리한다.
+    implementation "tools.jackson.module:jackson-module-kotlin"
 }

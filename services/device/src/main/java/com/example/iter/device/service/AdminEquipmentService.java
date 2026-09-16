@@ -47,17 +47,17 @@ public class AdminEquipmentService {
     // 관리자가 장비명, 카테고리, 상태 조건으로 전체 장비 목록을 커서 조회합니다.
     @Transactional(readOnly = true)
     public CursorPageResponse<AdminEquipmentSummaryResponse> getEquipments(AdminEquipmentSearchRequest request) {
-        String keyword = normalize(request.keyword());
-        String category = normalize(request.category());
-        CursorKey cursorKey = CursorCodec.decode(request.cursor());
+        String keyword = normalize(request.getKeyword());
+        String category = normalize(request.getCategory());
+        CursorKey cursorKey = CursorCodec.decode(request.getCursor());
 
         List<Equipment> equipment = equipmentRepository.searchForAdminByCursor(
                 keyword,
                 category,
-                request.status(),
+                request.getStatus(),
                 cursorKey == null ? null : cursorKey.createdAt(),
                 cursorKey == null ? null : cursorKey.id(),
-                PageRequest.of(0, request.size() + 1)
+                PageRequest.of(0, request.getSize() + 1)
         );
 
         Map<Long, UserSummary> ownerMap = loadOwners(equipment);
@@ -65,7 +65,7 @@ public class AdminEquipmentService {
 
         return CursorPageResponse.from(
                 equipment,
-                request.size(),
+                request.getSize(),
                 item -> adminEquipmentMapper.toSummary(
                         item,
                         getRequiredOwner(ownerMap, item.getOwnerId()),
@@ -94,15 +94,15 @@ public class AdminEquipmentService {
     ) {
         Equipment equipment = equipmentRepository.findByIdForUpdate(equipmentId).orElseThrow(() -> new CustomException(ErrorCode.EQUIPMENT_NOT_FOUND));
 
-        validateStatusChange(equipment, request.status());
-        AdminActionType action = applyStatus(equipment, request.status());
+        validateStatusChange(equipment, request.getStatus());
+        AdminActionType action = applyStatus(equipment, request.getStatus());
 
         adminActionService.record(
                 adminId,
                 AdminActionTargetType.EQUIPMENT,
                 equipment.getId(),
                 action,
-                request.reason().trim()
+                request.getReason().trim()
         );
 
         equipmentRepository.flush();
