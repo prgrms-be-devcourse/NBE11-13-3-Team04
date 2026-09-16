@@ -14,10 +14,11 @@ import com.example.iter.device.dto.response.EquipmentStatusResponse;
 import com.example.iter.device.dto.response.PresignedImageUploadResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -82,9 +83,15 @@ public interface EquipmentManagementApiSpec {
 
     @Operation(summary = "장비 예약 일정 조회",
             description = "장비 소유자 또는 관리자가 조회 기간과 겹치는 확정 예약 일정을 조회합니다.")
+    @Parameters({
+            @Parameter(name = "from", in = ParameterIn.QUERY, required = true,
+                    description = "조회 시작일", example = "2026-09-01"),
+            @Parameter(name = "to", in = ParameterIn.QUERY, required = true,
+                    description = "조회 종료일", example = "2026-09-30")
+    })
     ResponseEntity<EquipmentScheduleResponse> getSchedule(
             @Parameter(hidden = true) CustomUserDetails principal,
             Long equipmentId,
-            @ParameterObject EquipmentScheduleRequest request
+            @Parameter(hidden = true) EquipmentScheduleRequest request
     );
 }
