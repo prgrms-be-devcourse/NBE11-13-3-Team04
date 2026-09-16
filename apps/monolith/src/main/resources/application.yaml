@@ -69,6 +69,14 @@ auth:
     max-age: 14d
 
 app:
+  ai:
+    base-url: ${AI_SERVICE_BASE_URL:http://localhost:8000}
+    internal-api-key: ${AI_INTERNAL_API_KEY:}
+    connect-timeout: ${AI_CONNECT_TIMEOUT:2s}
+    read-timeout: ${AI_READ_TIMEOUT:5s}
+    daily-draft-limit: ${AI_DAILY_DRAFT_LIMIT:20}
+    daily-report-limit: ${AI_DAILY_REPORT_LIMIT:20}
+    daily-condition-limit: ${AI_DAILY_CONDITION_LIMIT:20}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   storage:

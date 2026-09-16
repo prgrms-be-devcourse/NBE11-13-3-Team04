@@ -5,6 +5,7 @@ jjwt = "0.12.6"
 aws-sdk = "2.47.5"
 bouncycastle = "1.82"
 springdoc = "3.0.3"
+mockito-kotlin = "5.4.0"
 
 [libraries]
 # ---- BOM ----
@@ -51,6 +52,9 @@ h2 = { module = "com.h2database:h2" }
 # 소스 6개가 com.fasterxml.jackson 애너테이션을 쓰는데 아무도 직접 선언하지 않은 상태라
 # springdoc 을 제거하거나 올릴 때 깨질 수 있다 - 별도로 정리할 것.
 jackson2-databind = { module = "com.fasterxml.jackson.core:jackson-databind" }
+jackson3-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito-kotlin" }
 
 bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
