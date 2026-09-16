@@ -49,7 +49,7 @@ class ChatWebSocketHandlerTest {
     private lateinit var sessionRegistry: SessionRegistry
 
     @Spy
-    private val jsonMapper: JsonMapper = JsonMapper.builder().build()
+    private val jsonMapper: JsonMapper = JsonMapper.builder().findAndAddModules().build()
 
     @InjectMocks
     private lateinit var handler: ChatWebSocketHandler

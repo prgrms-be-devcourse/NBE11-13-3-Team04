@@ -94,6 +94,9 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
 testcontainers-mysql = { module = "org.testcontainers:testcontainers-mysql" }
 testcontainers-r2dbc = { module = "org.testcontainers:testcontainers-r2dbc" }
+# com.redis 그룹이다 — org.testcontainers가 아니다. spring-boot-dependencies가 이것도
+# 스코프 임포트로 관리한다(직접 확인함).
+testcontainers-redis = { module = "com.redis:testcontainers-redis" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

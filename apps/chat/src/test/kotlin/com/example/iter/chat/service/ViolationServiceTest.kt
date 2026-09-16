@@ -44,7 +44,7 @@ class ViolationServiceTest {
     private lateinit var roomBroadcaster: RoomBroadcaster
 
     @Spy
-    private val jsonMapper: JsonMapper = JsonMapper.builder().build()
+    private val jsonMapper: JsonMapper = JsonMapper.builder().findAndAddModules().build()
 
     @InjectMocks
     private lateinit var violationService: ViolationService

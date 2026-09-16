@@ -15,6 +15,8 @@ base {
 }
 
 dependencies {
+    implementation project(':libs:event-contract')
+
     // WebFlux — spring-boot-starter-webmvc(서블릿)과 이 모듈에서 절대 같이 쓰지 않는다.
     implementation libs.spring.boot.starter.webflux
     // Spring Data R2DBC. CoroutineCrudRepository 등 코루틴 리포지토리 지원까지 포함한다.
@@ -42,6 +44,7 @@ dependencies {
     testImplementation libs.testcontainers.junit.jupiter
     testImplementation libs.testcontainers.mysql
     testImplementation libs.testcontainers.r2dbc
+    testImplementation libs.testcontainers.redis
 }
 
 tasks.named('test', Test) {

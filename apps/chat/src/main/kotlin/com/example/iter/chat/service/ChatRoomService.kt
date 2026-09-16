@@ -2,6 +2,7 @@ package com.example.iter.chat.service
 
 import com.example.iter.chat.domain.ChatRoom
 import com.example.iter.chat.domain.RoomParticipant
+import com.example.iter.chat.domain.RoomStage
 import com.example.iter.chat.dto.response.RoomSummaryResponse
 import com.example.iter.chat.exception.ChatErrorCode
 import com.example.iter.chat.exception.ChatException
@@ -11,7 +12,10 @@ import com.example.iter.chat.repository.MessageRepository
 import com.example.iter.chat.repository.RoomParticipantRepository
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+
+private val log = LoggerFactory.getLogger(ChatRoomService::class.java)
 
 @Service
 class ChatRoomService(
@@ -61,6 +65,27 @@ class ChatRoomService(
         val participant = roomParticipantRepository.findByRoomIdAndUserId(roomId, userId)
             ?: throw ChatException(ChatErrorCode.ROOM_ACCESS_DENIED)
         roomParticipantRepository.save(participant.copy(lastReadMessageId = lastReadMessageId))
+    }
+
+    // ChatIntegrationEventConsumer(CH7)가 결제 확정 이벤트를 받으면 호출한다. chat은
+    // device/auth DB를 안 보므로 장비명·닉네임을 새로 알아낼 방법이 없다 — 그래서 문의
+    // 방이 이미 있을 때만 stage를 전환하고, 없으면(문의 없이 바로 결제) 방을 새로
+    // 만들지 않는다. 알려진 한계다(.docs/13-chat-service.md에 남긴다).
+    //
+    // 멱등: 이벤트가 재전달돼도(Redis Stream은 at-least-once) stage가 이미 TRADE면
+    // 아무 것도 다시 안 한다.
+    suspend fun markPaymentConfirmed(equipmentId: Long, renterId: Long, rentalId: Long) {
+        val room = chatRoomRepository.findByEquipmentIdAndRequesterId(equipmentId, renterId)
+        if (room == null) {
+            log.info(
+                "문의방 없이 결제가 확정됨 — 방을 새로 만들지 않는다 equipmentId={} renterId={} rentalId={}",
+                equipmentId, renterId, rentalId,
+            )
+            return
+        }
+        if (room.stage == RoomStage.INQUIRY) {
+            chatRoomRepository.save(room.copy(stage = RoomStage.TRADE, rentalId = rentalId))
+        }
     }
 
     suspend fun requireRoom(roomId: Long): ChatRoom =

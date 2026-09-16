@@ -22,7 +22,7 @@ class TicketStoreTest {
     @Mock
     private lateinit var valueOperations: ReactiveValueOperations<String, String>
 
-    private val jsonMapper: JsonMapper = JsonMapper.builder().build()
+    private val jsonMapper: JsonMapper = JsonMapper.builder().findAndAddModules().build()
 
     private lateinit var ticketStore: TicketStore
 
