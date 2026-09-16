@@ -241,12 +241,7 @@ class EquipmentQueryApiTest {
     }
 
     private void saveThumbnail(Equipment equipment, String imageUrl) {
-        equipmentImageRepository.save(EquipmentImage.builder()
-                .equipment(equipment)
-                .imageUrl(imageUrl)
-                .sortOrder(0)
-                .thumbnail(true)
-                .build());
+        equipmentImageRepository.save(new EquipmentImage(equipment, imageUrl, null, 0, true));
     }
 
     private void saveRental(

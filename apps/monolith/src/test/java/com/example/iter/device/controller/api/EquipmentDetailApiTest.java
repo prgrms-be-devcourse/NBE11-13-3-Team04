@@ -175,12 +175,7 @@ class EquipmentDetailApiTest {
             int sortOrder,
             boolean thumbnail
     ) {
-        return equipmentImageRepository.saveAndFlush(EquipmentImage.builder()
-                .equipment(equipment)
-                .imageUrl(imageUrl)
-                .sortOrder(sortOrder)
-                .thumbnail(thumbnail)
-                .build());
+        return equipmentImageRepository.saveAndFlush(new EquipmentImage(equipment, imageUrl, null, sortOrder, thumbnail));
     }
 
     private String bearer(User user) {

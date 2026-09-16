@@ -391,7 +391,7 @@ class EquipmentManagementApiTest {
                 .andExpect(jsonPath("$[1].thumbnail").value(true));
 
         assertThat(equipmentImageRepository.findById(oldThumbnail.getId()).orElseThrow()
-                .isThumbnail()).isFalse();
+                .getThumbnail()).isFalse();
     }
 
     @Test
@@ -432,7 +432,7 @@ class EquipmentManagementApiTest {
                 .andExpect(status().isNoContent());
 
         EquipmentImage updated = equipmentImageRepository.findById(remaining.getId()).orElseThrow();
-        assertThat(updated.isThumbnail()).isTrue();
+        assertThat(updated.getThumbnail()).isTrue();
         assertThat(updated.getSortOrder()).isZero();
         verify(imageStorage, timeout(1000)).delete(thumbnail.getObjectKey());
     }
@@ -618,13 +618,12 @@ class EquipmentManagementApiTest {
             int sortOrder,
             boolean thumbnail
     ) {
-        return equipmentImageRepository.saveAndFlush(EquipmentImage.builder()
-                .equipment(equipment)
-                .imageUrl("https://cdn.example.com/" + objectKey)
-                .objectKey(objectKey)
-                .sortOrder(sortOrder)
-                .thumbnail(thumbnail)
-                .build());
+        return equipmentImageRepository.saveAndFlush(new EquipmentImage(
+                equipment,
+                "https://cdn.example.com/" + objectKey,
+                objectKey,
+                sortOrder,
+                thumbnail));
     }
 
     private void saveRental(
