@@ -5,6 +5,7 @@ import com.example.iter.auth.domain.entity.User;
 import com.example.iter.config.RestApiSecurityTestConfig;
 import com.example.iter.common.exception.GlobalExceptionHandler;
 import com.example.iter.common.security.CustomUserDetails;
+import com.example.iter.common.image.CaptureView;
 import com.example.iter.common.security.CustomUserDetailsService;
 import com.example.iter.common.security.JwtTokenProvider;
 import com.example.iter.reservation.dto.response.EvidenceImagePresignResponse;
@@ -63,8 +64,9 @@ class RentalEvidenceUploadApiControllerTest {
 
     @Test
     void presigned_URL을_발급한다() throws Exception {
-        when(rentalEvidenceUploadService.createPresignedUploads(any())).thenReturn(
+        when(rentalEvidenceUploadService.createPresignedUploads(any(), any(), any())).thenReturn(
                 new EvidenceImagePresignResponse(List.of(new EvidenceImagePresignResponse.Item(
+                        CaptureView.FRONT,
                         "rental-evidence/abc.jpg",
                         "https://example.com/upload",
                         Map.of("Content-Type", "image/jpeg"),
@@ -72,12 +74,12 @@ class RentalEvidenceUploadApiControllerTest {
                         LocalDateTime.now().plusMinutes(5)
                 ))));
 
-        mockMvc.perform(post("/api/v1/rentals/images/presigned-urls")
+        mockMvc.perform(post("/api/v1/rentals/{rentalId}/images/presigned-urls", 10L)
                         .with(user(principal))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                { "files": [ { "contentType": "image/jpeg" } ] }
+                                { "files": [ { "captureView":"FRONT", "contentType":"image/jpeg", "size":1024 } ] }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.uploads[0].objectKey").value("rental-evidence/abc.jpg"));
@@ -85,19 +87,19 @@ class RentalEvidenceUploadApiControllerTest {
 
     @Test
     void 지원하지_않는_Content_Type이면_400을_반환한다() throws Exception {
-        mockMvc.perform(post("/api/v1/rentals/images/presigned-urls")
+        mockMvc.perform(post("/api/v1/rentals/{rentalId}/images/presigned-urls", 10L)
                         .with(user(principal))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                { "files": [ { "contentType": "application/pdf" } ] }
+                                { "files": [ { "captureView":"FRONT", "contentType":"application/pdf", "size":1024 } ] }
                                 """))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void 인증이_없으면_접근할_수_없다() throws Exception {
-        mockMvc.perform(post("/api/v1/rentals/images/presigned-urls")
+        mockMvc.perform(post("/api/v1/rentals/{rentalId}/images/presigned-urls", 10L)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))

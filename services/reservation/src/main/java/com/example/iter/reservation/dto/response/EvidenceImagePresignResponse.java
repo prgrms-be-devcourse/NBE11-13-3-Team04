@@ -1,5 +1,7 @@
 package com.example.iter.reservation.dto.response;
 
+import com.example.iter.common.image.CaptureView;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -8,10 +10,11 @@ public record EvidenceImagePresignResponse(
         List<Item> uploads
 ) {
     public record Item(
+            CaptureView captureView,
             String objectKey,
             String uploadUrl,
             Map<String, String> requiredHeaders,
-            String publicUrl,
+            String viewUrl,
             LocalDateTime expiresAt
     ) {
     }

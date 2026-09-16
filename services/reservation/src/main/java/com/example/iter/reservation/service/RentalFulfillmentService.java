@@ -1,5 +1,6 @@
 package com.example.iter.reservation.service;
 
+import com.example.iter.common.dto.request.CapturedImageRequest;
 import com.example.iter.reservation.api.RentalStatus;
 import com.example.iter.common.exception.CustomException;
 import com.example.iter.common.exception.ErrorCode;
@@ -46,6 +47,7 @@ public class RentalFulfillmentService {
     private final ReceiptImageRepository receiptImageRepository;
     private final ReturnReceiptRepository returnReceiptRepository;
     private final ReturnReceiptImageRepository returnReceiptImageRepository;
+    private final RentalEvidenceUploadService evidenceUploadService;
     private final ApplicationEventPublisher eventPublisher;
 
     // 장비 등록자가 출고 배송 정보를 등록합니다. APPROVED -> SHIPPING
@@ -80,6 +82,9 @@ public class RentalFulfillmentService {
             throw new CustomException(ErrorCode.RENTAL_NOT_RECEIVABLE);
         }
 
+        evidenceUploadService.validateAndUse(
+                renterId, rentalId, EvidenceUploadPhase.RECEIPT, request.images());
+
         LocalDateTime now = LocalDateTime.now();
         Receipt receipt = receiptRepository.save(Receipt.builder()
                 .rental(rental)
@@ -87,7 +92,7 @@ public class RentalFulfillmentService {
                 .conditionDetail(request.conditionDetail())
                 .receivedAt(now)
                 .build());
-        saveReceiptImages(receipt, request.imageUrls());
+        saveReceiptImages(receipt, request.images());
 
         rental.changeStatus(RentalStatus.RENTING);
         eventPublisher.publishEvent(new RentalReceivedEvent(rental.getId()));
@@ -123,6 +128,9 @@ public class RentalFulfillmentService {
             throw new CustomException(ErrorCode.RENTAL_NOT_RETURN_EVIDENCE_SUBMITTABLE);
         }
 
+        evidenceUploadService.validateAndUse(
+                renterId, rentalId, EvidenceUploadPhase.RETURN, request.images());
+
         LocalDateTime now = LocalDateTime.now();
         LocalDate today = now.toLocalDate();
         ReturnReceipt returnReceipt = returnReceiptRepository.save(ReturnReceipt.builder()
@@ -131,7 +139,7 @@ public class RentalFulfillmentService {
                 .conditionDetail(request.conditionDetail())
                 .returnDate(today)
                 .build());
-        saveReturnReceiptImages(returnReceipt, request.imageUrls());
+        saveReturnReceiptImages(returnReceipt, request.images());
 
         shippingCommandPort.recordReturnDelivered(rental.getId(), now);
 
@@ -142,26 +150,40 @@ public class RentalFulfillmentService {
         return new ReturnEvidenceCreateResponse(rental.getId(), rental.getStatus(), today);
     }
 
-    private void saveReceiptImages(Receipt receipt, List<String> imageUrls) {
-        List<ReceiptImage> images = IntStream.range(0, imageUrls.size())
+    private void saveReceiptImages(Receipt receipt, List<CapturedImageRequest> capturedImages) {
+        List<CapturedImageRequest> ordered = orderedImages(capturedImages);
+        List<ReceiptImage> images = IntStream.range(0, ordered.size())
                 .mapToObj(index -> ReceiptImage.builder()
                         .receipt(receipt)
-                        .imageUrl(imageUrls.get(index))
+                        // 기존 컬럼명은 image_url이지만 신규 데이터에는 비공개 S3 object key를 저장합니다.
+                        .imageUrl(ordered.get(index).objectKey())
+                        .captureView(ordered.get(index).captureView())
                         .sortOrder(index)
                         .build())
                 .toList();
         receiptImageRepository.saveAll(images);
     }
 
-    private void saveReturnReceiptImages(ReturnReceipt returnReceipt, List<String> imageUrls) {
-        List<ReturnReceiptImage> images = IntStream.range(0, imageUrls.size())
+    private void saveReturnReceiptImages(
+            ReturnReceipt returnReceipt,
+            List<CapturedImageRequest> capturedImages
+    ) {
+        List<CapturedImageRequest> ordered = orderedImages(capturedImages);
+        List<ReturnReceiptImage> images = IntStream.range(0, ordered.size())
                 .mapToObj(index -> ReturnReceiptImage.builder()
                         .returnReceipt(returnReceipt)
-                        .imageUrl(imageUrls.get(index))
+                        .imageUrl(ordered.get(index).objectKey())
+                        .captureView(ordered.get(index).captureView())
                         .sortOrder(index)
                         .build())
                 .toList();
         returnReceiptImageRepository.saveAll(images);
+    }
+
+    private List<CapturedImageRequest> orderedImages(List<CapturedImageRequest> images) {
+        return images.stream()
+                .sorted(java.util.Comparator.comparing(CapturedImageRequest::captureView))
+                .toList();
     }
 
     private Rental findRental(Long rentalId) {

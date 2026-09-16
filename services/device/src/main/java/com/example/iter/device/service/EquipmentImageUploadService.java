@@ -39,8 +39,10 @@ public class EquipmentImageUploadService {
                             presigned.getObjectKey(),
                             file.getContentType(),
                             file.getSize(),
-                            presigned.getExpiresAt()));
+                            presigned.getExpiresAt(),
+                            file.getCaptureView()));
                     return new PresignedImageUploadItemResponse(
+                            file.getCaptureView(),
                             presigned.getObjectKey(),
                             presigned.getUploadUrl().toExternalForm(),
                             presigned.getRequiredHeaders(),

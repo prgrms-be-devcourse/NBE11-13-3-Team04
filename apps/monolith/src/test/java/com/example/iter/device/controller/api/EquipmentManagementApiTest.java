@@ -5,6 +5,8 @@ import com.example.iter.common.security.UserStatus;
 import com.example.iter.auth.domain.repository.UserRepository;
 import com.example.iter.common.exception.CustomException;
 import com.example.iter.common.exception.ErrorCode;
+import com.example.iter.common.dto.request.CapturedImageRequest;
+import com.example.iter.common.image.CaptureView;
 import com.example.iter.common.security.JwtTokenProvider;
 import com.example.iter.device.domain.entity.Equipment;
 import com.example.iter.device.domain.entity.EquipmentCategory;
@@ -131,6 +133,7 @@ class EquipmentManagementApiTest {
                         .content("""
                                 {
                                   "files":[{
+                                    "captureView":"FRONT",
                                     "fileName":"camera.jpg",
                                     "contentType":"image/jpeg",
                                     "size":1024
@@ -160,12 +163,12 @@ class EquipmentManagementApiTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"files":[
-                                  {"fileName":"1.jpg","contentType":"image/jpeg","size":1},
-                                  {"fileName":"2.jpg","contentType":"image/jpeg","size":1},
-                                  {"fileName":"3.jpg","contentType":"image/jpeg","size":1},
-                                  {"fileName":"4.jpg","contentType":"image/jpeg","size":1},
-                                  {"fileName":"5.jpg","contentType":"image/jpeg","size":1},
-                                  {"fileName":"6.jpg","contentType":"image/jpeg","size":1}
+                                  {"captureView":"FRONT","fileName":"1.jpg","contentType":"image/jpeg","size":1},
+                                  {"captureView":"SIDE","fileName":"2.jpg","contentType":"image/jpeg","size":1},
+                                  {"captureView":"REAR","fileName":"3.jpg","contentType":"image/jpeg","size":1},
+                                  {"captureView":"FRONT","fileName":"4.jpg","contentType":"image/jpeg","size":1},
+                                  {"captureView":"SIDE","fileName":"5.jpg","contentType":"image/jpeg","size":1},
+                                  {"captureView":"REAR","fileName":"6.jpg","contentType":"image/jpeg","size":1}
                                 ]}
                                 """)
                         .header(HttpHeaders.AUTHORIZATION, bearer(owner)))
@@ -178,25 +181,24 @@ class EquipmentManagementApiTest {
     @Test
     void 검증된_임시_이미지를_승격하여_장비와_대표_이미지를_등록한다() throws Exception {
         User owner = saveUser("create-owner@example.com", UserStatus.ACTIVE);
-        List<String> keys = List.of(
-                savePendingUpload(owner, "front.jpg").getObjectKey(),
-                savePendingUpload(owner, "back.jpg").getObjectKey());
+        List<String> keys = saveRequiredUploads(owner, "create");
 
         mockMvc.perform(post("/api/v1/devices")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(createRequestJson(keys, 1))
+                        .content(createRequestJson(keys, 0))
                         .header(HttpHeaders.AUTHORIZATION, bearer(owner)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.category").value("CAMERA"))
                 .andExpect(jsonPath("$.name").value("소니 A7C2"))
                 .andExpect(jsonPath("$.status").value("ACTIVE"))
-                .andExpect(jsonPath("$.images.length()").value(2))
-                .andExpect(jsonPath("$.images[0].thumbnail").value(false))
-                .andExpect(jsonPath("$.images[1].thumbnail").value(true));
+                .andExpect(jsonPath("$.images.length()").value(3))
+                .andExpect(jsonPath("$.images[0].captureView").value("FRONT"))
+                .andExpect(jsonPath("$.images[0].thumbnail").value(true))
+                .andExpect(jsonPath("$.images[1].thumbnail").value(false));
 
         Equipment equipment = equipmentRepository.findAll().getFirst();
         var images = equipmentImageRepository.findByEquipmentIdOrderBySortOrderAsc(equipment.getId());
-        assertThat(images).hasSize(2);
+        assertThat(images).hasSize(3);
         assertThat(images).allMatch(image -> image.getObjectKey().startsWith(
                 "equipment/public/%d/".formatted(equipment.getId())));
         assertThat(imageUploadRepository.findAll()).allMatch(EquipmentImageUpload::isUsed);
@@ -206,9 +208,7 @@ class EquipmentManagementApiTest {
     @Test
     void 모든_이미지_검증이_끝나기_전에는_승격을_시작하지_않는다() throws Exception {
         User owner = saveUser("invalid-image@example.com", UserStatus.ACTIVE);
-        List<String> keys = List.of(
-                savePendingUpload(owner, "valid.jpg").getObjectKey(),
-                savePendingUpload(owner, "invalid.jpg").getObjectKey());
+        List<String> keys = saveRequiredUploads(owner, "validation");
         when(imageStorage.validateTemporaryUpload(
                 keys.get(1), "image/jpeg", IMAGE_SIZE))
                 .thenThrow(new CustomException(ErrorCode.INVALID_IMAGE));
@@ -229,9 +229,7 @@ class EquipmentManagementApiTest {
     @Test
     void 두번째_이미지_승격이_실패하면_DB와_먼저_승격한_객체를_정리한다() throws Exception {
         User owner = saveUser("rollback-owner@example.com", UserStatus.ACTIVE);
-        List<String> keys = List.of(
-                savePendingUpload(owner, "first.jpg").getObjectKey(),
-                savePendingUpload(owner, "second.jpg").getObjectKey());
+        List<String> keys = saveRequiredUploads(owner, "rollback");
         StoredImage firstImage = new StoredImage(
                 "equipment/public/1/first.jpg",
                 "https://cdn.example.com/equipment/public/1/first.jpg");
@@ -256,11 +254,11 @@ class EquipmentManagementApiTest {
     void 다른_회원에게_발급된_이미지는_장비에_등록할_수_없다() throws Exception {
         User owner = saveUser("owner-image@example.com", UserStatus.ACTIVE);
         User attacker = saveUser("attacker@example.com", UserStatus.ACTIVE);
-        String key = savePendingUpload(owner, "private.jpg").getObjectKey();
+        List<String> keys = saveRequiredUploads(owner, "private");
 
         mockMvc.perform(post("/api/v1/devices")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(createRequestJson(List.of(key), 0))
+                        .content(createRequestJson(keys, 0))
                         .header(HttpHeaders.AUTHORIZATION, bearer(attacker)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("IMAGE_UPLOAD_NOT_FOUND"));
@@ -269,13 +267,17 @@ class EquipmentManagementApiTest {
     @Test
     void 이미_사용한_이미지_업로드는_다른_장비에_재사용할_수_없다() throws Exception {
         User owner = saveUser("used-upload@example.com", UserStatus.ACTIVE);
-        EquipmentImageUpload upload = savePendingUpload(owner, "used.jpg");
+        List<String> keys = saveRequiredUploads(owner, "used");
+        EquipmentImageUpload upload = imageUploadRepository.findAllByObjectKeyIn(keys).stream()
+                .filter(candidate -> candidate.getCaptureView() == CaptureView.FRONT)
+                .findFirst()
+                .orElseThrow();
         upload.use(LocalDateTime.now());
         imageUploadRepository.saveAndFlush(upload);
 
         mockMvc.perform(post("/api/v1/devices")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(createRequestJson(List.of(upload.getObjectKey()), 0))
+                        .content(createRequestJson(keys, 0))
                         .header(HttpHeaders.AUTHORIZATION, bearer(owner)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("IMAGE_UPLOAD_ALREADY_USED"));
@@ -290,11 +292,18 @@ class EquipmentManagementApiTest {
                         "equipment/temp/%d/expired.jpg".formatted(owner.getId()),
                         "image/jpeg",
                         IMAGE_SIZE,
-                        LocalDateTime.now().minusSeconds(1)));
+                        LocalDateTime.now().minusSeconds(1),
+                        CaptureView.FRONT));
+
+        List<String> keys = List.of(
+                upload.getObjectKey(),
+                savePendingUpload(owner, "expired-side.jpg", CaptureView.SIDE).getObjectKey(),
+                savePendingUpload(owner, "expired-rear.jpg", CaptureView.REAR).getObjectKey()
+        );
 
         mockMvc.perform(post("/api/v1/devices")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(createRequestJson(List.of(upload.getObjectKey()), 0))
+                        .content(createRequestJson(keys, 0))
                         .header(HttpHeaders.AUTHORIZATION, bearer(owner)))
                 .andExpect(status().isGone())
                 .andExpect(jsonPath("$.code").value("IMAGE_UPLOAD_EXPIRED"));
@@ -303,7 +312,11 @@ class EquipmentManagementApiTest {
     @Test
     void 동일한_임시_이미지로_동시에_등록하면_한_건만_성공한다() throws Exception {
         User owner = saveUser("concurrent-upload@example.com", UserStatus.ACTIVE);
-        String objectKey = savePendingUpload(owner, "single-use.jpg").getObjectKey();
+        List<String> objectKeys = List.of(
+                savePendingUpload(owner, "single-use-front.jpg", CaptureView.FRONT).getObjectKey(),
+                savePendingUpload(owner, "single-use-side.jpg", CaptureView.SIDE).getObjectKey(),
+                savePendingUpload(owner, "single-use-rear.jpg", CaptureView.REAR).getObjectKey()
+        );
         EquipmentCreateRequest request = new EquipmentCreateRequest(
                 EquipmentCategory.CAMERA,
                 "동시 등록 카메라",
@@ -313,8 +326,11 @@ class EquipmentManagementApiTest {
                 LocalDate.now().plusMonths(1),
                 ProductConditionType.NORMAL,
                 null,
-                List.of(objectKey),
-                0
+                List.of(
+                        new CapturedImageRequest(CaptureView.FRONT, objectKeys.get(0)),
+                        new CapturedImageRequest(CaptureView.SIDE, objectKeys.get(1)),
+                        new CapturedImageRequest(CaptureView.REAR, objectKeys.get(2))
+                )
         );
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);
@@ -591,12 +607,25 @@ class EquipmentManagementApiTest {
     }
 
     private EquipmentImageUpload savePendingUpload(User user, String filename) {
+        return savePendingUpload(user, filename, null);
+    }
+
+    private EquipmentImageUpload savePendingUpload(User user, String filename, CaptureView captureView) {
         return imageUploadRepository.saveAndFlush(new EquipmentImageUpload(
                 user.getId(),
                 "equipment/temp/%d/%s".formatted(user.getId(), filename),
                 "image/jpeg",
                 IMAGE_SIZE,
-                LocalDateTime.now().plusMinutes(5)));
+                LocalDateTime.now().plusMinutes(5),
+                captureView));
+    }
+
+    private List<String> saveRequiredUploads(User user, String prefix) {
+        return List.of(
+                savePendingUpload(user, prefix + "-front.jpg", CaptureView.FRONT).getObjectKey(),
+                savePendingUpload(user, prefix + "-side.jpg", CaptureView.SIDE).getObjectKey(),
+                savePendingUpload(user, prefix + "-rear.jpg", CaptureView.REAR).getObjectKey()
+        );
     }
 
     private Equipment saveEquipment(Long ownerId, EquipmentStatus status) {
@@ -647,10 +676,7 @@ class EquipmentManagementApiTest {
                 .build());
     }
 
-    private String createRequestJson(List<String> imageKeys, int thumbnailIndex) {
-        String keys = imageKeys.stream()
-                .map(key -> "\"" + key + "\"")
-                .collect(java.util.stream.Collectors.joining(","));
+    private String createRequestJson(List<String> imageKeys, int ignoredThumbnailIndex) {
         return """
                 {
                   "category":"CAMERA",
@@ -661,11 +687,18 @@ class EquipmentManagementApiTest {
                   "availableTo":"%s",
                   "productCondition":"NORMAL",
                   "conditionDetail":null,
-                  "imageKeys":[%s],
-                  "thumbnailIndex":%d
+                  "images":[
+                    {"captureView":"FRONT","objectKey":"%s"},
+                    {"captureView":"SIDE","objectKey":"%s"},
+                    {"captureView":"REAR","objectKey":"%s"}
+                  ]
                 }
                 """.formatted(
-                LocalDate.now(), LocalDate.now().plusMonths(2), keys, thumbnailIndex);
+                LocalDate.now(),
+                LocalDate.now().plusMonths(2),
+                imageKeys.get(0),
+                imageKeys.get(1),
+                imageKeys.get(2));
     }
 
     private String bearer(User user) {

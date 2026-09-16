@@ -1,8 +1,11 @@
 package com.example.iter.device.domain.entity
 
 import com.example.iter.common.entity.BaseCreatedAtEntity
+import com.example.iter.common.image.CaptureView
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -10,10 +13,19 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 
 // ERD EQUIPMENT_IMAGE 엔티티 — Equipment와 같은 도메인이므로 정상적인 JPA 연관관계를 사용
 @Entity
-@Table(name = "equipment_image")
+@Table(
+    name = "equipment_image",
+    uniqueConstraints = [
+        UniqueConstraint(
+            name = "uk_equipment_image_capture_view",
+            columnNames = ["equipment_id", "capture_view"]
+        )
+    ]
+)
 class EquipmentImage @JvmOverloads constructor(
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,11 +42,24 @@ class EquipmentImage @JvmOverloads constructor(
 
     thumbnail: Boolean = false,
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "capture_view", length = 16)
+    val captureView: CaptureView? = null,
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    val id: Long? = null
 
 ) : BaseCreatedAtEntity() {
+
+    constructor(
+        equipment: Equipment,
+        imageUrl: String,
+        objectKey: String?,
+        sortOrder: Int,
+        thumbnail: Boolean,
+        id: Long?
+    ) : this(equipment, imageUrl, objectKey, sortOrder, thumbnail, null, id)
 
     @Column(name = "sort_order")
     var sortOrder: Int = sortOrder

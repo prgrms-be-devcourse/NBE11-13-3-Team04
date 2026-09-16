@@ -54,6 +54,7 @@ class AdminEquipmentMapper {
     private fun toImageResponse(image: EquipmentImage): ImageResponse = ImageResponse(
         image.id!!,
         image.imageUrl,
+        image.captureView,
         image.sortOrder,
         image.thumbnail
     )

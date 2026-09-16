@@ -1,8 +1,11 @@
 package com.example.iter.device.domain.entity
 
 import com.example.iter.common.entity.BaseCreatedAtEntity
+import com.example.iter.common.image.CaptureView
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -29,10 +32,14 @@ class EquipmentImageUpload @JvmOverloads constructor(
     @Column(name = "expires_at", nullable = false)
     val expiresAt: LocalDateTime,
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "capture_view", length = 16)
+    val captureView: CaptureView? = null,
+
     // id 를 맨 뒤에 두는 이유는 EquipmentOccupancy 와 같다.
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    val id: Long? = null
 
 ) : BaseCreatedAtEntity() {
 

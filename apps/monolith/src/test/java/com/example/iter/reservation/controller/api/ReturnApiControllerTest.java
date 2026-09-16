@@ -5,6 +5,7 @@ import com.example.iter.auth.domain.entity.User;
 import com.example.iter.auth.api.UserSummary;
 import com.example.iter.config.RestApiSecurityTestConfig;
 import com.example.iter.common.dto.request.PagingRequest;
+import com.example.iter.common.image.CaptureView;
 import com.example.iter.common.dto.response.PageResponse;
 import com.example.iter.common.exception.CustomException;
 import com.example.iter.common.exception.ErrorCode;
@@ -16,6 +17,7 @@ import com.example.iter.reservation.domain.entity.ProductConditionType;
 import com.example.iter.reservation.api.RentalStatus;
 import com.example.iter.reservation.dto.request.ReturnConfirmationRequest;
 import com.example.iter.reservation.dto.response.ConditionEvidenceResponse;
+import com.example.iter.reservation.dto.response.ConditionEvidenceImageResponse;
 import com.example.iter.reservation.dto.response.ReturnComparisonResponse;
 import com.example.iter.reservation.dto.response.ReturnConfirmationResponse;
 import com.example.iter.reservation.dto.response.ReturnTargetResponse;
@@ -36,6 +38,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -133,9 +136,9 @@ class ReturnApiControllerTest {
                 .andExpect(jsonPath("$.rentalId").value(RENTAL_ID))
                 .andExpect(jsonPath("$.equipmentName").value("예약 당시 맥북"))
                 .andExpect(jsonPath("$.receipt.productCondition").value("NORMAL"))
-                .andExpect(jsonPath("$.receipt.imageUrls[0]").value("receipt.jpg"))
+                .andExpect(jsonPath("$.receipt.images[0].imageUrl").value("receipt.jpg"))
                 .andExpect(jsonPath("$.returnReceipt.productCondition").value("DAMAGED"))
-                .andExpect(jsonPath("$.returnReceipt.imageUrls[0]").value("return.jpg"));
+                .andExpect(jsonPath("$.returnReceipt.images[0].imageUrl").value("return.jpg"));
 
         verify(returnService).getReturnComparison(OWNER_ID, RENTAL_ID);
     }
@@ -143,7 +146,7 @@ class ReturnApiControllerTest {
     @Test
     void 정상_반납을_최종_확인한다() throws Exception {
         when(returnService.confirmReturn(eq(OWNER_ID), eq(RENTAL_ID), any(ReturnConfirmationRequest.class)))
-                .thenReturn(new ReturnConfirmationResponse(RENTAL_ID, RentalStatus.COMPLETED, null));
+                .thenReturn(new ReturnConfirmationResponse(RENTAL_ID, RentalStatus.COMPLETED, null, null));
 
         mockMvc.perform(post("/api/v1/rentals/{rentalId}/return-confirmation", RENTAL_ID)
                         .with(user(ownerPrincipal))
@@ -170,7 +173,7 @@ class ReturnApiControllerTest {
     @Test
     void 비정상_반납을_최종_확인하면_분쟁_ID를_반환한다() throws Exception {
         when(returnService.confirmReturn(eq(OWNER_ID), eq(RENTAL_ID), any(ReturnConfirmationRequest.class)))
-                .thenReturn(new ReturnConfirmationResponse(RENTAL_ID, RentalStatus.DISPUTED, 50L));
+                .thenReturn(new ReturnConfirmationResponse(RENTAL_ID, RentalStatus.DISPUTED, 50L, 60L));
 
         mockMvc.perform(post("/api/v1/rentals/{rentalId}/return-confirmation", RENTAL_ID)
                         .with(user(ownerPrincipal))
@@ -198,7 +201,7 @@ class ReturnApiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        verify(returnService, never()).confirmReturn(any(), any(), any());
+        verify(returnService, never()).confirmReturn(anyLong(), anyLong(), any());
     }
 
     @Test
@@ -216,7 +219,7 @@ class ReturnApiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        verify(returnService, never()).confirmReturn(any(), any(), any());
+        verify(returnService, never()).confirmReturn(anyLong(), anyLong(), any());
     }
 
     @Test
@@ -235,7 +238,7 @@ class ReturnApiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        verify(returnService, never()).confirmReturn(any(), any(), any());
+        verify(returnService, never()).confirmReturn(anyLong(), anyLong(), any());
     }
 
     @Test
@@ -246,7 +249,7 @@ class ReturnApiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        verify(returnService, never()).getReturnTargets(any(), any());
+        verify(returnService, never()).getReturnTargets(anyLong(), any());
     }
 
     @Test
@@ -256,7 +259,7 @@ class ReturnApiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        verify(returnService, never()).getReturnComparison(any(), any());
+        verify(returnService, never()).getReturnComparison(anyLong(), anyLong());
     }
 
     @Test
@@ -293,7 +296,7 @@ class ReturnApiControllerTest {
         mockMvc.perform(get("/api/v1/rentals/returns"))
                 .andExpect(status().isUnauthorized());
 
-        verify(returnService, never()).getReturnTargets(any(), any());
+        verify(returnService, never()).getReturnTargets(anyLong(), any());
     }
 
     private ReturnComparisonResponse comparisonResponse() {
@@ -304,16 +307,26 @@ class ReturnApiControllerTest {
                 LocalDate.of(2026, 8, 1),
                 LocalDate.of(2026, 8, 10),
                 LocalDate.of(2026, 8, 11),
+                List.of(new ConditionEvidenceImageResponse(
+                        CaptureView.FRONT,
+                        "listing.jpg"
+                )),
                 new ConditionEvidenceResponse(
                         ProductConditionType.NORMAL,
                         "수령 시 정상",
-                        List.of("receipt.jpg"),
+                        List.of(new ConditionEvidenceImageResponse(
+                                CaptureView.FRONT,
+                                "receipt.jpg"
+                        )),
                         LocalDateTime.of(2026, 8, 1, 14, 30)
                 ),
                 new ConditionEvidenceResponse(
                         ProductConditionType.DAMAGED,
                         "반납 시 파손",
-                        List.of("return.jpg"),
+                        List.of(new ConditionEvidenceImageResponse(
+                                CaptureView.FRONT,
+                                "return.jpg"
+                        )),
                         LocalDateTime.of(2026, 8, 11, 17, 20)
                 )
         );

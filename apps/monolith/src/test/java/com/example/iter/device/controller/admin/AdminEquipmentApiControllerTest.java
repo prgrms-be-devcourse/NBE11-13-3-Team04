@@ -3,6 +3,7 @@ package com.example.iter.device.controller.admin;
 import com.example.iter.common.security.Role;
 import com.example.iter.auth.domain.entity.User;
 import com.example.iter.common.security.UserStatus;
+import com.example.iter.common.image.CaptureView;
 import com.example.iter.auth.api.UserSummary;
 import com.example.iter.config.RestApiSecurityTestConfig;
 import com.example.iter.common.dto.response.CursorPageResponse;
@@ -274,6 +275,7 @@ class AdminEquipmentApiControllerTest {
                 List.of(new ImageResponse(
                         100L,
                         "https://example.com/image.jpg",
+                        CaptureView.FRONT,
                         1,
                         true
                 )),
