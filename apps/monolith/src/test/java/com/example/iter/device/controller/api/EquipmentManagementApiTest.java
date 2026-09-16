@@ -107,7 +107,7 @@ class EquipmentManagementApiTest {
                     ValidatedUpload upload = invocation.getArgument(1);
                     String finalKey = "equipment/public/%d/%s".formatted(
                             equipmentId,
-                            upload.objectKey().substring(upload.objectKey().lastIndexOf('/') + 1));
+                            upload.getObjectKey().substring(upload.getObjectKey().lastIndexOf('/') + 1));
                     return new StoredImage(
                             finalKey,
                             "https://cdn.example.com/" + finalKey
@@ -249,7 +249,7 @@ class EquipmentManagementApiTest {
         assertThat(equipmentRepository.count()).isZero();
         assertThat(equipmentImageRepository.count()).isZero();
         assertThat(imageUploadRepository.findAll()).noneMatch(EquipmentImageUpload::isUsed);
-        verify(imageStorage, timeout(1000)).delete(firstImage.objectKey());
+        verify(imageStorage, timeout(1000)).delete(firstImage.getObjectKey());
     }
 
     @Test
