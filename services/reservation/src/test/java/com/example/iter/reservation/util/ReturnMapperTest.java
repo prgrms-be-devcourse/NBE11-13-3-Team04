@@ -97,19 +97,28 @@ class ReturnMapperTest {
     }
 
     private Rental rental(RentalStatus status) {
-        return Rental.builder()
-                .id(10L)
-                .equipmentId(20L)
-                .renterId(2L)
-                .startDate(LocalDate.of(2026, 8, 1))
-                .endDate(LocalDate.of(2026, 8, 10))
-                .productNameSnapshot("예약 당시 맥북")
-                .categorySnapshot("노트북")
-                .dailyPriceSnapshot(BigDecimal.valueOf(30000))
-                .rentalDays(10)
-                .totalPrice(BigDecimal.valueOf(300000))
-                .status(status)
-                .build();
+        return new Rental(
+                20L,
+                0L,
+                2L,
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 10),
+                "예약 당시 맥북",
+                BigDecimal.valueOf(30000),
+                10,
+                BigDecimal.valueOf(300000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                "노트북",
+                null,
+                10L);
     }
 
     private UserSummary renter() {
@@ -117,22 +126,20 @@ class ReturnMapperTest {
     }
 
     private Receipt receipt(Rental rental) {
-        return Receipt.builder()
-                .id(30L)
-                .rental(rental)
-                .productCondition(ProductConditionType.NORMAL)
-                .conditionDetail("수령 시 정상")
-                .receivedAt(LocalDateTime.of(2026, 8, 1, 14, 30))
-                .build();
+        return new Receipt(
+                rental,
+                ProductConditionType.NORMAL,
+                "수령 시 정상",
+                LocalDateTime.of(2026, 8, 1, 14, 30),
+                30L);
     }
 
     private ReturnReceipt returnReceipt(Rental rental) {
-        return ReturnReceipt.builder()
-                .id(40L)
-                .rental(rental)
-                .productCondition(ProductConditionType.DAMAGED)
-                .conditionDetail("반납 시 모서리 파손")
-                .returnDate(LocalDate.of(2026, 8, 11))
-                .build();
+        return new ReturnReceipt(
+                rental,
+                ProductConditionType.DAMAGED,
+                "반납 시 모서리 파손",
+                LocalDate.of(2026, 8, 11),
+                40L);
     }
 }
