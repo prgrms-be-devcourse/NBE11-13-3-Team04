@@ -58,7 +58,7 @@ class RentalHistoryRepositoryTest {
                 .extracting(Rental::getId)
                 .containsExactly(first.getId(), second.getId());
         assertThat(result.getContent())
-                .allMatch(rental -> rental.getRenterId().equals(RENTER_ID));
+                .allMatch(rental -> rental.getRenterId() == RENTER_ID);
     }
 
     @Test
@@ -326,19 +326,28 @@ class RentalHistoryRepositoryTest {
             LocalDate endDate
     ) {
         return rentalRepository.saveAndFlush(
-                Rental.builder()
-                        .equipmentId(equipment.getId())
-                        .ownerIdSnapshot(equipment.getOwnerId())
-                        .renterId(renterId)
-                        .startDate(endDate.minusDays(2))
-                        .endDate(endDate)
-                        .productNameSnapshot(productNameSnapshot)
-                        .categorySnapshot("디지털기기")
-                        .dailyPriceSnapshot(BigDecimal.valueOf(10_000))
-                        .rentalDays(3)
-                        .totalPrice(BigDecimal.valueOf(30_000))
-                        .status(status)
-                        .build()
+                new Rental(
+                        equipment.getId(),
+                        equipment.getOwnerId(),
+                        renterId,
+                        endDate.minusDays(2),
+                        endDate,
+                        productNameSnapshot,
+                        BigDecimal.valueOf(10_000),
+                        3,
+                        BigDecimal.valueOf(30_000),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        status,
+                        "디지털기기",
+                        null,
+                        null)
         );
     }
 }
