@@ -66,10 +66,13 @@ class ChatRoomService(
     suspend fun requireRoom(roomId: Long): ChatRoom =
         chatRoomRepository.findById(roomId) ?: throw ChatException(ChatErrorCode.ROOM_NOT_FOUND)
 
-    // WebSocket 연결(CH5)에서도 그대로 쓸 수 있게 public으로 둔다.
     suspend fun requireParticipant(roomId: Long, userId: Long): RoomParticipant =
+        findParticipant(roomId, userId) ?: throw ChatException(ChatErrorCode.ROOM_ACCESS_DENIED)
+
+    // WebSocket 핸드셰이크(ChatWebSocketHandler)에서 쓴다 — 거기서는 예외 대신
+    // 1008(POLICY_VIOLATION) 종료로 처리하는 쪽이 자연스러워서 null 반환 버전을 따로 둔다.
+    suspend fun findParticipant(roomId: Long, userId: Long): RoomParticipant? =
         roomParticipantRepository.findByRoomIdAndUserId(roomId, userId)
-            ?: throw ChatException(ChatErrorCode.ROOM_ACCESS_DENIED)
 
     private suspend fun toSummary(userId: Long, participant: RoomParticipant): RoomSummaryResponse {
         val room = requireRoom(participant.roomId)
