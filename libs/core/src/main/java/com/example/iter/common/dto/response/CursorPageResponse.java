@@ -26,9 +26,11 @@ public record CursorPageResponse<T>(
             Function<S, CursorKey> cursorKeyExtractor
     ) {
         boolean hasNext = fetched.size() > requestedSize;
+
         List<S> pageContent = hasNext
                 ? fetched.subList(0, requestedSize)
                 : fetched;
+
         List<T> content = pageContent.stream().map(mapper).toList();
 
         String nextCursor = hasNext && !pageContent.isEmpty()

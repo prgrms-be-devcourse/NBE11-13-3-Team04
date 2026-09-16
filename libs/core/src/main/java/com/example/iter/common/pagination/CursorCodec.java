@@ -36,13 +36,16 @@ public final class CursorCodec {
                     Base64.getUrlDecoder().decode(cursor.trim()),
                     StandardCharsets.UTF_8
             );
+
             String[] values = decoded.split("\\|", -1);
+
             if (values.length != 2) {
                 throw invalidCursor();
             }
 
             LocalDateTime createdAt = LocalDateTime.parse(values[0]);
             long id = Long.parseLong(values[1]);
+
             if (id <= 0) {
                 throw invalidCursor();
             }
