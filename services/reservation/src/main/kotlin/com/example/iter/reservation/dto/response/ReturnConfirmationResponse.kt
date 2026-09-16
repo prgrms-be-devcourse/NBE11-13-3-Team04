@@ -6,8 +6,10 @@ data class ReturnConfirmationResponse(
     val rentalId: Long?,
     val status: RentalStatus?,
     val disputeId: Long?,
+    val reportId: Long?,
 ) {
     fun rentalId(): Long? = rentalId
     fun status(): RentalStatus? = status
     fun disputeId(): Long? = disputeId
+    fun reportId(): Long? = reportId
 }

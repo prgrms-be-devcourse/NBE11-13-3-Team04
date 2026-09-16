@@ -38,9 +38,11 @@ class EquipmentImageUploadService(
                     file.contentType,
                     file.size,
                     presigned.expiresAt,
+                    file.captureView,
                 )
             )
             PresignedImageUploadItemResponse(
+                file.captureView,
                 presigned.objectKey,
                 presigned.uploadUrl.toExternalForm(),
                 presigned.requiredHeaders,

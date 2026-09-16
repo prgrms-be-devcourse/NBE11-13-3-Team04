@@ -11,6 +11,7 @@ data class ReturnComparisonResponse(
     val startDate: LocalDate?,
     val endDate: LocalDate?,
     val returnDate: LocalDate?,
+    val listingImages: List<ConditionEvidenceImageResponse> = emptyList(),
     val receipt: ConditionEvidenceResponse?,
     val returnReceipt: ConditionEvidenceResponse?,
 ) {
@@ -20,6 +21,7 @@ data class ReturnComparisonResponse(
     fun startDate(): LocalDate? = startDate
     fun endDate(): LocalDate? = endDate
     fun returnDate(): LocalDate? = returnDate
+    fun listingImages(): List<ConditionEvidenceImageResponse> = listingImages
     fun receipt(): ConditionEvidenceResponse? = receipt
     fun returnReceipt(): ConditionEvidenceResponse? = returnReceipt
 }

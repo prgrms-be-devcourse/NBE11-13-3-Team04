@@ -1,10 +1,12 @@
 package com.example.iter.device.dto.request
 
+import com.example.iter.common.dto.request.CapturedImageRequest
+import com.example.iter.common.image.CaptureView
 import com.example.iter.device.domain.entity.EquipmentCategory
 import com.example.iter.device.domain.entity.ProductConditionType
+import jakarta.validation.Valid
 import jakarta.validation.constraints.AssertTrue
 import jakarta.validation.constraints.FutureOrPresent
-import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
@@ -13,6 +15,7 @@ import jakarta.validation.constraints.Size
 
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.EnumSet
 
 data class EquipmentCreateRequest(
     @field:NotNull(message = "장비 카테고리는 필수입니다.")
@@ -41,12 +44,10 @@ data class EquipmentCreateRequest(
 
     val conditionDetail: String?,
 
-    @field:NotEmpty(message = "장비 이미지는 한 장 이상 필요합니다.")
-    @field:Size(max = 5, message = "장비 이미지는 5장 이하로 등록해주세요.")
-    val imageKeys: List<@NotBlank(message = "이미지 객체 키는 빈 값일 수 없습니다.") String>?,
-
-    @field:Min(value = 0, message = "대표 이미지 인덱스는 0 이상이어야 합니다.")
-    val thumbnailIndex: Int = 0,
+    @field:NotEmpty(message = "장비 이미지는 필수입니다.")
+    @field:Size(min = 3, max = 3, message = "정면·측면·후면 사진을 각각 한 장씩 등록해주세요.")
+    @field:Valid
+    val images: List<CapturedImageRequest>?
 ) {
     @get:AssertTrue(message = "대여 가능 종료일은 시작일보다 빠를 수 없습니다.")
     val isValidAvailablePeriod: Boolean
@@ -58,11 +59,26 @@ data class EquipmentCreateRequest(
             productCondition == ProductConditionType.NORMAL ||
             conditionDetail != null && conditionDetail.isNotBlank()
 
-    @get:AssertTrue(message = "대표 이미지 인덱스가 이미지 목록 범위를 벗어났습니다.")
-    val isValidThumbnailIndex: Boolean
-        get() = imageKeys == null || imageKeys.isEmpty() || thumbnailIndex < imageKeys.size
+    @get:AssertTrue(message = "정면·측면·후면 사진을 각각 한 장씩 등록해주세요.")
+    val hasAllCaptureViews: Boolean
+        get() {
+            if (images == null || images.size != CaptureView.entries.size) {
+                return false
+            }
+
+            val views = images.mapNotNull(CapturedImageRequest::captureView).toSet()
+
+            return views == EnumSet.allOf(CaptureView::class.java)
+        }
 
     @AssertTrue(message = "중복된 이미지 객체 키는 등록할 수 없습니다.")
     fun hasNoDuplicateImageKeys(): Boolean =
-        imageKeys == null || imageKeys.toSet().size == imageKeys.size
+        images == null || images.map(CapturedImageRequest::objectKey).toSet().size == images.size
+
+    fun orderedImages(): List<CapturedImageRequest> = images
+        ?.sortedWith(compareBy(nullsLast()) { it.captureView })
+        ?: emptyList()
+
+    val imageKeys: List<String>
+        get() = orderedImages().map { requireNotNull(it.objectKey) }
 }

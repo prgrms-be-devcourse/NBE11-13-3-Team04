@@ -1,8 +1,11 @@
 package com.example.iter.reservation.dto.request
 
+import com.example.iter.common.dto.request.CapturedImageRequest
 import com.example.iter.reservation.domain.entity.ProductConditionType
-import jakarta.validation.constraints.NotEmpty
+import jakarta.validation.Valid
+import jakarta.validation.constraints.AssertTrue
 import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Size
 
 data class ReturnEvidenceCreateRequest(
     @field:NotNull(message = "반납 시점 상품 상태는 필수입니다.")
@@ -10,10 +13,19 @@ data class ReturnEvidenceCreateRequest(
 
     val conditionDetail: String?,
 
-    @field:NotEmpty(message = "반납 증빙 사진은 최소 1장 필요합니다.")
-    val imageUrls: List<@NotEmpty String>?,
+    @field:Size(min = 3, max = 3, message = "반납 사진은 정면·측면·후면 각각 한 장씩 필요합니다.")
+    @field:Valid
+    val images: List<CapturedImageRequest>?,
 ) {
     fun productCondition(): ProductConditionType? = productCondition
     fun conditionDetail(): String? = conditionDetail
-    fun imageUrls(): List<String>? = imageUrls
+    fun images(): List<CapturedImageRequest>? = images
+
+    @get:AssertTrue(message = "반납 사진은 정면·측면·후면 각각 한 장씩 필요합니다.")
+    val hasAllCaptureViews: Boolean
+        get() = CaptureImageRequestRules.hasAllViews(images)
+
+    @get:AssertTrue(message = "중복된 반납 사진은 제출할 수 없습니다.")
+    val hasNoDuplicateKeys: Boolean
+        get() = CaptureImageRequestRules.hasNoDuplicateKeys(images)
 }

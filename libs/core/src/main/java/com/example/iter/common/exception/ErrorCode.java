@@ -17,6 +17,15 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다."),
     CONCURRENT_MODIFICATION(HttpStatus.CONFLICT, "다른 요청이 먼저 처리되었습니다. 새로고침 후 다시 시도해주세요."),
 
+    // AI
+    AI_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "AI 분석을 사용할 수 없습니다. 직접 등록은 계속 이용할 수 있습니다."),
+    AI_DAILY_LIMIT(HttpStatus.TOO_MANY_REQUESTS, "오늘의 AI 초안 생성 횟수를 모두 사용했습니다."),
+    AI_REPORT_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "AI 분석을 사용할 수 없습니다. 수동 신고 처리는 가능합니다."),
+    AI_REPORT_DAILY_LIMIT(HttpStatus.TOO_MANY_REQUESTS, "오늘의 신고 AI 분석 횟수를 모두 사용했습니다."),
+    AI_REPORT_CLOSED(HttpStatus.CONFLICT, "처리 완료 또는 기각된 신고는 새로 분석하지 않습니다."),
+    AI_CONDITION_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "AI 비교를 사용할 수 없습니다. 사진을 직접 비교해 반납을 확인하십시오."),
+    AI_CONDITION_DAILY_LIMIT(HttpStatus.TOO_MANY_REQUESTS, "오늘의 수령·반납 AI 비교 횟수를 모두 사용했습니다."),
+
     // Auth
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 가입된 이메일입니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다."),
@@ -87,6 +96,12 @@ public enum ErrorCode {
     RENTAL_NOT_RECEIVABLE(HttpStatus.CONFLICT, "배송 중인 예약만 수령 확인할 수 있습니다."),
     RENTAL_NOT_RETURN_REQUESTABLE(HttpStatus.CONFLICT, "대여 중인 예약만 반납 신청할 수 있습니다."),
     RENTAL_NOT_RETURN_EVIDENCE_SUBMITTABLE(HttpStatus.CONFLICT, "반납 신청된 예약만 반납 증빙을 제출할 수 있습니다."),
+    EVIDENCE_UPLOAD_NOT_ALLOWED(HttpStatus.CONFLICT, "현재 대여 상태에서는 증빙 사진을 업로드할 수 없습니다."),
+    EVIDENCE_IMAGE_INVALID(HttpStatus.BAD_REQUEST, "증빙 사진은 JPEG, PNG, WebP 형식이며 한 장당 10MB 이하여야 합니다."),
+    EVIDENCE_UPLOAD_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "이 대여 단계에서 증빙 사진 업로드를 더 발급할 수 없습니다."),
+    EVIDENCE_UPLOAD_NOT_FOUND(HttpStatus.BAD_REQUEST, "이 대여에 발급된 증빙 사진 업로드를 찾을 수 없습니다."),
+    EVIDENCE_UPLOAD_ALREADY_USED(HttpStatus.CONFLICT, "이미 제출한 증빙 사진은 다시 사용할 수 없습니다."),
+    EVIDENCE_UPLOAD_FAILED(HttpStatus.BAD_GATEWAY, "증빙 사진 저장 상태를 확인하지 못했습니다."),
     RESERVATION_CONFLICT(HttpStatus.CONFLICT, "이미 확정된 예약과 기간이 겹쳐 승인할 수 없습니다."),
     TOSS_PAYMENT_FAILED(HttpStatus.BAD_GATEWAY, "토스 결제 승인에 실패했습니다."),
     TOSS_AMOUNT_MISMATCH(HttpStatus.CONFLICT, "결제 금액이 일치하지 않습니다."),

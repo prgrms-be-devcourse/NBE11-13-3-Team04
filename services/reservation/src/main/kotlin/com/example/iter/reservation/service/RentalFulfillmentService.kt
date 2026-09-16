@@ -1,11 +1,13 @@
 package com.example.iter.reservation.service
 
+import com.example.iter.common.dto.request.CapturedImageRequest
 import com.example.iter.common.exception.CustomException
 import com.example.iter.common.exception.ErrorCode
 import com.example.iter.delivery.api.ShippingCommandPort
 import com.example.iter.device.api.EquipmentInfo
 import com.example.iter.device.api.EquipmentQueryPort
 import com.example.iter.reservation.api.RentalStatus
+import com.example.iter.reservation.domain.entity.EvidenceUploadPhase
 import com.example.iter.reservation.domain.entity.Receipt
 import com.example.iter.reservation.domain.entity.ReceiptImage
 import com.example.iter.reservation.domain.entity.Rental
@@ -51,6 +53,7 @@ class RentalFulfillmentService(
     private val receiptImageRepository: ReceiptImageRepository,
     private val returnReceiptRepository: ReturnReceiptRepository,
     private val returnReceiptImageRepository: ReturnReceiptImageRepository,
+    private val evidenceUploadService: RentalEvidenceUploadService,
     private val eventPublisher: ApplicationEventPublisher,
 ) {
 
@@ -86,11 +89,13 @@ class RentalFulfillmentService(
             throw CustomException(ErrorCode.RENTAL_NOT_RECEIVABLE)
         }
 
+        evidenceUploadService.validateAndUse(renterId, rentalId, EvidenceUploadPhase.RECEIPT, request.images())
+
         val now = LocalDateTime.now()
         val receipt = receiptRepository.save(
             Receipt(rental, request.productCondition()!!, request.conditionDetail(), now),
         )
-        saveReceiptImages(receipt, request.imageUrls()!!)
+        saveReceiptImages(receipt, request.images()!!)
 
         rental.changeStatus(RentalStatus.RENTING)
         eventPublisher.publishEvent(RentalReceivedEvent(rental.id))
@@ -127,12 +132,14 @@ class RentalFulfillmentService(
             throw CustomException(ErrorCode.RENTAL_NOT_RETURN_EVIDENCE_SUBMITTABLE)
         }
 
+        evidenceUploadService.validateAndUse(renterId, rentalId, EvidenceUploadPhase.RETURN, request.images())
+
         val now = LocalDateTime.now()
         val today = now.toLocalDate()
         val returnReceipt = returnReceiptRepository.save(
             ReturnReceipt(rental, request.productCondition()!!, request.conditionDetail(), today),
         )
-        saveReturnReceiptImages(returnReceipt, request.imageUrls()!!)
+        saveReturnReceiptImages(returnReceipt, request.images()!!)
 
         shippingCommandPort.recordReturnDelivered(rental.id, now)
 
@@ -142,15 +149,25 @@ class RentalFulfillmentService(
         return ReturnEvidenceCreateResponse(rental.id, rental.status, today)
     }
 
-    private fun saveReceiptImages(receipt: Receipt, imageUrls: List<String>) {
-        val images = imageUrls.mapIndexed { index, imageUrl -> ReceiptImage(receipt, imageUrl, index) }
+    private fun saveReceiptImages(receipt: Receipt, capturedImages: List<CapturedImageRequest>) {
+        val ordered = orderedImages(capturedImages)
+        val images = ordered.mapIndexed { index, image ->
+            // 기존 컬럼명은 image_url이지만 신규 데이터에는 비공개 S3 object key를 저장합니다.
+            ReceiptImage(receipt, requireNotNull(image.objectKey), index, image.captureView)
+        }
         receiptImageRepository.saveAll(images)
     }
 
-    private fun saveReturnReceiptImages(returnReceipt: ReturnReceipt, imageUrls: List<String>) {
-        val images = imageUrls.mapIndexed { index, imageUrl -> ReturnReceiptImage(returnReceipt, imageUrl, index) }
+    private fun saveReturnReceiptImages(returnReceipt: ReturnReceipt, capturedImages: List<CapturedImageRequest>) {
+        val ordered = orderedImages(capturedImages)
+        val images = ordered.mapIndexed { index, image ->
+            ReturnReceiptImage(returnReceipt, requireNotNull(image.objectKey), index, image.captureView)
+        }
         returnReceiptImageRepository.saveAll(images)
     }
+
+    private fun orderedImages(images: List<CapturedImageRequest>): List<CapturedImageRequest> =
+        images.sortedWith(compareBy(nullsLast()) { it.captureView })
 
     private fun findRental(rentalId: Long): Rental =
         rentalRepository.findById(rentalId).orElseThrow { CustomException(ErrorCode.RENTAL_NOT_FOUND) }

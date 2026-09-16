@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param
 
 interface EquipmentImageUploadRepository : JpaRepository<EquipmentImageUpload, Long> {
 
+    fun findAllByObjectKeyIn(objectKeys: Collection<String>): List<EquipmentImageUpload>
+
     // order by u.id 는 데드락 회피용 락 획득 순서다. 빼지 말 것.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from EquipmentImageUpload u where u.objectKey in :objectKeys order by u.id")
