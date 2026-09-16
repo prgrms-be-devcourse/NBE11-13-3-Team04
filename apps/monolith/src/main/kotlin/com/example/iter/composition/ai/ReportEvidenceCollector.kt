@@ -31,7 +31,7 @@ class ReportEvidenceCollector(
 
     // 수령 증빙은 촬영 순서를 보존하며 최대 세 장까지만 후보에 추가합니다.
     fun collectReceiptImages(receipt: Receipt, draft: ReportAnalysisDraft) {
-        val storedImages = receiptImages.findByReceipt_IdOrderBySortOrderAscIdAsc(receipt.id)
+        val storedImages = receiptImages.findByReceipt_IdOrderBySortOrderAscIdAsc(receipt.id!!)
 
         for (index in 0 until minOf(storedImages.size, MAX_IMAGES_PER_RECEIPT)) {
             val stored = storedImages[index]
@@ -43,7 +43,7 @@ class ReportEvidenceCollector(
 
     // 반납 증빙은 촬영 순서를 보존하며 최대 세 장까지만 후보에 추가합니다.
     fun collectReturnReceiptImages(receipt: ReturnReceipt, draft: ReportAnalysisDraft) {
-        val storedImages = returnReceiptImages.findByReturnReceipt_IdOrderBySortOrderAscIdAsc(receipt.id)
+        val storedImages = returnReceiptImages.findByReturnReceipt_IdOrderBySortOrderAscIdAsc(receipt.id!!)
 
         for (index in 0 until minOf(storedImages.size, MAX_IMAGES_PER_RECEIPT)) {
             val stored = storedImages[index]

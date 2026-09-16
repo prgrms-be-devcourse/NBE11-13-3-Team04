@@ -133,7 +133,7 @@ class ConditionAnalysisApiTest {
         }
         verify(images).reference("before-front.jpg", "before-front", "FRONT")
         verify(images).reference("after-rear.jpg", "after-rear", "REAR")
-        assertThat(rentals.findById(rental.id).orElseThrow().status).isEqualTo(RentalStatus.RETURNED)
+        assertThat(rentals.findById(rental.id!!).orElseThrow().status).isEqualTo(RentalStatus.RETURNED)
         verify(returns, never()).confirmReturn(any(), any(), any())
     }
 
@@ -169,13 +169,13 @@ class ConditionAnalysisApiTest {
     @Test
     fun 접수불명확과_재접수에도_같은_UUID를_사용한다() {
         doThrow(AiServiceException(0)).whenever(client).createJob(any())
-        val first = service.create(owner.id, rental.id, input())
+        val first = service.create(owner.id, rental.id!!, input())
         val jobId = requireNotNull(first.jobId)
         assertThat(first.status).isEqualTo("SUBMISSION_UNKNOWN")
         whenever(client.getJob(jobId)).thenThrow(AiServiceException(404))
-        assertThat(service.get(owner.id, rental.id).status).isEqualTo("SUBMISSION_UNKNOWN")
-        assertThat(service.retry(owner.id, rental.id).jobId).isEqualTo(first.jobId)
-        assertThat(service.create(owner.id, rental.id, input()).jobId).isEqualTo(first.jobId)
+        assertThat(service.get(owner.id, rental.id!!).status).isEqualTo("SUBMISSION_UNKNOWN")
+        assertThat(service.retry(owner.id, rental.id!!).jobId).isEqualTo(first.jobId)
+        assertThat(service.create(owner.id, rental.id!!, input()).jobId).isEqualTo(first.jobId)
         verify(client, times(3)).createJob(argThat { jobId == first.jobId })
         verify(images, times(9)).reference(any(), any(), any())
     }
@@ -183,10 +183,10 @@ class ConditionAnalysisApiTest {
     @Test
     fun 완료된_대여는_신규분석하지_않고_일일한도를_검사한다() {
         val closed = rental(RentalStatus.COMPLETED)
-        assertThatThrownBy { service.create(owner.id, closed.id, input()) }.isInstanceOf(CustomException::class.java)
-        service.create(owner.id, rental.id, input())
+        assertThatThrownBy { service.create(owner.id, closed.id!!, input()) }.isInstanceOf(CustomException::class.java)
+        service.create(owner.id, rental.id!!, input())
         val another = rental(RentalStatus.RETURNED)
-        assertThatThrownBy { service.create(owner.id, another.id, input()) }
+        assertThatThrownBy { service.create(owner.id, another.id!!, input()) }
             .isInstanceOfSatisfying(CustomException::class.java) {
                 assertThat(it.errorCode).isEqualTo(ErrorCode.AI_CONDITION_DAILY_LIMIT)
             }
@@ -199,7 +199,7 @@ class ConditionAnalysisApiTest {
             status { isOk() }
             jsonPath("$.status") { value("NOT_REQUESTED") }
         }
-        val created = service.create(owner.id, rental.id, input())
+        val created = service.create(owner.id, rental.id!!, input())
         val jobId = requireNotNull(created.jobId)
         whenever(client.getJob(jobId)).thenReturn(
             AiJobStatus(
@@ -223,8 +223,8 @@ class ConditionAnalysisApiTest {
     fun 같은_대여의_동시요청도_한_UUID만_사용한다() {
         val start = CountDownLatch(1)
         Executors.newFixedThreadPool(2).use { executor ->
-            val first = executor.submit<UUID> { start.await(); service.create(owner.id, rental.id, input()).jobId }
-            val second = executor.submit<UUID> { start.await(); service.create(owner.id, rental.id, input()).jobId }
+            val first = executor.submit<UUID> { start.await(); service.create(owner.id, rental.id!!, input()).jobId }
+            val second = executor.submit<UUID> { start.await(); service.create(owner.id, rental.id!!, input()).jobId }
             start.countDown()
             assertThat(first.get(10, TimeUnit.SECONDS)).isEqualTo(second.get(10, TimeUnit.SECONDS))
         }
@@ -244,7 +244,7 @@ class ConditionAnalysisApiTest {
     }
 
     private fun tryCreate(target: Rental): String = try {
-        requireNotNull(service.create(owner.id, target.id, input()).status)
+        requireNotNull(service.create(owner.id, target.id!!, input()).status)
     } catch (exception: CustomException) {
         exception.errorCode.name
     }
@@ -254,10 +254,19 @@ class ConditionAnalysisApiTest {
     )
 
     private fun rental(status: RentalStatus): Rental = rentals.saveAndFlush(
-        Rental.builder().equipmentId(item.id).ownerIdSnapshot(owner.id).renterId(renter.id)
-            .startDate(LocalDate.now()).endDate(LocalDate.now().plusDays(1)).productNameSnapshot("카메라")
-            .dailyPriceSnapshot(BigDecimal.valueOf(1000)).rentalDays(1).totalPrice(BigDecimal.valueOf(1000))
-            .status(status).build()
+        Rental(
+            requireNotNull(item.id),
+            requireNotNull(owner.id),
+            requireNotNull(renter.id),
+            LocalDate.now(),
+            LocalDate.now().plusDays(1),
+            "카메라",
+            BigDecimal.valueOf(1000),
+            1,
+            BigDecimal.valueOf(1000),
+            null, null, null, null, null, null, null, null,
+            status,
+        )
     )
 
     private fun evidence(phase: String) = listOf(

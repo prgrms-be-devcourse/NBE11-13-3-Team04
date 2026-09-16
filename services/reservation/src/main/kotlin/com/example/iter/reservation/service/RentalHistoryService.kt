@@ -6,6 +6,8 @@ import com.example.iter.common.dto.request.PagingRequest
 import com.example.iter.common.dto.response.PageResponse
 import com.example.iter.common.exception.CustomException
 import com.example.iter.common.exception.ErrorCode
+import com.example.iter.device.api.EquipmentInfo
+import com.example.iter.device.api.EquipmentQueryPort
 import com.example.iter.device.api.EquipmentThumbnailQueryPort
 import com.example.iter.reservation.domain.entity.Rental
 import com.example.iter.reservation.domain.repository.RentalHistoryRepository
@@ -20,114 +22,128 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.Clock
+
 import java.time.LocalDate
 
 @Service
 class RentalHistoryService(
     private val rentalHistoryRepository: RentalHistoryRepository,
+    private val equipmentQueryPort: EquipmentQueryPort,
     private val equipmentThumbnailQueryPort: EquipmentThumbnailQueryPort,
     private val userQueryPort: UserQueryPort,
     private val rentalHistoryMapper: RentalHistoryMapper,
-    private val clock: Clock
 ) {
 
-    // 대여자가 빌린 거래를 상태·장비명으로 검색하고 최신 거래부터 반환합니다.
+    // 로그인 사용자가 빌린 장비 이력을 조회합니다.
+    //
+    // renterId/ownerId는 전부 Long?로 받고 곧장 !!로 푼다 — non-null Long으로 두면 JVM
+    // 시그니처가 primitive long이 되는데, RentalHistoryApiControllerTest(apps/monolith)가
+    // 이 서비스를 @MockitoBean으로 목킹하며 verify(..., never()).getBorrowedHistory(any(), any())
+    // 처럼 타입 지정 없는 any()를 쓴다. any()는 null을 반환하는 매처라 primitive 언박싱 시
+    // NPE가 난다(device D7에서 겪은 것과 동일한 함정).
     @Transactional(readOnly = true)
-    fun getBorrowedHistory(renterId: Long, request: RentalHistorySearchRequest): PageResponse<RentalHistoryResponse> {
+    fun getBorrowedHistory(renterId: Long?, request: RentalHistorySearchRequest): PageResponse<RentalHistoryResponse> {
+        val renterId = renterId!!
         val rentals = rentalHistoryRepository.findAll(
-            RentalSpecifications.borrowedHistory(
-                renterId,
-                request.status,
-                normalizeKeyword(request.equipmentName)
-            ),
-            historyPageable(request.page, request.size)
+            RentalSpecifications.borrowedHistory(renterId, request.status(), normalizeKeyword(request.equipmentName())),
+            historyPageable(request.page(), request.size()),
         )
 
-        return toBorrowedHistoryResponse(rentals, LocalDate.now(clock))
+        return toBorrowedHistoryResponse(rentals, LocalDate.now())
     }
 
-    // 현재 장비 소유자가 아니라 거래 생성 당시 등록자 스냅샷을 기준으로 빌려준 이력을 조회합니다.
+    // 로그인 사용자가 빌려준 장비 이력을 조회합니다.
     @Transactional(readOnly = true)
-    fun getLentHistory(ownerId: Long, request: RentalHistorySearchRequest): PageResponse<RentalHistoryResponse> {
+    fun getLentHistory(ownerId: Long?, request: RentalHistorySearchRequest): PageResponse<RentalHistoryResponse> {
+        val ownerId = ownerId!!
         val rentals = rentalHistoryRepository.findLentHistory(
             ownerId,
-            request.status,
-            normalizeKeyword(request.equipmentName),
-            historyPageable(request.page, request.size)
+            request.status(),
+            normalizeKeyword(request.equipmentName()),
+            historyPageable(request.page(), request.size()),
         )
 
-        return toLentHistoryResponse(rentals, LocalDate.now(clock))
+        return toLentHistoryResponse(rentals, LocalDate.now())
     }
 
-    // 종료일이 지났고 아직 반납이 끝나지 않은 대여자의 거래를 오래 연체된 순서로 조회합니다.
+    // 로그인 사용자가 빌린 장비 중 현재 연체 중인 거래를 조회합니다.
     @Transactional(readOnly = true)
-    fun getBorrowedOverdueHistory(renterId: Long, request: PagingRequest): PageResponse<RentalHistoryResponse> {
-        val today = LocalDate.now(clock)
+    fun getBorrowedOverdueHistory(renterId: Long?, request: PagingRequest): PageResponse<RentalHistoryResponse> {
+        val renterId = renterId!!
+        val today = LocalDate.now()
+
         val rentals = rentalHistoryRepository.findByRenterIdAndEndDateBeforeAndStatusIn(
             renterId,
             today,
             RentalOverduePolicy.statuses(),
-            overduePageable(request.page(), request.size())
+            overduePageable(request.page(), request.size()),
         )
 
         return toBorrowedHistoryResponse(rentals, today)
     }
 
-    // 거래 당시 등록자 스냅샷을 기준으로 빌려준 연체 이력을 조회합니다.
+    // 로그인 사용자가 빌려준 장비 중 현재 연체 중인 거래를 조회합니다.
     @Transactional(readOnly = true)
-    fun getLentOverdueHistory(ownerId: Long, request: PagingRequest): PageResponse<RentalHistoryResponse> {
-        val today = LocalDate.now(clock)
+    fun getLentOverdueHistory(ownerId: Long?, request: PagingRequest): PageResponse<RentalHistoryResponse> {
+        val ownerId = ownerId!!
+        val today = LocalDate.now()
+
         val rentals = rentalHistoryRepository.findByOwnerIdSnapshotAndEndDateBeforeAndStatusIn(
             ownerId,
             today,
             RentalOverduePolicy.statuses(),
-            overduePageable(request.page(), request.size())
+            overduePageable(request.page(), request.size()),
         )
 
         return toLentHistoryResponse(rentals, today)
     }
 
-    // 현재 페이지의 등록자와 썸네일을 일괄 조회해 거래별 추가 조회가 발생하지 않게 합니다.
+    // ============================================================
+
     private fun toBorrowedHistoryResponse(rentals: Page<Rental>, today: LocalDate): PageResponse<RentalHistoryResponse> {
         if (rentals.isEmpty) {
             return emptyResponse(rentals)
         }
 
-        val equipmentIds = rentals.content.map(Rental::getEquipmentId).toSet()
-        val ownerIds = rentals.content.map(Rental::getOwnerIdSnapshot).toSet()
+        val equipmentIds = rentals.content.map { it.equipmentId }.toSet()
+        val equipmentMap = equipmentQueryPort.findAll(equipmentIds)
+
+        val ownerIds = rentals.content.map { getEquipment(equipmentMap, it.equipmentId).ownerId() }.toSet()
+
         val userMap = userQueryPort.findSummaries(ownerIds)
         val thumbnailMap = loadThumbnails(equipmentIds)
 
         val responses = rentals.content.map { rental ->
+            val equipment = getEquipment(equipmentMap, rental.equipmentId)
+            val owner = getUser(userMap, equipment.ownerId())
+
             rentalHistoryMapper.toResponse(
                 rental,
-                getUser(userMap, rental.ownerIdSnapshot),
+                owner,
                 thumbnailMap[rental.equipmentId],
-                RentalOverduePolicy.calculateDays(rental, today)
+                RentalOverduePolicy.calculateDays(rental, today),
             )
         }
 
         return toPageResponse(rentals, responses)
     }
 
-    // 현재 페이지의 대여자와 썸네일을 일괄 조회해 거래별 추가 조회가 발생하지 않게 합니다.
     private fun toLentHistoryResponse(rentals: Page<Rental>, today: LocalDate): PageResponse<RentalHistoryResponse> {
         if (rentals.isEmpty) {
             return emptyResponse(rentals)
         }
 
-        val renterIds = rentals.content.map(Rental::getRenterId).toSet()
-        val equipmentIds = rentals.content.map(Rental::getEquipmentId).toSet()
+        val renterIds = rentals.content.map { it.renterId }.toSet()
+
         val userMap = userQueryPort.findSummaries(renterIds)
-        val thumbnailMap = loadThumbnails(equipmentIds)
+        val thumbnailMap = loadThumbnails(rentals.content.map { it.equipmentId }.toSet())
 
         val responses = rentals.content.map { rental ->
             rentalHistoryMapper.toResponse(
                 rental,
                 getUser(userMap, rental.renterId),
                 thumbnailMap[rental.equipmentId],
-                RentalOverduePolicy.calculateDays(rental, today)
+                RentalOverduePolicy.calculateDays(rental, today),
             )
         }
 
@@ -137,39 +153,54 @@ class RentalHistoryService(
     private fun loadThumbnails(equipmentIds: Collection<Long>): Map<Long, String> =
         equipmentThumbnailQueryPort.findThumbnailUrls(equipmentIds)
 
+    private fun getEquipment(equipmentMap: Map<Long, EquipmentInfo>, equipmentId: Long): EquipmentInfo =
+        equipmentMap[equipmentId] ?: throw CustomException(ErrorCode.EQUIPMENT_NOT_FOUND)
+
     private fun getUser(userMap: Map<Long, UserSummary>, userId: Long): UserSummary =
         userMap[userId] ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
 
-    private fun historyPageable(page: Int, size: Int): Pageable = PageRequest.of(
-        page,
-        size,
-        Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id"))
-    )
+    private fun historyPageable(page: Int, size: Int): Pageable =
+        PageRequest.of(
+            page,
+            size,
+            Sort.by(Sort.Direction.DESC, "createdAt").and(Sort.by(Sort.Direction.DESC, "id")),
+        )
 
-    // 연체 이력은 가장 오래 지난 종료일을 먼저 보여주고 동일 종료일에서는 최신 거래를 우선합니다.
-    private fun overduePageable(page: Int, size: Int): Pageable = PageRequest.of(
-        page,
-        size,
-        Sort.by(Sort.Direction.ASC, "endDate")
-            .and(Sort.by(Sort.Direction.DESC, "createdAt"))
-            .and(Sort.by(Sort.Direction.DESC, "id"))
-    )
+    private fun overduePageable(page: Int, size: Int): Pageable =
+        PageRequest.of(
+            page,
+            size,
+            Sort.by(Sort.Direction.ASC, "endDate")
+                .and(Sort.by(Sort.Direction.DESC, "createdAt"))
+                .and(Sort.by(Sort.Direction.DESC, "id")),
+        )
 
-    private fun normalizeKeyword(keyword: String?): String? = keyword?.trim()?.takeIf(String::isNotEmpty)
+    private fun normalizeKeyword(keyword: String?): String? {
+        if (keyword == null || keyword.isBlank()) {
+            return null
+        }
 
-    private fun emptyResponse(rentals: Page<Rental>): PageResponse<RentalHistoryResponse> = PageResponse(
-        emptyList(),
-        rentals.number,
-        rentals.size,
-        rentals.totalElements,
-        rentals.totalPages
-    )
+        return keyword.trim()
+    }
 
-    private fun toPageResponse(rentals: Page<Rental>, responses: List<RentalHistoryResponse>): PageResponse<RentalHistoryResponse> = PageResponse(
-        responses,
-        rentals.number,
-        rentals.size,
-        rentals.totalElements,
-        rentals.totalPages
-    )
+    private fun emptyResponse(rentals: Page<Rental>): PageResponse<RentalHistoryResponse> =
+        PageResponse(
+            emptyList(),
+            rentals.number,
+            rentals.size,
+            rentals.totalElements,
+            rentals.totalPages,
+        )
+
+    private fun toPageResponse(
+        rentals: Page<Rental>,
+        responses: List<RentalHistoryResponse>,
+    ): PageResponse<RentalHistoryResponse> =
+        PageResponse(
+            responses,
+            rentals.number,
+            rentals.size,
+            rentals.totalElements,
+            rentals.totalPages,
+        )
 }

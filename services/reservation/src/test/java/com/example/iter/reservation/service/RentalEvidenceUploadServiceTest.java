@@ -13,6 +13,8 @@ import com.example.iter.reservation.domain.repository.RentalEvidenceUploadReposi
 import com.example.iter.reservation.domain.repository.RentalRepository;
 import com.example.iter.reservation.dto.request.EvidenceImagePresignRequest;
 import org.junit.jupiter.api.Test;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -210,11 +212,28 @@ class RentalEvidenceUploadServiceTest {
     }
 
     private Rental rental(Long renterId) {
-        return Rental.builder()
-                .id(RENTAL_ID)
-                .renterId(renterId)
-                .status(RentalStatus.SHIPPING)
-                .build();
+        return new Rental(
+                100L,
+                999L,
+                renterId,
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 10),
+                "테스트 장비",
+                BigDecimal.valueOf(10000),
+                9,
+                BigDecimal.valueOf(90000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                RentalStatus.SHIPPING,
+                null,
+                null,
+                RENTAL_ID);
     }
 
     private S3StorageProperties properties() {
