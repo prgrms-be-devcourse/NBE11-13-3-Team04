@@ -149,17 +149,16 @@ class EquipmentScheduleApiTest {
     }
 
     private Equipment saveEquipment(User owner) {
-        return equipmentRepository.saveAndFlush(Equipment.builder()
-                .ownerId(owner.getId())
-                .category(EquipmentCategory.CAMERA)
-                .name("예약 장비")
-                .description("예약 일정 테스트 장비")
-                .dailyPrice(BigDecimal.valueOf(30_000))
-                .availableFrom(LocalDate.now())
-                .availableTo(LocalDate.now().plusMonths(3))
-                .status(EquipmentStatus.ACTIVE)
-                .productCondition(ProductConditionType.NORMAL)
-                .build());
+        return equipmentRepository.saveAndFlush(new Equipment(
+                owner.getId(),
+                EquipmentCategory.CAMERA,
+                "예약 장비",
+                "예약 일정 테스트 장비",
+                BigDecimal.valueOf(30_000),
+                LocalDate.now(),
+                LocalDate.now().plusMonths(3),
+                EquipmentStatus.ACTIVE,
+                ProductConditionType.NORMAL));
     }
 
     private Rental saveRental(

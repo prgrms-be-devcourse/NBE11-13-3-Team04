@@ -48,13 +48,7 @@ class AdminEquipmentMapperTest {
     void 장비와_등록자와_이미지를_상세_응답으로_변환한다() {
         Equipment equipment = equipment();
         UserSummary owner = owner();
-        EquipmentImage image = EquipmentImage.builder()
-                .id(100L)
-                .equipment(equipment)
-                .imageUrl("https://example.com/image.jpg")
-                .sortOrder(1)
-                .thumbnail(true)
-                .build();
+        EquipmentImage image = new EquipmentImage(equipment, "https://example.com/image.jpg", null, 1, true, 100L);
 
         var response = adminEquipmentMapper.toDetail(
                 equipment,
@@ -76,19 +70,18 @@ class AdminEquipmentMapperTest {
     }
 
     private Equipment equipment() {
-        Equipment equipment = Equipment.builder()
-                .id(10L)
-                .ownerId(2L)
-                .category(EquipmentCategory.LAPTOP)
-                .name("맥북 프로")
-                .description("테스트 장비")
-                .dailyPrice(BigDecimal.valueOf(30000))
-                .availableFrom(LocalDate.of(2026, 8, 1))
-                .availableTo(LocalDate.of(2026, 8, 31))
-                .status(EquipmentStatus.SUSPENDED)
-                .productCondition(ProductConditionType.NORMAL)
-                .conditionDetail("정상")
-                .build();
+        Equipment equipment = new Equipment(
+                2L,
+                EquipmentCategory.LAPTOP,
+                "맥북 프로",
+                "테스트 장비",
+                BigDecimal.valueOf(30000),
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 31),
+                EquipmentStatus.SUSPENDED,
+                ProductConditionType.NORMAL,
+                "정상",
+                10L);
         ReflectionTestUtils.setField(
                 equipment,
                 "createdAt",

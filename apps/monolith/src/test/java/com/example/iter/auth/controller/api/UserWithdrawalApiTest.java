@@ -242,17 +242,16 @@ class UserWithdrawalApiTest {
     }
 
     private Equipment saveEquipment(Long ownerId) {
-        return equipmentRepository.saveAndFlush(Equipment.builder()
-                .ownerId(ownerId)
-                .category(EquipmentCategory.CAMERA)
-                .name("테스트 장비")
-                .description("탈퇴 테스트용 장비")
-                .dailyPrice(BigDecimal.valueOf(10_000))
-                .availableFrom(LocalDate.now().plusDays(1))
-                .availableTo(LocalDate.now().plusDays(30))
-                .status(EquipmentStatus.ACTIVE)
-                .productCondition(ProductConditionType.NORMAL)
-                .build());
+        return equipmentRepository.saveAndFlush(new Equipment(
+                ownerId,
+                EquipmentCategory.CAMERA,
+                "테스트 장비",
+                "탈퇴 테스트용 장비",
+                BigDecimal.valueOf(10_000),
+                LocalDate.now().plusDays(1),
+                LocalDate.now().plusDays(30),
+                EquipmentStatus.ACTIVE,
+                ProductConditionType.NORMAL));
     }
 
     private Rental saveRental(Equipment equipment, Long renterId, RentalStatus status) {

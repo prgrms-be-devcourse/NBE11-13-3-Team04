@@ -342,19 +342,18 @@ class AdminEquipmentServiceTest {
             EquipmentStatus status,
             String name
     ) {
-        return Equipment.builder()
-                .id(id)
-                .ownerId(ownerId)
-                .category(EquipmentCategory.LAPTOP)
-                .name(name)
-                .description("테스트 장비")
-                .dailyPrice(BigDecimal.valueOf(30000))
-                .availableFrom(LocalDate.of(2026, 8, 1))
-                .availableTo(LocalDate.of(2026, 8, 31))
-                .status(status)
-                .productCondition(ProductConditionType.NORMAL)
-                .conditionDetail("정상")
-                .build();
+        return new Equipment(
+                ownerId,
+                EquipmentCategory.LAPTOP,
+                name,
+                "테스트 장비",
+                BigDecimal.valueOf(30000),
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 31),
+                status,
+                ProductConditionType.NORMAL,
+                "정상",
+                id);
     }
 
     private UserSummary owner() {
@@ -368,13 +367,7 @@ class AdminEquipmentServiceTest {
             int sortOrder,
             boolean thumbnail
     ) {
-        return EquipmentImage.builder()
-                .id(id)
-                .equipment(equipment)
-                .imageUrl(url)
-                .sortOrder(sortOrder)
-                .thumbnail(thumbnail)
-                .build();
+        return new EquipmentImage(equipment, url, null, sortOrder, thumbnail, id);
     }
 
     private static Stream<EquipmentStatus> suspendableStatuses() {

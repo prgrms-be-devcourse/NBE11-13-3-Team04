@@ -285,13 +285,12 @@ class EquipmentManagementApiTest {
     void 만료된_이미지_업로드는_장비에_등록할_수_없다() throws Exception {
         User owner = saveUser("expired-upload@example.com", UserStatus.ACTIVE);
         EquipmentImageUpload upload = imageUploadRepository.saveAndFlush(
-                EquipmentImageUpload.builder()
-                        .userId(owner.getId())
-                        .objectKey("equipment/temp/%d/expired.jpg".formatted(owner.getId()))
-                        .expectedContentType("image/jpeg")
-                        .expectedSize(IMAGE_SIZE)
-                        .expiresAt(LocalDateTime.now().minusSeconds(1))
-                        .build());
+                new EquipmentImageUpload(
+                        owner.getId(),
+                        "equipment/temp/%d/expired.jpg".formatted(owner.getId()),
+                        "image/jpeg",
+                        IMAGE_SIZE,
+                        LocalDateTime.now().minusSeconds(1)));
 
         mockMvc.perform(post("/api/v1/devices")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -392,7 +391,7 @@ class EquipmentManagementApiTest {
                 .andExpect(jsonPath("$[1].thumbnail").value(true));
 
         assertThat(equipmentImageRepository.findById(oldThumbnail.getId()).orElseThrow()
-                .isThumbnail()).isFalse();
+                .getThumbnail()).isFalse();
     }
 
     @Test
@@ -433,7 +432,7 @@ class EquipmentManagementApiTest {
                 .andExpect(status().isNoContent());
 
         EquipmentImage updated = equipmentImageRepository.findById(remaining.getId()).orElseThrow();
-        assertThat(updated.isThumbnail()).isTrue();
+        assertThat(updated.getThumbnail()).isTrue();
         assertThat(updated.getSortOrder()).isZero();
         verify(imageStorage, timeout(1000)).delete(thumbnail.getObjectKey());
     }
@@ -592,27 +591,25 @@ class EquipmentManagementApiTest {
     }
 
     private EquipmentImageUpload savePendingUpload(User user, String filename) {
-        return imageUploadRepository.saveAndFlush(EquipmentImageUpload.builder()
-                .userId(user.getId())
-                .objectKey("equipment/temp/%d/%s".formatted(user.getId(), filename))
-                .expectedContentType("image/jpeg")
-                .expectedSize(IMAGE_SIZE)
-                .expiresAt(LocalDateTime.now().plusMinutes(5))
-                .build());
+        return imageUploadRepository.saveAndFlush(new EquipmentImageUpload(
+                user.getId(),
+                "equipment/temp/%d/%s".formatted(user.getId(), filename),
+                "image/jpeg",
+                IMAGE_SIZE,
+                LocalDateTime.now().plusMinutes(5)));
     }
 
     private Equipment saveEquipment(Long ownerId, EquipmentStatus status) {
-        return equipmentRepository.saveAndFlush(Equipment.builder()
-                .ownerId(ownerId)
-                .category(EquipmentCategory.CAMERA)
-                .name("기존 카메라")
-                .description("기존 설명")
-                .dailyPrice(BigDecimal.valueOf(30_000))
-                .availableFrom(LocalDate.now())
-                .availableTo(LocalDate.now().plusMonths(2))
-                .status(status)
-                .productCondition(ProductConditionType.NORMAL)
-                .build());
+        return equipmentRepository.saveAndFlush(new Equipment(
+                ownerId,
+                EquipmentCategory.CAMERA,
+                "기존 카메라",
+                "기존 설명",
+                BigDecimal.valueOf(30_000),
+                LocalDate.now(),
+                LocalDate.now().plusMonths(2),
+                status,
+                ProductConditionType.NORMAL));
     }
 
     private EquipmentImage saveImage(
@@ -621,13 +618,12 @@ class EquipmentManagementApiTest {
             int sortOrder,
             boolean thumbnail
     ) {
-        return equipmentImageRepository.saveAndFlush(EquipmentImage.builder()
-                .equipment(equipment)
-                .imageUrl("https://cdn.example.com/" + objectKey)
-                .objectKey(objectKey)
-                .sortOrder(sortOrder)
-                .thumbnail(thumbnail)
-                .build());
+        return equipmentImageRepository.saveAndFlush(new EquipmentImage(
+                equipment,
+                "https://cdn.example.com/" + objectKey,
+                objectKey,
+                sortOrder,
+                thumbnail));
     }
 
     private void saveRental(

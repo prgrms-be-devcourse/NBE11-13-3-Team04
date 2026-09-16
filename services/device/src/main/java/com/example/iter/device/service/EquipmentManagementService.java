@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -71,19 +72,18 @@ public class EquipmentManagementService {
                         upload.getExpectedSize()))
                 .toList();
 
-        Equipment equipment = equipmentRepository.saveAndFlush(Equipment.builder()
-                .ownerId(owner.getId())
-                .category(request.getCategory())
-                .name(request.getName().trim())
-                .description(request.getDescription().trim())
-                .dailyPrice(request.getDailyPrice())
-                .availableFrom(request.getAvailableFrom())
-                .availableTo(request.getAvailableTo())
-                .status(EquipmentStatus.ACTIVE)
-                .productCondition(request.getProductCondition())
-                .conditionDetail(normalizeConditionDetail(
-                        request.getProductCondition(), request.getConditionDetail()))
-                .build());
+        Equipment equipment = equipmentRepository.saveAndFlush(new Equipment(
+                owner.getId(),
+                request.getCategory(),
+                request.getName().trim(),
+                request.getDescription().trim(),
+                request.getDailyPrice(),
+                request.getAvailableFrom(),
+                request.getAvailableTo(),
+                EquipmentStatus.ACTIVE,
+                request.getProductCondition(),
+                normalizeConditionDetail(
+                        request.getProductCondition(), request.getConditionDetail())));
 
         List<StoredImage> storedImages = promoteAll(equipment.getId(), validatedUploads);
         registerStorageSynchronization(storedImages, request.getImageKeys());
@@ -92,13 +92,12 @@ public class EquipmentManagementService {
 
         for (int index = 0; index < storedImages.size(); index++) {
             StoredImage storedImage = storedImages.get(index);
-            equipmentImageRepository.save(EquipmentImage.builder()
-                    .equipment(equipment)
-                    .imageUrl(storedImage.imageUrl())
-                    .objectKey(storedImage.objectKey())
-                    .sortOrder(index)
-                    .thumbnail(index == request.getThumbnailIndex())
-                    .build());
+            equipmentImageRepository.save(new EquipmentImage(
+                    equipment,
+                    storedImage.imageUrl(),
+                    storedImage.objectKey(),
+                    index,
+                    index == request.getThumbnailIndex()));
         }
 
         equipmentImageRepository.flush();
@@ -142,14 +141,13 @@ public class EquipmentManagementService {
                 .orElse(-1) + 1;
         for (int index = 0; index < storedImages.size(); index++) {
             StoredImage storedImage = storedImages.get(index);
-            equipmentImageRepository.save(EquipmentImage.builder()
-                    .equipment(equipment)
-                    .imageUrl(storedImage.imageUrl())
-                    .objectKey(storedImage.objectKey())
-                    .sortOrder(nextSortOrder + index)
-                    .thumbnail(request.getThumbnailIndex() != null
-                            && index == request.getThumbnailIndex())
-                    .build());
+            equipmentImageRepository.save(new EquipmentImage(
+                    equipment,
+                    storedImage.imageUrl(),
+                    storedImage.objectKey(),
+                    nextSortOrder + index,
+                    request.getThumbnailIndex() != null
+                            && index == request.getThumbnailIndex()));
         }
         LocalDateTime usedAt = LocalDateTime.now();
         uploadRecords.forEach(upload -> upload.use(usedAt));
@@ -180,7 +178,7 @@ public class EquipmentManagementService {
         List<EquipmentImage> remainingImages = images.stream()
                 .filter(image -> !image.getId().equals(imageId))
                 .toList();
-        if (target.isThumbnail()) {
+        if (target.getThumbnail()) {
             remainingImages.getFirst().changeThumbnail(true);
         }
         for (int index = 0; index < remainingImages.size(); index++) {
@@ -395,7 +393,7 @@ public class EquipmentManagementService {
         return objectKeys.stream()
                 .map(objectKey -> {
                     EquipmentImageUpload record = recordsByKey.get(objectKey);
-                    if (record == null || !record.getUserId().equals(ownerId)) {
+                    if (record == null || !Objects.equals(record.getUserId(), ownerId)) {
                         throw new CustomException(ErrorCode.IMAGE_UPLOAD_NOT_FOUND);
                     }
                     if (record.isUsed()) {

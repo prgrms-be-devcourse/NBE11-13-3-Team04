@@ -1,7 +1,10 @@
 package com.example.iter.device.support;
 
 import com.example.iter.device.domain.entity.Equipment;
+import com.example.iter.device.domain.entity.EquipmentCategory;
 import com.example.iter.device.domain.entity.EquipmentImage;
+import com.example.iter.device.domain.entity.EquipmentStatus;
+import com.example.iter.device.domain.entity.ProductConditionType;
 import com.example.iter.device.domain.repository.EquipmentImageRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -75,15 +79,23 @@ class JpaEquipmentThumbnailQueryAdapterTest {
                 .findByEquipment_IdInAndThumbnailTrueOrderBySortOrderAscIdAsc(any());
     }
 
+    // 이 테스트가 보는 건 id 뿐이다. 나머지는 생성자의 non-null 요구를 채우는 값이다.
     private Equipment equipment(Long id) {
-        return Equipment.builder().id(id).build();
+        return new Equipment(
+                1L,
+                EquipmentCategory.CAMERA,
+                "테스트 장비",
+                null,
+                BigDecimal.valueOf(10_000),
+                null,
+                null,
+                EquipmentStatus.ACTIVE,
+                ProductConditionType.NORMAL,
+                null,
+                id);
     }
 
     private EquipmentImage image(Equipment equipment, String url) {
-        return EquipmentImage.builder()
-                .equipment(equipment)
-                .imageUrl(url)
-                .thumbnail(true)
-                .build();
+        return new EquipmentImage(equipment, url, null, 0, true);
     }
 }

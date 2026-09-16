@@ -228,26 +228,20 @@ class EquipmentQueryApiTest {
             long dailyPrice,
             EquipmentStatus status
     ) {
-        return equipmentRepository.save(Equipment.builder()
-                .ownerId(1L)
-                .category(category)
-                .name(name)
-                .description(name + " 설명")
-                .dailyPrice(BigDecimal.valueOf(dailyPrice))
-                .availableFrom(LocalDate.now())
-                .availableTo(LocalDate.now().plusMonths(2))
-                .status(status)
-                .productCondition(ProductConditionType.NORMAL)
-                .build());
+        return equipmentRepository.save(new Equipment(
+                1L,
+                category,
+                name,
+                name + " 설명",
+                BigDecimal.valueOf(dailyPrice),
+                LocalDate.now(),
+                LocalDate.now().plusMonths(2),
+                status,
+                ProductConditionType.NORMAL));
     }
 
     private void saveThumbnail(Equipment equipment, String imageUrl) {
-        equipmentImageRepository.save(EquipmentImage.builder()
-                .equipment(equipment)
-                .imageUrl(imageUrl)
-                .sortOrder(0)
-                .thumbnail(true)
-                .build());
+        equipmentImageRepository.save(new EquipmentImage(equipment, imageUrl, null, 0, true));
     }
 
     private void saveRental(
@@ -274,12 +268,8 @@ class EquipmentQueryApiTest {
         // 검색 가용성 필터는 이제 EquipmentOccupancy 프로젝션만 본다 — 실제 서비스(RentalService)라면
         // 생성 시점에 같이 채우지만, 여기서는 Repository로 직접 픽스처를 심으므로 같이 채워줘야 한다.
         if (!RentalConflictPolicy.nonOccupyingStatuses().contains(status)) {
-            equipmentOccupancyRepository.save(EquipmentOccupancy.builder()
-                    .equipmentId(equipment.getId())
-                    .rentalId(rental.getId())
-                    .startDate(startDate)
-                    .endDate(endDate)
-                    .build());
+            equipmentOccupancyRepository.save(new EquipmentOccupancy(
+                    equipment.getId(), rental.getId(), startDate, endDate));
         }
     }
 }
