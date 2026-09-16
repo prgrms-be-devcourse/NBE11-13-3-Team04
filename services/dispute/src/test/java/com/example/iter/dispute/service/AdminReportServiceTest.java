@@ -36,6 +36,7 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -222,7 +223,7 @@ class AdminReportServiceTest {
                 );
 
         assertThat(report.getStatus()).isEqualTo(currentStatus);
-        verify(adminActionService, never()).record(any(), any(), any(), any(), any());
+        verify(adminActionService, never()).record(anyLong(), any(), anyLong(), any(), any());
         verify(reportRepository, never()).flush();
     }
 
@@ -240,7 +241,7 @@ class AdminReportServiceTest {
                         exception -> assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.REPORT_NOT_FOUND)
                 );
 
-        verify(adminActionService, never()).record(any(), any(), any(), any(), any());
+        verify(adminActionService, never()).record(anyLong(), any(), anyLong(), any(), any());
     }
 
     private static Stream<Arguments> validTransitions() {

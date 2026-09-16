@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -217,14 +218,15 @@ class AdminActionQueryServiceTest {
             AdminActionType actionType,
             String reason
     ) {
-        return AdminAction.builder()
-                .id(actionId)
-                .adminId(ADMIN_ID)
-                .targetType(AdminActionTargetType.EQUIPMENT)
-                .targetId(EQUIPMENT_ID)
-                .action(actionType)
-                .reason(reason)
-                .build();
+        AdminAction adminAction = new AdminAction(
+                ADMIN_ID,
+                AdminActionTargetType.EQUIPMENT,
+                EQUIPMENT_ID,
+                actionType,
+                reason
+        );
+        ReflectionTestUtils.setField(adminAction, "id", actionId);
+        return adminAction;
     }
 
     private AdminActionResponse response(
