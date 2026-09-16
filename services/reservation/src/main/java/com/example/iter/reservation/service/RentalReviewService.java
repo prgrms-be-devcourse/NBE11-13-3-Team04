@@ -44,13 +44,12 @@ public class RentalReviewService {
         Long revieweeId = resolveRevieweeId(reviewerId, rental, equipment);
 
         RentalReview saved = rentalReviewRepository.save(
-                RentalReview.builder()
-                        .rentalId(rental.getId())
-                        .reviewerId(reviewerId)
-                        .revieweeId(revieweeId)
-                        .rating(request.rating())
-                        .content(request.content().trim())
-                        .build()
+                new RentalReview(
+                        rental.getId(),
+                        reviewerId,
+                        revieweeId,
+                        request.rating(),
+                        request.content().trim())
         );
 
         eventPublisher.publishEvent(new RentalReviewCreatedEvent(saved.getId()));
