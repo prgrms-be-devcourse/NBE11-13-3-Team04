@@ -88,8 +88,9 @@ class JpaRentalQueryAdapter(
 
     private fun toInfo(rental: Rental): RentalInfo =
         RentalInfo(
-            rental.id,
+            rental.id!!,
             rental.equipmentId,
+            rental.ownerIdSnapshot,
             rental.renterId,
             rental.productNameSnapshot,
             rental.rejectReason,
