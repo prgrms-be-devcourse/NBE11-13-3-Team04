@@ -274,12 +274,8 @@ class EquipmentQueryApiTest {
         // 검색 가용성 필터는 이제 EquipmentOccupancy 프로젝션만 본다 — 실제 서비스(RentalService)라면
         // 생성 시점에 같이 채우지만, 여기서는 Repository로 직접 픽스처를 심으므로 같이 채워줘야 한다.
         if (!RentalConflictPolicy.nonOccupyingStatuses().contains(status)) {
-            equipmentOccupancyRepository.save(EquipmentOccupancy.builder()
-                    .equipmentId(equipment.getId())
-                    .rentalId(rental.getId())
-                    .startDate(startDate)
-                    .endDate(endDate)
-                    .build());
+            equipmentOccupancyRepository.save(new EquipmentOccupancy(
+                    equipment.getId(), rental.getId(), startDate, endDate));
         }
     }
 }
