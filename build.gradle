@@ -4,6 +4,11 @@ plugins {
 }
 
 dependencies {
+    // apps:chat은 아직 안 넣었다 — 지금은 스켈레톤(설정·엔티티·리포지토리 인터페이스)뿐이라
+    // 유닛 테스트로 커버할 로직이 거의 없다. 현재 집계 커버리지가 82%대라 헤드룸이
+    // 크지 않아서, 정책 엔진(CH6)처럼 실제로 테스트할 로직이 들어오면 그때 추가한다.
+    // (리포지토리는 Testcontainers 통합 테스트로 검증하는데, 그 실행 결과는 별도
+    // integrationTest 태스크라 이 집계에 안 잡힌다 — apps/chat/build.gradle 참고)
     jacocoAggregation project(':apps:monolith')
     jacocoAggregation project(':libs:core')
     jacocoAggregation project(':libs:security')
