@@ -20,6 +20,7 @@ import com.example.iter.dispute.domain.entity.ReportTargetType
 import com.example.iter.dispute.domain.repository.DisputeRepository
 import com.example.iter.dispute.domain.repository.ReportRepository
 import com.example.iter.payment.domain.repository.PaymentRepository
+import com.example.iter.reservation.domain.entity.ProductConditionType as ReservationProductConditionType
 import com.example.iter.reservation.domain.entity.Receipt
 import com.example.iter.reservation.domain.entity.ReceiptImage
 import com.example.iter.reservation.domain.entity.Rental
@@ -117,18 +118,30 @@ class ReportAnalysisContextBuilderTest {
             false,
             101L
         )
-        val receipt = Receipt.builder().id(201L).rental(rental).conditionDetail("수령 상태").build()
-        val returned = ReturnReceipt.builder().id(301L).rental(rental).conditionDetail("반납 시 긁힘").build()
-        val receiptImage = ReceiptImage.builder()
-            .id(202L)
-            .receipt(receipt)
-            .imageUrl("equipment/private/rental-evidence/20/2/receipt/a.png")
-            .build()
-        val returnImage = ReturnReceiptImage.builder()
-            .id(302L)
-            .returnReceipt(returned)
-            .imageUrl("equipment/private/rental-evidence/20/2/return/b.png")
-            .build()
+        val receipt = Receipt(
+            rental,
+            ReservationProductConditionType.NORMAL,
+            "수령 상태",
+            id = 201L,
+        )
+        val returned = ReturnReceipt(
+            rental,
+            ReservationProductConditionType.NORMAL,
+            "반납 시 긁힘",
+            id = 301L,
+        )
+        val receiptImage = ReceiptImage(
+            receipt,
+            "equipment/private/rental-evidence/20/2/receipt/a.png",
+            0,
+            id = 202L,
+        )
+        val returnImage = ReturnReceiptImage(
+            returned,
+            "equipment/private/rental-evidence/20/2/return/b.png",
+            0,
+            id = 302L,
+        )
 
         whenever(reports.findById(50L)).thenReturn(Optional.of(report))
         whenever(rentals.findById(20L)).thenReturn(Optional.of(rental))
@@ -181,20 +194,20 @@ class ReportAnalysisContextBuilderTest {
             .containsExactly("LISTING_1", "RECEIPT_1", "RETURN_1")
     }
 
-    private fun rental() = Rental.builder()
-        .id(20L)
-        .equipmentId(10L)
-        .ownerIdSnapshot(1L)
-        .renterId(2L)
-        .startDate(LocalDate.of(2026, 9, 1))
-        .endDate(LocalDate.of(2026, 9, 5))
-        .productNameSnapshot("카메라")
-        .categorySnapshot("CAMERA")
-        .dailyPriceSnapshot(BigDecimal.valueOf(30_000))
-        .rentalDays(5)
-        .totalPrice(BigDecimal.valueOf(150_000))
-        .status(RentalStatus.RETURNED)
-        .build()
+    private fun rental() = Rental(
+        equipmentId = 10L,
+        ownerIdSnapshot = 1L,
+        renterId = 2L,
+        startDate = LocalDate.of(2026, 9, 1),
+        endDate = LocalDate.of(2026, 9, 5),
+        productNameSnapshot = "카메라",
+        dailyPriceSnapshot = BigDecimal.valueOf(30_000),
+        rentalDays = 5,
+        totalPrice = BigDecimal.valueOf(150_000),
+        status = RentalStatus.RETURNED,
+        categorySnapshot = "CAMERA",
+        id = 20L,
+    )
 
     private fun equipment() = Equipment(
         ownerId = 1L,

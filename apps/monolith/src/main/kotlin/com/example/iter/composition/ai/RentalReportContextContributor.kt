@@ -56,7 +56,7 @@ class RentalReportContextContributor(
         sanitizer.addPublicContent(draft.publicContent, "rentalCategory", rental.categorySnapshot)
 
         // 성공한 반납 비교 결과가 있으면 동일 사진을 다시 보내지 않고 기존 분석을 재사용합니다.
-        val previousResult = previousConditionAnalysis.findSucceededResult(rental.id)
+        val previousResult = previousConditionAnalysis.findSucceededResult(rental.id!!)
         val hasPriorConditionAnalysis = previousResult.isPresent
 
         if (hasPriorConditionAnalysis) {
@@ -81,10 +81,10 @@ class RentalReportContextContributor(
             addShipping(delivery, draft)
         }
 
-        receipts.findByRentalId(rental.id).ifPresent { receipt ->
+        receipts.findByRentalId(rental.id!!).ifPresent { receipt ->
             addReceipt(receipt, draft, !hasPriorConditionAnalysis)
         }
-        returnReceipts.findByRentalId(rental.id).ifPresent { receipt ->
+        returnReceipts.findByRentalId(rental.id!!).ifPresent { receipt ->
             addReturnReceipt(receipt, draft, !hasPriorConditionAnalysis)
         }
         disputes.findFirstByRentalIdOrderByCreatedAtDesc(rental.id).ifPresent { dispute ->
