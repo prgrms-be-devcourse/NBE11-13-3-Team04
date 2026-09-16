@@ -55,6 +55,6 @@ class AdminEquipmentMapper {
         image.id!!,
         image.imageUrl,
         image.sortOrder,
-        image.thumbnail,
+        image.thumbnail
     )
 }

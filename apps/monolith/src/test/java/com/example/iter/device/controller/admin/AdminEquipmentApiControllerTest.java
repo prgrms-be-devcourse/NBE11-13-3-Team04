@@ -204,7 +204,7 @@ class AdminEquipmentApiControllerTest {
                         .with(user(adminPrincipal)))
                 .andExpect(status().isBadRequest());
 
-        verify(adminEquipmentService, never()).getEquipmentDetail(any());
+        verify(adminEquipmentService, never()).getEquipmentDetail(anyLong());
     }
 
     @Test

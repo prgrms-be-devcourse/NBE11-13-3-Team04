@@ -78,22 +78,26 @@ class AdminEquipmentService(
     }
 
     // 관리자가 장비를 차단 또는 차단 해제하고 관리자 조치 이력을 저장합니다.
+    //
+    // adminId·equipmentId 를 Long? 으로 받는 이유는 getEquipmentDetail 의 주석과 같다 —
+    // AdminEquipmentApiControllerTest 가 verify(..., never()).updateEquipmentStatus(any(), any(), any())
+    // 로 셋을 전부 타입 없는 any() 로 넘긴다.
     @Transactional
     fun updateEquipmentStatus(
-        adminId: Long,
-        equipmentId: Long,
+        adminId: Long?,
+        equipmentId: Long?,
         request: AdminEquipmentStatusRequest,
     ): AdminEquipmentDetailResponse {
-        val equipment = equipmentRepository.findByIdForUpdate(equipmentId)
+        val equipment = equipmentRepository.findByIdForUpdate(equipmentId!!)
             .orElseThrow { CustomException(ErrorCode.EQUIPMENT_NOT_FOUND) }
 
         validateStatusChange(equipment, request.status)
         val action = applyStatus(equipment, request.status)
 
         adminActionService.record(
-            adminId,
+            adminId!!,
             AdminActionTargetType.EQUIPMENT,
-            requireNotNull(equipment.id),
+            equipment.id!!,
             action,
             request.reason!!.trim(),
         )
