@@ -3,15 +3,9 @@ plugins {
     id 'org.springframework.boot'
 }
 
-springBoot {
-    mainClass = 'com.example.iter.IterApplication'
-}
-
-// 이 설정이 없으면 산출물 이름이 프로젝트명을 따라 monolith-0.0.1-SNAPSHOT.jar 가 된다.
-// 기존 배포 산출물 이름(iter-*.jar)을 유지한다.
-base {
-    archivesName = 'iter'
-}
+// mainClass 와 archivesName 은 앱마다 다르므로 각 앱의 build.gradle 에서 직접 선언한다.
+// (예: apps/monolith/build.gradle) 두 번째 앱(apps:chat)이 생기면서 이 모듈에 공용으로
+// 박아둘 수 없게 됐다.
 
 // Boot 4.1 은 plain jar 를 비활성화하지 않고 -plain 분류자를 붙여 같이 만든다.
 // 실행 가능한 jar 만 있으면 되는 앱 모듈에서는 불필요한 산출물이라 끈다.

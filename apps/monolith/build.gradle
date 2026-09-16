@@ -4,6 +4,15 @@ plugins {
 
 description = 'iter'
 
+springBoot {
+    mainClass = 'com.example.iter.IterApplication'
+}
+
+// 기존 배포 산출물 이름(iter-*.jar)을 유지한다.
+base {
+    archivesName = 'iter'
+}
+
 dependencies {
     implementation project(':libs:core')
     implementation project(':libs:security')
