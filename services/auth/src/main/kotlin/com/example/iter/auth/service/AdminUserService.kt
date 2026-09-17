@@ -56,7 +56,7 @@ class AdminUserService(
             users,
             request.size,
             AdminUserSummaryResponse::from
-        ) { user -> CursorKey(user.createdAt, user.id) }
+        ) { user -> CursorKey(user.createdAt!!, user.id) }
     }
 
     // 거래 집계 정의는 reservation, 신고 집계 정의는 dispute 포트에 위임합니다.

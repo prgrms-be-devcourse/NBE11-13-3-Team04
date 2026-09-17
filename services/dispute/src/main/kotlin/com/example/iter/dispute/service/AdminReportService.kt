@@ -57,7 +57,7 @@ class AdminReportService(
                     getRequiredReporter(reporterMap, report.reporterId)
                 )
             }
-        ) { report -> CursorKey(report.createdAt, report.id) }
+        ) { report -> CursorKey(report.createdAt!!, report.id!!) }
     }
 
     // 관리자 상세 화면에 필요한 신고와 신고자 요약을 조회합니다.

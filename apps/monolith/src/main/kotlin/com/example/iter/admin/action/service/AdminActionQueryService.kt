@@ -32,6 +32,6 @@ class AdminActionQueryService(private val adminActionRepository: AdminActionRepo
             actions,
             request.size,
             adminActionMapper::toResponse
-        ) { action -> CursorKey(action.createdAt, action.id) }
+        ) { action -> CursorKey(action.createdAt!!, action.id!!) }
     }
 }

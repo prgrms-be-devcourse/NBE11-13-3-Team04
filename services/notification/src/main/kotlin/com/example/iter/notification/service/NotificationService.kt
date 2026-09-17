@@ -84,8 +84,8 @@ class NotificationService(
     @Transactional(readOnly = true)
     fun getNotifications(userId: Long, unreadOnly: Boolean, cursor: String?, size: Int): CursorPageResponse<NotificationResponse> {
         val cursorKey = CursorCodec.decode(cursor)
-        val cursorCreatedAt = cursorKey?.createdAt()
-        val cursorId = cursorKey?.id()
+        val cursorCreatedAt = cursorKey?.createdAt
+        val cursorId = cursorKey?.id
 
         // size + 1개를 가져와서, 실제로 나온 개수가 size보다 많으면 다음 페이지가 있다는 뜻이다
         // (count 쿼리 없이 hasNext를 판단하기 위한 트릭 — CursorPageResponse.from 참고).
@@ -100,7 +100,7 @@ class NotificationService(
             notifications,
             size,
             NotificationResponse::from,
-        ) { notification -> CursorKey(notification.createdAt, notification.id) }
+        ) { notification -> CursorKey(notification.createdAt!!, notification.id!!) }
     }
 
     @Transactional(readOnly = true)

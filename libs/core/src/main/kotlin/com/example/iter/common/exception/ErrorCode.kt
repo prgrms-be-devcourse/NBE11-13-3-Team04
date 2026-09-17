@@ -1,12 +1,10 @@
-package com.example.iter.common.exception;
+package com.example.iter.common.exception
 
-import lombok.Getter;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatus
 
 // 프로젝트 전역에서 사용하는 에러 코드 모음.
 // 팀원 각자 담당 도메인 개발 중 필요한 에러 상황이 생기면 이 enum에 항목을 추가해서 사용한다.
-@Getter
-public enum ErrorCode {
+enum class ErrorCode(val status: HttpStatus, val message: String) {
 
     // Common
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "요청 값이 올바르지 않습니다."),
@@ -64,8 +62,8 @@ public enum ErrorCode {
     EQUIPMENT_STATUS_CHANGE_NOT_ALLOWED(HttpStatus.CONFLICT, "현재 상태에서는 장비 공개 상태를 변경할 수 없습니다."),
 
     // Admin (C)
-    ADMIN_SUSPENSION_NOT_ALLOWED(HttpStatus.FORBIDDEN,"관리자 계정은 정지할 수 없습니다."),
-    INVALID_USER_STATUS_TRANSITION(HttpStatus.CONFLICT,"허용되지 않는 회원 상태 변경입니다."),
+    ADMIN_SUSPENSION_NOT_ALLOWED(HttpStatus.FORBIDDEN, "관리자 계정은 정지할 수 없습니다."),
+    INVALID_USER_STATUS_TRANSITION(HttpStatus.CONFLICT, "허용되지 않는 회원 상태 변경입니다."),
     INVALID_EQUIPMENT_STATUS_TRANSITION(HttpStatus.CONFLICT, "허용되지 않는 장비 상태 변경입니다."),
     INVALID_REPORT_STATUS_TRANSITION(HttpStatus.CONFLICT, "허용되지 않는 신고 상태 변경입니다."),
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 결제 기록입니다."),
@@ -116,15 +114,7 @@ public enum ErrorCode {
 
     // Chat — monolith가 발급만 하고 실제 채팅은 apps:chat이 처리한다.
     CHAT_EQUIPMENT_NOT_INQUIRABLE(HttpStatus.CONFLICT, "문의할 수 없는 상태의 장비입니다."),
-    CHAT_INQUIRY_SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "본인이 등록한 장비에는 문의할 수 없습니다.");
-
+    CHAT_INQUIRY_SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "본인이 등록한 장비에는 문의할 수 없습니다."),
     // TODO: delivery / dispute 담당자가 각자 도메인 에러코드를 이어서 추가
-
-    private final HttpStatus status;
-    private final String message;
-
-    ErrorCode( HttpStatus status, String message ) {
-        this.status = status;
-        this.message = message;
-    }
+    ;
 }
