@@ -22,7 +22,7 @@ class EquipmentImageUrlResolver(
 
     fun resolve(objectKey: String): String {
         if (StringUtils.hasText(properties.publicBaseUrl)) {
-            return properties.publicBaseUrl.trimEnd('/') + "/" + objectKey
+            return properties.publicBaseUrl!!.trimEnd('/') + "/" + objectKey
         }
         return s3Client.utilities()
             .getUrl(

@@ -1,5 +1,6 @@
 plugins {
     id 'iter.spring-library-conventions'
+    id 'iter.kotlin-conventions'
 }
 
 description = 'iter S3 저장소 공용 - 프리사인 업로드 설정과 S3 클라이언트 빈'
