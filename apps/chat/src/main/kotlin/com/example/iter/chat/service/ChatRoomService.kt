@@ -105,9 +105,10 @@ class ChatRoomService(
         val counterpart = roomParticipantRepository.findByRoomIdAndUserId(room.id!!, counterpartId)
 
         val lastMessage = messageRepository.findFirstByRoomIdOrderByIdDesc(room.id)
+        // 내가 보낸 메시지는 안읽음이 아니다 — 제외는 리포지토리 쿼리가 한다(MessageRepository 주석 참고).
         val unreadCount = when (val lastReadId = participant.lastReadMessageId) {
-            null -> messageRepository.countByRoomId(room.id)
-            else -> messageRepository.countByRoomIdAndIdGreaterThan(room.id, lastReadId)
+            null -> messageRepository.countUnreadAll(room.id, userId)
+            else -> messageRepository.countUnreadAfter(room.id, lastReadId, userId)
         }
 
         return RoomSummaryResponse(
