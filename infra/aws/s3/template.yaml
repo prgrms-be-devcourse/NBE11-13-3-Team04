@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: ITer equipment image bucket, public delivery policy, and backend IAM policy
+Description: ITer equipment and private rental evidence image bucket with backend IAM policy
 
 Parameters:
   BucketName:
@@ -42,6 +42,7 @@ Resources:
               - HEAD
             AllowedHeaders:
               - content-type
+              - if-none-match
               - x-amz-*
             ExposedHeaders:
               - ETag
@@ -80,6 +81,13 @@ Resources:
             Principal: "*"
             Action: s3:GetObject
             Resource: !Sub "${EquipmentImageBucket.Arn}/${KeyPrefix}/public/*"
+          - Sid: ManagePrivateRentalEvidence
+            Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetObject
+              - s3:DeleteObject
+            Resource: !Sub "${EquipmentImageBucket.Arn}/${KeyPrefix}/private/rental-evidence/*"
 
   EquipmentImageBackendPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -115,3 +123,5 @@ Outputs:
     Value: !Sub "${KeyPrefix}/temp/"
   PublicPrefix:
     Value: !Sub "${KeyPrefix}/public/"
+  PrivateRentalEvidencePrefix:
+    Value: !Sub "${KeyPrefix}/private/rental-evidence/"

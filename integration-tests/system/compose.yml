@@ -1,0 +1,104 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "13306:3306"
+    volumes:
+      - ./mysql-init.sql:/docker-entrypoint-initdb.d/001-system-databases.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:7
+    ports:
+      - "16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  toss-stub:
+    image: python:3.12-alpine
+    working_dir: /app
+    command: ["python", "toss_stub.py"]
+    volumes:
+      - ./toss_stub.py:/app/toss_stub.py:ro
+    ports:
+      - "18090:8090"
+
+  ai:
+    build:
+      context: ../../ai-service
+      dockerfile: Dockerfile
+    environment:
+      AI_ENV: test
+      AI_DATABASE_URL: mysql+pymysql://root@mysql:3306/iter_ai?charset=utf8mb4
+      AI_PROVIDER: fake
+      AI_INTERNAL_AUTH_ENABLED: "true"
+      AI_INTERNAL_API_KEY: iter-system-secret
+    ports:
+      - "18000:8000"
+    # MySQL 공식 이미지가 초기화용 임시 서버를 잠깐 열었다 닫는 동안 첫 연결이
+    # 실패할 수 있다. 최종 서버가 준비되면 자동으로 다시 기동한다.
+    restart: "on-failure:5"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  monolith:
+    build:
+      context: .
+      dockerfile: docker/monolith.Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      # application-secret.yml이 이미지에 포함돼 있어도 시스템 테스트 DB 설정이 가장
+      # 높은 우선순위로 적용되도록 Spring의 정식 환경 변수 이름을 사용한다.
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/iter?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ""
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      JWT_SECRET_KEY: aW50ZWdyYXRpb24tc3lzdGVtLXRlc3Qtand0LXNlY3JldC1rZXktbXVzdC1iZS1sb25nLWVub3VnaC1mb3ItaHM1MTItc2lnbmluZw==
+      TOSS_BASE_URL: http://toss-stub:8090
+      AI_SERVICE_BASE_URL: http://ai:8000
+      AI_INTERNAL_API_KEY: iter-system-secret
+      MAIL_HOST: 127.0.0.1
+      MAIL_PORT: "1"
+    ports:
+      - "18080:8080"
+    restart: "on-failure:5"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      toss-stub:
+        condition: service_started
+      ai:
+        condition: service_started
+
+  chat:
+    build:
+      context: .
+      dockerfile: docker/chat.Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      CHAT_DB_URL: r2dbc:pool:mysql://mysql:3306/iter_chat?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      CHAT_FLYWAY_URL: jdbc:mysql://mysql:3306/iter_chat?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      CHAT_DB_USERNAME: root
+      CHAT_DB_PASSWORD: ""
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    ports:
+      - "18081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy

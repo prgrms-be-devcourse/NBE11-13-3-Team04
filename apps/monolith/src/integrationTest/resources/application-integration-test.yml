@@ -1,0 +1,44 @@
+spring:
+  data:
+    # 실제 접속 대상은 @ServiceConnection이 Testcontainers Redis로 덮어쓴다. 기본
+    # application.yaml의 필수 환경 변수 placeholder가 바인딩 단계에서 실패하지 않게
+    # 테스트 프로필에는 숫자로 변환 가능한 기준값을 둔다.
+    redis:
+      host: localhost
+      port: 6379
+  jpa:
+    hibernate:
+      # 통합 테스트의 스키마는 Flyway만 변경하고 Hibernate는 일치 여부만 확인한다.
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: integration-test-kakao-client-id
+            client-secret: integration-test-kakao-client-secret
+
+jwt:
+  issuer: iter-integration-test
+  audience: iter-api
+  secret-key: aW50ZWdyYXRpb24tdGVzdC1vbmx5LWp3dC1zZWNyZXQta2V5LW11c3QtYmUtbG9uZy1lbm91Z2gtZm9yLWg1MTItc2lnbmluZw==
+  access-token-validity: 30m
+  refresh-token-validity: 14d
+
+auth:
+  refresh-cookie:
+    name: iter-integration-refresh
+    secure: false
+
+app:
+  storage:
+    s3:
+      bucket: iter-integration-test
+      region: ap-northeast-2
+      public-base-url: https://example.invalid/iter-integration-test
+      key-prefix: integration-test
+      presigned-url-validity: 5m

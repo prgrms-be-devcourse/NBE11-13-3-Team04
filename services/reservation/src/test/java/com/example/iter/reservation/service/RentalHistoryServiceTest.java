@@ -419,19 +419,28 @@ class RentalHistoryServiceTest {
             LocalDate endDate,
             String productNameSnapshot
     ) {
-        return Rental.builder()
-                .id(id)
-                .equipmentId(equipmentId)
-                .renterId(renterId)
-                .startDate(endDate.minusDays(2))
-                .endDate(endDate)
-                .productNameSnapshot(productNameSnapshot)
-                .categorySnapshot("디지털기기")
-                .dailyPriceSnapshot(BigDecimal.valueOf(10_000))
-                .rentalDays(3)
-                .totalPrice(BigDecimal.valueOf(30_000))
-                .status(status)
-                .build();
+        return new Rental(
+                equipmentId,
+                0L,
+                renterId,
+                endDate.minusDays(2),
+                endDate,
+                productNameSnapshot,
+                BigDecimal.valueOf(10_000),
+                3,
+                BigDecimal.valueOf(30_000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                "디지털기기",
+                null,
+                id);
     }
 
     private EquipmentInfo equipment(Long id, Long ownerId, String name) {

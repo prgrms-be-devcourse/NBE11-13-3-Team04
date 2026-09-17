@@ -57,16 +57,10 @@ class RentalReviewRepositoryTest {
                 REVIEWER_ID, null, null, PageRequest.of(0, 10));
 
         assertThat(written).hasSize(2);
-        assertThat(written).allMatch(r -> r.getReviewerId().equals(REVIEWER_ID));
+        assertThat(written).allMatch(r -> r.getReviewerId() == REVIEWER_ID);
     }
 
     private RentalReview review(Long rentalId, Long reviewerId, Long revieweeId, int rating) {
-        return RentalReview.builder()
-                .rentalId(rentalId)
-                .reviewerId(reviewerId)
-                .revieweeId(revieweeId)
-                .rating(rating)
-                .content("테스트 리뷰")
-                .build();
+        return new RentalReview(rentalId, reviewerId, revieweeId, rating, "테스트 리뷰");
     }
 }

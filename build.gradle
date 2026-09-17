@@ -4,6 +4,12 @@ plugins {
 }
 
 dependencies {
+    // apps:chat은 CH3(스켈레톤) 시점엔 유닛 테스트로 커버할 로직이 거의 없어서
+    // 두 번(CH3, CH6) 다 79%대로 80% 게이트를 못 넘어 빼뒀었다. CH6(정책 엔진)·
+    // CH7(Redis Stream 이벤트 소비자)로 실제 테스트된 로직이 늘어난 뒤 다시 재보니
+    // 80.2%로 게이트를 넘어서 정식으로 편입한다.
+    // (리포지토리는 Testcontainers 통합 테스트로 검증하는데, 그 실행 결과는 별도
+    // integrationTest 태스크라 이 집계에 안 잡힌다 — apps/chat/build.gradle 참고)
     jacocoAggregation project(':apps:monolith')
     jacocoAggregation project(':libs:core')
     jacocoAggregation project(':libs:security')
@@ -16,6 +22,8 @@ dependencies {
     jacocoAggregation project(':services:payment')
     jacocoAggregation project(':services:device')
     jacocoAggregation project(':services:reservation')
+    jacocoAggregation project(':services:ai')
+    jacocoAggregation project(':apps:chat')
 }
 
 // jacoco-report-aggregation 플러그인은 리포트 태스크를 자동으로 만들어주지 않는다.
@@ -32,6 +40,14 @@ reporting {
 def aggregatedReport = tasks.named('testCodeCoverageReport', JacocoReport)
 
 aggregatedReport.configure {
+    // 게이트를 domain/service 계층에만 건다. dto·controller·config·support(adapter)·
+    // client 등은 전부 빠진다 — 얇은 보일러플레이트가 전체 평균을 깎거나(원래 테스트가
+    // 없던 delivery 등) 부풀리는 일 없이, 실제 비즈니스 로직 커버리지만 본다.
+    classDirectories.setFrom(
+        classDirectories.files.collect { dir ->
+            fileTree(dir: dir, includes: ['**/domain/**', '**/service/**'])
+        },
+    )
     reports {
         xml.required = true
         html.required = true
@@ -54,7 +70,7 @@ def aggregatedCoverageVerification = tasks.register('aggregatedCoverageVerificat
     violationRules {
         rule {
             limit {
-                minimum = 0.50
+                minimum = 0.80
             }
         }
     }
@@ -62,4 +78,18 @@ def aggregatedCoverageVerification = tasks.register('aggregatedCoverageVerificat
 
 tasks.named('check') {
     dependsOn aggregatedReport, aggregatedCoverageVerification
+}
+
+// 현재 JVM 애플리케이션의 실제 인프라 통합 테스트를 한 명령으로 실행한다.
+// Python AI 통합 테스트는 Python 실행 환경을 Gradle에 연결하는 단계에서 이 태스크에 추가한다.
+tasks.register('projectIntegrationTest') {
+    description = '모놀리스와 채팅의 Testcontainers 통합 테스트를 모두 실행한다.'
+    group = 'verification'
+    dependsOn ':apps:monolith:integrationTest', ':apps:chat:integrationTest'
+}
+
+tasks.register('contractTest') {
+    description = '공용 fixture를 사용하는 JVM 서비스 계약 테스트를 실행한다.'
+    group = 'verification'
+    dependsOn ':services:ai:contractTest'
 }

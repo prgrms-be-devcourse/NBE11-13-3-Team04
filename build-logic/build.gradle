@@ -8,4 +8,11 @@ dependencies {
     // 컨벤션 플러그인 안에서 id 'org.springframework.boot' 를 적용하려면
     // 그 플러그인이 컴파일 클래스패스에 있어야 한다.
     implementation "org.springframework.boot:spring-boot-gradle-plugin:${libs.versions.spring.boot.get()}"
+
+    // 같은 이유로 코틀린 컨벤션 플러그인(iter.kotlin-conventions)도 여기 있어야 한다.
+    // org.jetbrains.kotlin.plugin.spring / .plugin.jpa 는 kotlin-gradle-plugin에
+    // 안 딸려 있고 각각 kotlin-allopen / kotlin-noarg 아티팩트가 따로 있다.
+    implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}"
+    implementation "org.jetbrains.kotlin:kotlin-allopen:${libs.versions.kotlin.get()}"
+    implementation "org.jetbrains.kotlin:kotlin-noarg:${libs.versions.kotlin.get()}"
 }

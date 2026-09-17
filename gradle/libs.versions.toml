@@ -1,9 +1,11 @@
 [versions]
 spring-boot = "4.1.0"
+kotlin = "2.4.0"
 jjwt = "0.12.6"
 aws-sdk = "2.47.5"
 bouncycastle = "1.82"
 springdoc = "3.0.3"
+mockito-kotlin = "5.4.0"
 
 [libraries]
 # ---- BOM ----
@@ -20,6 +22,15 @@ spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-
 spring-boot-starter-security-oauth2-client = { module = "org.springframework.boot:spring-boot-starter-security-oauth2-client" }
 spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
 spring-boot-starter-mail = { module = "org.springframework.boot:spring-boot-starter-mail" }
+# apps:chat 전용. WebFlux 스택 — webmvc 와 같은 모듈에서 절대 같이 쓰지 않는다
+# (서블릿+리액티브 두 스택이 동시에 올라가는 조합이라 Boot 자동설정이 꼬인다).
+spring-boot-starter-webflux = { module = "org.springframework.boot:spring-boot-starter-webflux" }
+# CoroutineCrudRepository 등 Spring Data 리포지토리 지원까지 포함하는 R2DBC 스타터.
+# (spring-boot-starter-r2dbc 는 이보다 낮은 레벨이라 리포지토리 지원이 없다)
+spring-boot-starter-data-r2dbc = { module = "org.springframework.boot:spring-boot-starter-data-r2dbc" }
+spring-boot-starter-data-redis-reactive = { module = "org.springframework.boot:spring-boot-starter-data-redis-reactive" }
+# monolith(서블릿) 전용 — 티켓·그랜트 발급, 도메인 이벤트 Stream 발행에 쓴다.
+spring-boot-starter-data-redis = { module = "org.springframework.boot:spring-boot-starter-data-redis" }
 
 # ---- Spring Boot 테스트 스타터 ----
 spring-boot-starter-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test" }
@@ -27,13 +38,16 @@ spring-boot-starter-data-jpa-test = { module = "org.springframework.boot:spring-
 spring-boot-starter-security-test = { module = "org.springframework.boot:spring-boot-starter-security-test" }
 spring-boot-starter-security-oauth2-client-test = { module = "org.springframework.boot:spring-boot-starter-security-oauth2-client-test" }
 spring-boot-starter-validation-test = { module = "org.springframework.boot:spring-boot-starter-validation-test" }
+spring-boot-starter-webflux-test = { module = "org.springframework.boot:spring-boot-starter-webflux-test" }
+spring-boot-starter-data-r2dbc-test = { module = "org.springframework.boot:spring-boot-starter-data-r2dbc-test" }
+# Testcontainers 를 Spring Boot 테스트에 자동 연결(@ServiceConnection)해 주는 모듈.
+spring-boot-testcontainers = { module = "org.springframework.boot:spring-boot-testcontainers" }
 
 # ---- 서드파티 ----
-# lombok, junit-platform-launcher, mysql, h2 는 버전을 적지 않는다.
+# junit-platform-launcher, mysql, h2 는 버전을 적지 않는다.
 # Spring Boot BOM 이 관리하며, 실제 해석 결과를 확인했다:
-#   lombok 1.18.46 / junit-platform-launcher 6.0.3 / byte-buddy 1.18.10
+#   junit-platform-launcher 6.0.3 / byte-buddy 1.18.10
 # byte-buddy 를 임의로 올리거나 내리지 말 것 - Mockito 의 Java 25 동작이 여기에 달려 있다.
-lombok = { module = "org.projectlombok:lombok" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 mysql-connector = { module = "com.mysql:mysql-connector-j" }
 # !! flyway-core 만 넣으면 Flyway 가 아예 안 돈다 !!
@@ -50,6 +64,9 @@ h2 = { module = "com.h2database:h2" }
 # 소스 6개가 com.fasterxml.jackson 애너테이션을 쓰는데 아무도 직접 선언하지 않은 상태라
 # springdoc 을 제거하거나 올릴 때 깨질 수 있다 - 별도로 정리할 것.
 jackson2-databind = { module = "com.fasterxml.jackson.core:jackson-databind" }
+jackson3-module-kotlin = { module = "tools.jackson.module:jackson-module-kotlin" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito-kotlin" }
 
 bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
@@ -58,6 +75,27 @@ jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }
 springdoc-openapi-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
 aws-s3 = { module = "software.amazon.awssdk:s3" }
 aws-url-connection-client = { module = "software.amazon.awssdk:url-connection-client" }
+
+# ---- apps:chat (R2DBC + 코루틴) ----
+# 셋 다 버전을 적지 않는다 — spring-boot-dependencies 가 testcontainers-bom과
+# kotlinx-coroutines-bom을 <scope>import</scope>로 내부에 끌어와서 관리한다
+# (직접 확인함: r2dbc-mysql 1.4.2 / r2dbc-pool 1.0.2.RELEASE / kotlin-coroutines 1.10.2).
+# io.r2dbc:r2dbc-mysql 이 아니라 io.asyncer:r2dbc-mysql 이다 — 옛 드라이버는 유지보수가 끊겼다.
+r2dbc-mysql = { module = "io.asyncer:r2dbc-mysql" }
+r2dbc-pool = { module = "io.r2dbc:r2dbc-pool" }
+kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test" }
+# Testcontainers 도 마찬가지로 spring-boot-dependencies 가 스코프 임포트한
+# testcontainers-bom 이 버전을 관리한다.
+# !! Testcontainers 2.0 부터 아티팩트 이름이 다시 testcontainers-* 접두어로 돌아왔다 !!
+# (1.19~1.21 대는 짧은 이름 junit-jupiter/mysql/r2dbc 였는데, 이 저장소가 쓰는
+#  2.0.5 는 옛 이름으로 되돌아갔다 — 실제 BOM(testcontainers-bom-2.0.5.pom)을 열어서 확인함)
+testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
+testcontainers-mysql = { module = "org.testcontainers:testcontainers-mysql" }
+testcontainers-r2dbc = { module = "org.testcontainers:testcontainers-r2dbc" }
+# com.redis 그룹이다 — org.testcontainers가 아니다. spring-boot-dependencies가 이것도
+# 스코프 임포트로 관리한다(직접 확인함).
+testcontainers-redis = { module = "com.redis:testcontainers-redis" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

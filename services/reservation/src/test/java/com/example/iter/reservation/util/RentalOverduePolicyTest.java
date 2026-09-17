@@ -71,17 +71,27 @@ class RentalOverduePolicyTest {
     }
 
     private Rental rental(RentalStatus status, LocalDate endDate) {
-        return Rental.builder()
-                .id(1L)
-                .equipmentId(1L)
-                .renterId(1L)
-                .startDate(endDate.minusDays(2))
-                .endDate(endDate)
-                .productNameSnapshot("테스트 장비")
-                .dailyPriceSnapshot(BigDecimal.valueOf(10_000))
-                .rentalDays(3)
-                .totalPrice(BigDecimal.valueOf(30_000))
-                .status(status)
-                .build();
+        return new Rental(
+                1L,
+                0L,
+                1L,
+                endDate.minusDays(2),
+                endDate,
+                "테스트 장비",
+                BigDecimal.valueOf(10_000),
+                3,
+                BigDecimal.valueOf(30_000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                null,
+                null,
+                1L);
     }
 }

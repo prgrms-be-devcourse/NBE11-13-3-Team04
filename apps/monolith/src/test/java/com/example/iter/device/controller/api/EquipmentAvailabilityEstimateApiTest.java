@@ -231,17 +231,16 @@ class EquipmentAvailabilityEstimateApiTest {
     }
 
     private Equipment saveEquipment(EquipmentStatus status) {
-        return equipmentRepository.saveAndFlush(Equipment.builder()
-                .ownerId(1L)
-                .category(EquipmentCategory.CAMERA)
-                .name("소니 A7C2")
-                .description("대여 가능 여부 테스트 장비")
-                .dailyPrice(BigDecimal.valueOf(30_000))
-                .availableFrom(LocalDate.now())
-                .availableTo(LocalDate.now().plusDays(30))
-                .status(status)
-                .productCondition(ProductConditionType.NORMAL)
-                .build());
+        return equipmentRepository.saveAndFlush(new Equipment(
+                1L,
+                EquipmentCategory.CAMERA,
+                "소니 A7C2",
+                "대여 가능 여부 테스트 장비",
+                BigDecimal.valueOf(30_000),
+                LocalDate.now(),
+                LocalDate.now().plusDays(30),
+                status,
+                ProductConditionType.NORMAL));
     }
 
     private void saveRental(
@@ -250,18 +249,27 @@ class EquipmentAvailabilityEstimateApiTest {
             LocalDate endDate,
             RentalStatus status
     ) {
-        rentalRepository.saveAndFlush(Rental.builder()
-                .equipmentId(equipment.getId())
-                .ownerIdSnapshot(equipment.getOwnerId())
-                .renterId(99L)
-                .startDate(startDate)
-                .endDate(endDate)
-                .productNameSnapshot(equipment.getName())
-                .categorySnapshot(equipment.getCategory().name())
-                .dailyPriceSnapshot(equipment.getDailyPrice())
-                .rentalDays((int) (endDate.toEpochDay() - startDate.toEpochDay() + 1))
-                .totalPrice(equipment.getDailyPrice())
-                .status(status)
-                .build());
+        rentalRepository.saveAndFlush(new Rental(
+                equipment.getId(),
+                equipment.getOwnerId(),
+                99L,
+                startDate,
+                endDate,
+                equipment.getName(),
+                equipment.getDailyPrice(),
+                (int) (endDate.toEpochDay() - startDate.toEpochDay() + 1),
+                equipment.getDailyPrice(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                equipment.getCategory().name(),
+                null,
+                null));
     }
 }

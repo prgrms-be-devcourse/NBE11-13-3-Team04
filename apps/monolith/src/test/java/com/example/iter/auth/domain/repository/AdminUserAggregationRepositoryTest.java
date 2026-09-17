@@ -142,15 +142,14 @@ class AdminUserAggregationRepositoryTest {
     }
 
     private Equipment equipment(Long ownerId, String name) {
-        return Equipment.builder()
-                .ownerId(ownerId)
-                .category(EquipmentCategory.LAPTOP)
-                .name(name)
-                .description("테스트 장비")
-                .dailyPrice(BigDecimal.valueOf(10_000))
-                .availableFrom(LocalDate.now().minusMonths(1))
-                .availableTo(LocalDate.now().plusMonths(1))
-                .build();
+        return new Equipment(
+                ownerId,
+                EquipmentCategory.LAPTOP,
+                name,
+                "테스트 장비",
+                BigDecimal.valueOf(10_000),
+                LocalDate.now().minusMonths(1),
+                LocalDate.now().plusMonths(1));
     }
 
     private Rental rental(
@@ -159,19 +158,28 @@ class AdminUserAggregationRepositoryTest {
             LocalDate endDate,
             RentalStatus status
     ) {
-        return Rental.builder()
-                .equipmentId(equipment.getId())
-                .ownerIdSnapshot(equipment.getOwnerId())
-                .renterId(renterId)
-                .startDate(endDate.minusDays(3))
-                .endDate(endDate)
-                .productNameSnapshot("테스트 장비")
-                .categorySnapshot("노트북")
-                .dailyPriceSnapshot(BigDecimal.valueOf(10_000))
-                .rentalDays(4)
-                .totalPrice(BigDecimal.valueOf(40_000))
-                .status(status)
-                .build();
+        return new Rental(
+                equipment.getId(),
+                equipment.getOwnerId(),
+                renterId,
+                endDate.minusDays(3),
+                endDate,
+                "테스트 장비",
+                BigDecimal.valueOf(10_000),
+                4,
+                BigDecimal.valueOf(40_000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                "노트북",
+                null,
+                null);
     }
 
     private Report report(
@@ -179,13 +187,13 @@ class AdminUserAggregationRepositoryTest {
             ReportTargetType targetType,
             Long targetId
     ) {
-        return Report.builder()
-                .reporterId(reporterId)
-                .targetType(targetType)
-                .targetId(targetId)
-                .reason("테스트 신고")
-                .description("테스트 신고 내용입니다.")
-                .status(ReportStatus.RECEIVED)
-                .build();
+        return new Report(
+                reporterId,
+                targetType,
+                targetId,
+                "테스트 신고",
+                "테스트 신고 내용입니다.",
+                ReportStatus.RECEIVED
+        );
     }
 }

@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=75,<81"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iter-ai-service"
+version = "0.1.0"
+description = "Bootcamp-friendly Python AI microservice for ITer"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

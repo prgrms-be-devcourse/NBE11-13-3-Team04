@@ -216,54 +216,59 @@ class ReturnRepositoryTest {
     }
 
     private Equipment equipment(Long ownerId, String name) {
-        return Equipment.builder()
-                .ownerId(ownerId)
-                .category(EquipmentCategory.LAPTOP)
-                .name(name)
-                .dailyPrice(BigDecimal.valueOf(30000))
-                .build();
+        return new Equipment(
+                ownerId,
+                EquipmentCategory.LAPTOP,
+                name,
+                null,
+                BigDecimal.valueOf(30000));
     }
 
     private Rental rental(Equipment equipment, RentalStatus status, String snapshotName) {
-        return Rental.builder()
-                .equipmentId(equipment.getId())
-                .ownerIdSnapshot(equipment.getOwnerId())
-                .renterId(RENTER_ID)
-                .startDate(LocalDate.of(2026, 8, 1))
-                .endDate(LocalDate.of(2026, 8, 10))
-                .productNameSnapshot(snapshotName)
-                .categorySnapshot("노트북")
-                .dailyPriceSnapshot(BigDecimal.valueOf(30000))
-                .rentalDays(10)
-                .totalPrice(BigDecimal.valueOf(300000))
-                .status(status)
-                .build();
+        return new Rental(
+                equipment.getId(),
+                equipment.getOwnerId(),
+                RENTER_ID,
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 10),
+                snapshotName,
+                BigDecimal.valueOf(30000),
+                10,
+                BigDecimal.valueOf(300000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                "노트북",
+                null,
+                null);
     }
 
     private Receipt receipt(Rental rental) {
-        return Receipt.builder()
-                .rental(rental)
-                .productCondition(ProductConditionType.NORMAL)
-                .conditionDetail("수령 시 정상")
-                .receivedAt(LocalDateTime.of(2026, 8, 1, 14, 30))
-                .build();
+        return new Receipt(
+                rental,
+                ProductConditionType.NORMAL,
+                "수령 시 정상",
+                LocalDateTime.of(2026, 8, 1, 14, 30),
+                null);
     }
 
     private ReturnReceipt returnReceipt(Rental rental) {
-        return ReturnReceipt.builder()
-                .rental(rental)
-                .productCondition(ProductConditionType.DAMAGED)
-                .conditionDetail("반납 시 모서리 파손")
-                .returnDate(LocalDate.of(2026, 8, 11))
-                .build();
+        return new ReturnReceipt(
+                rental,
+                ProductConditionType.DAMAGED,
+                "반납 시 모서리 파손",
+                LocalDate.of(2026, 8, 11),
+                null);
     }
 
     private ReceiptImage receiptImage(Receipt receipt, String imageUrl, int sortOrder) {
-        return ReceiptImage.builder()
-                .receipt(receipt)
-                .imageUrl(imageUrl)
-                .sortOrder(sortOrder)
-                .build();
+        return new ReceiptImage(receipt, imageUrl, sortOrder, null);
     }
 
     private ReturnReceiptImage returnReceiptImage(
@@ -271,11 +276,7 @@ class ReturnRepositoryTest {
             String imageUrl,
             int sortOrder
     ) {
-        return ReturnReceiptImage.builder()
-                .returnReceipt(returnReceipt)
-                .imageUrl(imageUrl)
-                .sortOrder(sortOrder)
-                .build();
+        return new ReturnReceiptImage(returnReceipt, imageUrl, sortOrder, null);
     }
 
     private EquipmentImage equipmentImage(
@@ -284,11 +285,6 @@ class ReturnRepositoryTest {
             int sortOrder,
             boolean thumbnail
     ) {
-        return EquipmentImage.builder()
-                .equipment(equipment)
-                .imageUrl(imageUrl)
-                .sortOrder(sortOrder)
-                .thumbnail(thumbnail)
-                .build();
+        return new EquipmentImage(equipment, imageUrl, null, sortOrder, thumbnail);
     }
 }

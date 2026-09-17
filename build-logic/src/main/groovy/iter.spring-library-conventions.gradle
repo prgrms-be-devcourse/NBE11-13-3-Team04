@@ -18,8 +18,4 @@ def bom = libs.findLibrary('spring-boot-bom').get()
 dependencies {
     // api 로 선언해야 이 모듈을 쓰는 쪽도 동일한 버전 제약을 물려받는다.
     api platform(bom)
-    // annotationProcessor / testAnnotationProcessor 는 implementation 을 상속하지 않아
-    // 따로 platform 을 넣어줘야 lombok 을 버전 없이 쓸 수 있다.
-    annotationProcessor platform(bom)
-    testAnnotationProcessor platform(bom)
 }

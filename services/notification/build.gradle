@@ -1,5 +1,6 @@
 plugins {
     id 'iter.spring-library-conventions'
+    id 'iter.kotlin-conventions'
 }
 
 description = 'iter 알림 도메인 - 인앱 알림, SSE'

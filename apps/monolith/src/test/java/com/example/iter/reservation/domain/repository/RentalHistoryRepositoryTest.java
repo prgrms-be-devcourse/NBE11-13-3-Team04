@@ -58,7 +58,7 @@ class RentalHistoryRepositoryTest {
                 .extracting(Rental::getId)
                 .containsExactly(first.getId(), second.getId());
         assertThat(result.getContent())
-                .allMatch(rental -> rental.getRenterId().equals(RENTER_ID));
+                .allMatch(rental -> rental.getRenterId() == RENTER_ID);
     }
 
     @Test
@@ -305,17 +305,16 @@ class RentalHistoryRepositoryTest {
 
     private Equipment equipment(Long ownerId, String name) {
         return equipmentRepository.saveAndFlush(
-                Equipment.builder()
-                        .ownerId(ownerId)
-                        .category(EquipmentCategory.OTHER)
-                        .name(name)
-                        .description("테스트 장비")
-                        .dailyPrice(BigDecimal.valueOf(20_000))
-                        .availableFrom(TODAY.minusMonths(1))
-                        .availableTo(TODAY.plusMonths(1))
-                        .status(EquipmentStatus.ACTIVE)
-                        .productCondition(ProductConditionType.NORMAL)
-                        .build()
+                new Equipment(
+                        ownerId,
+                        EquipmentCategory.OTHER,
+                        name,
+                        "테스트 장비",
+                        BigDecimal.valueOf(20_000),
+                        TODAY.minusMonths(1),
+                        TODAY.plusMonths(1),
+                        EquipmentStatus.ACTIVE,
+                        ProductConditionType.NORMAL)
         );
     }
 
@@ -327,19 +326,28 @@ class RentalHistoryRepositoryTest {
             LocalDate endDate
     ) {
         return rentalRepository.saveAndFlush(
-                Rental.builder()
-                        .equipmentId(equipment.getId())
-                        .ownerIdSnapshot(equipment.getOwnerId())
-                        .renterId(renterId)
-                        .startDate(endDate.minusDays(2))
-                        .endDate(endDate)
-                        .productNameSnapshot(productNameSnapshot)
-                        .categorySnapshot("디지털기기")
-                        .dailyPriceSnapshot(BigDecimal.valueOf(10_000))
-                        .rentalDays(3)
-                        .totalPrice(BigDecimal.valueOf(30_000))
-                        .status(status)
-                        .build()
+                new Rental(
+                        equipment.getId(),
+                        equipment.getOwnerId(),
+                        renterId,
+                        endDate.minusDays(2),
+                        endDate,
+                        productNameSnapshot,
+                        BigDecimal.valueOf(10_000),
+                        3,
+                        BigDecimal.valueOf(30_000),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        status,
+                        "디지털기기",
+                        null,
+                        null)
         );
     }
 }

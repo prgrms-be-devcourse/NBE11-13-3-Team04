@@ -8,7 +8,6 @@ plugins {
 // precompiled script plugin 안에서는 타입 안전한 libs.* 접근자가 생성되지 않는다.
 // 아래가 공식적으로 지원되는 우회 방법이다.
 def libs = extensions.getByType(VersionCatalogsExtension).named('libs')
-def lombok = libs.findLibrary('lombok').get()
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
@@ -31,11 +30,6 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 dependencies {
-    compileOnly lombok
-    annotationProcessor lombok
-    testCompileOnly lombok
-    testAnnotationProcessor lombok
-
     testRuntimeOnly libs.findLibrary('junit-platform-launcher').get()
 }
 

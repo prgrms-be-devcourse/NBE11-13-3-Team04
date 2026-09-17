@@ -1,0 +1,22 @@
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+spring:
+  config:
+    activate:
+      on-profile: local
+  r2dbc:
+    url: ${CHAT_DB_URL:r2dbc:pool:mysql://localhost:3306/iter_chat?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${CHAT_DB_USERNAME:root}
+    password: ${CHAT_DB_PASSWORD:}
+  flyway:
+    url: ${CHAT_FLYWAY_URL:jdbc:mysql://localhost:3306/iter_chat?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    user: ${CHAT_DB_USERNAME:root}
+    password: ${CHAT_DB_PASSWORD:}
+  data:
+    # docker-compose.yml의 redis 서비스 기본값(비밀번호 없음, 6379).
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}

@@ -1,0 +1,9 @@
+fastapi==0.128.0
+openai==2.15.0
+pydantic==2.12.5
+pydantic-settings==2.12.0
+PyMySQL[rsa]==1.1.2
+SQLAlchemy==2.0.45
+uvicorn==0.40.0
+boto3==1.43.88
+Pillow==12.3.0

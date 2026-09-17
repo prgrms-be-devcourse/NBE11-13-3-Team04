@@ -55,14 +55,15 @@ class NotificationServiceTest {
     }
 
     private Notification notification(Long id, Long receiverId, boolean read, LocalDateTime createdAt) {
-        Notification notification = Notification.builder()
-                .id(id)
-                .receiverId(receiverId)
-                .type(NotificationType.RENTAL_APPROVED)
-                .params(Map.of("productName", "테스트 장비"))
-                .rentalId(10L)
-                .read(read)
-                .build();
+        Notification notification = new Notification(
+                receiverId,
+                NotificationType.RENTAL_APPROVED,
+                10L,
+                Map.of("productName", "테스트 장비"),
+                read,
+                null,
+                id
+        );
         ReflectionTestUtils.setField(notification, "createdAt", createdAt);
         return notification;
     }
@@ -115,7 +116,7 @@ class NotificationServiceTest {
 
         var response = notificationService().markRead(1L, 1L);
 
-        assertThat(response.read()).isTrue();
+        assertThat(response.getRead()).isTrue();
     }
 
     @Test
@@ -139,7 +140,7 @@ class NotificationServiceTest {
 
         var response = notificationService().getNotifications(1L, false, null, 2);
 
-        assertThat(response.content()).extracting(NotificationResponse::id).containsExactly(30L, 20L);
+        assertThat(response.content()).extracting(NotificationResponse::getId).containsExactly(30L, 20L);
         assertThat(response.hasNext()).isTrue();
         assertThat(response.nextCursor())
                 .isEqualTo(CursorCodec.encode(new CursorKey(second.getCreatedAt(), second.getId())));

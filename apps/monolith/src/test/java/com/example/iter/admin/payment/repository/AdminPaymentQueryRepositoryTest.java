@@ -264,27 +264,37 @@ class AdminPaymentQueryRepositoryTest {
                 .status(UserStatus.ACTIVE)
                 .build());
 
-        Rental rental = rentalRepository.saveAndFlush(Rental.builder()
-                .equipmentId(100L + renter.getId())
-                .ownerIdSnapshot(1L)
-                .renterId(renter.getId())
-                .startDate(LocalDate.of(2026, 8, 21))
-                .endDate(LocalDate.of(2026, 8, 30))
-                .productNameSnapshot(equipmentName)
-                .categorySnapshot("LAPTOP")
-                .dailyPriceSnapshot(BigDecimal.valueOf(30000))
-                .rentalDays(10)
-                .totalPrice(BigDecimal.valueOf(300000))
-                .status(RentalStatus.REQUESTED)
-                .build());
+        Rental rental = rentalRepository.saveAndFlush(new Rental(
+                100L + renter.getId(),
+                1L,
+                renter.getId(),
+                LocalDate.of(2026, 8, 21),
+                LocalDate.of(2026, 8, 30),
+                equipmentName,
+                BigDecimal.valueOf(30000),
+                10,
+                BigDecimal.valueOf(300000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                RentalStatus.REQUESTED,
+                "LAPTOP",
+                null,
+                null));
 
-        Payment payment = paymentRepository.saveAndFlush(Payment.builder()
-                .rentalId(rental.getId())
-                .renterIdSnapshot(rental.getRenterId())
-                .amount(BigDecimal.valueOf(300000))
-                .status(paymentStatus)
-                .orderId(orderId)
-                .build());
+        Payment payment = paymentRepository.saveAndFlush(new Payment(
+                rental.getId(),
+                rental.getRenterId(),
+                BigDecimal.valueOf(300000),
+                paymentStatus,
+                null,
+                null,
+                orderId));
 
         return new Fixture(renter, rental, payment);
     }

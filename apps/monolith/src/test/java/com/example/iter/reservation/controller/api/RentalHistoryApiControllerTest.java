@@ -32,6 +32,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -167,7 +168,7 @@ class RentalHistoryApiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        verify(rentalHistoryService, never()).getBorrowedHistory(any(), any());
+        verify(rentalHistoryService, never()).getBorrowedHistory(anyLong(), any());
     }
 
     @Test
@@ -178,7 +179,7 @@ class RentalHistoryApiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        verify(rentalHistoryService, never()).getLentOverdueHistory(any(), any());
+        verify(rentalHistoryService, never()).getLentOverdueHistory(anyLong(), any());
     }
 
     @Test
@@ -189,7 +190,7 @@ class RentalHistoryApiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        verify(rentalHistoryService, never()).getBorrowedHistory(any(), any());
+        verify(rentalHistoryService, never()).getBorrowedHistory(anyLong(), any());
     }
 
     @Test

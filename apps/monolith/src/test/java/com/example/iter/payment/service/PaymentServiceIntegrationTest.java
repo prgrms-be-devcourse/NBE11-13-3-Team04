@@ -54,18 +54,34 @@ class PaymentServiceIntegrationTest {
     void confirm_이후_재조회하면_실제_DB에_PAID_REQUESTED로_반영돼있다() {
         User owner = userRepository.save(user("owner"));
         User renter = userRepository.save(user("renter"));
-        Equipment equipment = equipmentRepository.save(Equipment.builder()
-                .ownerId(owner.getId()).category(EquipmentCategory.CAMERA).name("A7C2")
-                .dailyPrice(BigDecimal.valueOf(10000)).build());
-        Rental rental = rentalRepository.save(Rental.builder()
-                .equipmentId(equipment.getId()).ownerIdSnapshot(owner.getId()).renterId(renter.getId())
-                .startDate(LocalDate.now().plusDays(1)).endDate(LocalDate.now().plusDays(2))
-                .productNameSnapshot("A7C2").categorySnapshot("카메라")
-                .dailyPriceSnapshot(BigDecimal.valueOf(10000))
-                .rentalDays(1).totalPrice(BigDecimal.valueOf(10000))
-                .receiverName("n").receiverPhone("p").zipcode("z").address("a").detailAddress("d")
-                .status(RentalStatus.PENDING)
-                .build());
+        Equipment equipment = equipmentRepository.save(new Equipment(
+                owner.getId(),
+                EquipmentCategory.CAMERA,
+                "A7C2",
+                null,
+                BigDecimal.valueOf(10000)));
+        Rental rental = rentalRepository.save(new Rental(
+                equipment.getId(),
+                owner.getId(),
+                renter.getId(),
+                LocalDate.now().plusDays(1),
+                LocalDate.now().plusDays(2),
+                "A7C2",
+                BigDecimal.valueOf(10000),
+                1,
+                BigDecimal.valueOf(10000),
+                "n",
+                "p",
+                "z",
+                "a",
+                "d",
+                null,
+                null,
+                null,
+                RentalStatus.PENDING,
+                "카메라",
+                null,
+                null));
 
         paymentService.ready(rental.getId(), renter.getId());
         Payment readyPayment = paymentRepository.findByRentalId(rental.getId()).orElseThrow();

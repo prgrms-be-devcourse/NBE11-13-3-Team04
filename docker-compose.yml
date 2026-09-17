@@ -1,0 +1,41 @@
+# 로컬 개발용 인프라. MySQL 을 직접 설치해서 쓰던 방식 대신 `docker compose up -d` 한 번으로
+# 대체할 수 있게 한다. 운영에는 쓰지 않는다(운영 인프라는 별도).
+#
+# 기본값은 apps/monolith/src/main/resources/application-local.yml 의 기본값과 맞춰 두었다
+# (root / 빈 비밀번호, 3306, DB명 iter). 이미 로컬에 MySQL을 직접 설치해서 쓰고 있다면
+# 이 파일을 안 써도 되고, 포트가 겹치면 아래 ports 를 바꿔서 쓰면 된다.
+#
+# apps:chat 은 별도 스키마(iter_chat)를 쓴다 — 물리적으로는 같은 MySQL 인스턴스지만
+# 크로스 스키마 조인은 금지한다(설계는 .docs/05-chat-and-realtime.md 참고).
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: iter-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3306:3306"
+    volumes:
+      - iter-mysql-data:/var/lib/mysql
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: iter-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  iter-mysql-data:

@@ -3,6 +3,7 @@ package com.example.iter.device.controller.admin;
 import com.example.iter.common.security.Role;
 import com.example.iter.auth.domain.entity.User;
 import com.example.iter.common.security.UserStatus;
+import com.example.iter.common.image.CaptureView;
 import com.example.iter.auth.api.UserSummary;
 import com.example.iter.config.RestApiSecurityTestConfig;
 import com.example.iter.common.dto.response.CursorPageResponse;
@@ -38,6 +39,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -124,11 +126,11 @@ class AdminEquipmentApiControllerTest {
         ArgumentCaptor<AdminEquipmentSearchRequest> captor =
                 ArgumentCaptor.forClass(AdminEquipmentSearchRequest.class);
         verify(adminEquipmentService).getEquipments(captor.capture());
-        assertThat(captor.getValue().keyword()).isEqualTo("맥북");
-        assertThat(captor.getValue().category()).isEqualTo("LAPTOP");
-        assertThat(captor.getValue().status()).isEqualTo(EquipmentStatus.ACTIVE);
-        assertThat(captor.getValue().cursor()).isEqualTo("current-cursor");
-        assertThat(captor.getValue().size()).isEqualTo(20);
+        assertThat(captor.getValue().getKeyword()).isEqualTo("맥북");
+        assertThat(captor.getValue().getCategory()).isEqualTo("LAPTOP");
+        assertThat(captor.getValue().getStatus()).isEqualTo(EquipmentStatus.ACTIVE);
+        assertThat(captor.getValue().getCursor()).isEqualTo("current-cursor");
+        assertThat(captor.getValue().getSize()).isEqualTo(20);
     }
 
     @Test
@@ -176,8 +178,8 @@ class AdminEquipmentApiControllerTest {
                 eq(EQUIPMENT_ID),
                 captor.capture()
         );
-        assertThat(captor.getValue().status()).isEqualTo(EquipmentStatus.SUSPENDED);
-        assertThat(captor.getValue().reason()).isEqualTo("신고 누적으로 관리자 차단");
+        assertThat(captor.getValue().getStatus()).isEqualTo(EquipmentStatus.SUSPENDED);
+        assertThat(captor.getValue().getReason()).isEqualTo("신고 누적으로 관리자 차단");
     }
 
     @Test
@@ -203,7 +205,7 @@ class AdminEquipmentApiControllerTest {
                         .with(user(adminPrincipal)))
                 .andExpect(status().isBadRequest());
 
-        verify(adminEquipmentService, never()).getEquipmentDetail(any());
+        verify(adminEquipmentService, never()).getEquipmentDetail(anyLong());
     }
 
     @Test
@@ -221,7 +223,7 @@ class AdminEquipmentApiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        verify(adminEquipmentService, never()).updateEquipmentStatus(any(), any(), any());
+        verify(adminEquipmentService, never()).updateEquipmentStatus(anyLong(), anyLong(), any());
     }
 
     @Test
@@ -239,7 +241,7 @@ class AdminEquipmentApiControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 
-        verify(adminEquipmentService, never()).updateEquipmentStatus(any(), any(), any());
+        verify(adminEquipmentService, never()).updateEquipmentStatus(anyLong(), anyLong(), any());
     }
 
     private CustomUserDetails principal(Long id, Role role) {
@@ -273,6 +275,7 @@ class AdminEquipmentApiControllerTest {
                 List.of(new ImageResponse(
                         100L,
                         "https://example.com/image.jpg",
+                        CaptureView.FRONT,
                         1,
                         true
                 )),

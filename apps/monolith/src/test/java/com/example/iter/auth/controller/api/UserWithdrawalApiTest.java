@@ -242,33 +242,41 @@ class UserWithdrawalApiTest {
     }
 
     private Equipment saveEquipment(Long ownerId) {
-        return equipmentRepository.saveAndFlush(Equipment.builder()
-                .ownerId(ownerId)
-                .category(EquipmentCategory.CAMERA)
-                .name("테스트 장비")
-                .description("탈퇴 테스트용 장비")
-                .dailyPrice(BigDecimal.valueOf(10_000))
-                .availableFrom(LocalDate.now().plusDays(1))
-                .availableTo(LocalDate.now().plusDays(30))
-                .status(EquipmentStatus.ACTIVE)
-                .productCondition(ProductConditionType.NORMAL)
-                .build());
+        return equipmentRepository.saveAndFlush(new Equipment(
+                ownerId,
+                EquipmentCategory.CAMERA,
+                "테스트 장비",
+                "탈퇴 테스트용 장비",
+                BigDecimal.valueOf(10_000),
+                LocalDate.now().plusDays(1),
+                LocalDate.now().plusDays(30),
+                EquipmentStatus.ACTIVE,
+                ProductConditionType.NORMAL));
     }
 
     private Rental saveRental(Equipment equipment, Long renterId, RentalStatus status) {
-        return rentalRepository.saveAndFlush(Rental.builder()
-                .equipmentId(equipment.getId())
-                .ownerIdSnapshot(equipment.getOwnerId())
-                .renterId(renterId)
-                .startDate(LocalDate.now().plusDays(2))
-                .endDate(LocalDate.now().plusDays(4))
-                .productNameSnapshot("테스트 장비")
-                .categorySnapshot("CAMERA")
-                .dailyPriceSnapshot(BigDecimal.valueOf(10_000))
-                .rentalDays(3)
-                .totalPrice(BigDecimal.valueOf(30_000))
-                .status(status)
-                .build());
+        return rentalRepository.saveAndFlush(new Rental(
+                equipment.getId(),
+                equipment.getOwnerId(),
+                renterId,
+                LocalDate.now().plusDays(2),
+                LocalDate.now().plusDays(4),
+                "테스트 장비",
+                BigDecimal.valueOf(10_000),
+                3,
+                BigDecimal.valueOf(30_000),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                status,
+                "CAMERA",
+                null,
+                null));
     }
 
     private String bearer(User user) {

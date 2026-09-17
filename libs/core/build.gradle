@@ -1,5 +1,7 @@
 plugins {
     id 'iter.spring-library-conventions'
+    // 코틀린 전환 첫 대상. src/main/kotlin 에 파일을 추가하면 바로 컴파일된다.
+    id 'iter.kotlin-conventions'
 }
 
 description = 'iter 공용 코어 - 응답/예외/페이징/감사 엔티티/메일/요청 로깅'

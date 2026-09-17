@@ -106,10 +106,10 @@ class AdminEquipmentServiceTest {
         var response = adminEquipmentService.getEquipments(request);
 
         assertThat(response.content()).hasSize(2);
-        assertThat(response.content().getFirst().owner().userId()).isEqualTo(OWNER_ID);
-        assertThat(response.content().getFirst().thumbnailUrl())
+        assertThat(response.content().getFirst().getOwner().userId()).isEqualTo(OWNER_ID);
+        assertThat(response.content().getFirst().getThumbnailUrl())
                 .isEqualTo("https://example.com/first.jpg");
-        assertThat(response.content().get(1).thumbnailUrl())
+        assertThat(response.content().get(1).getThumbnailUrl())
                 .isEqualTo("https://example.com/air.jpg");
         assertThat(response.size()).isEqualTo(10);
         assertThat(response.hasNext()).isFalse();
@@ -142,7 +142,7 @@ class AdminEquipmentServiceTest {
         )).thenReturn(List.of());
 
         var response = adminEquipmentService.getEquipments(
-                new AdminEquipmentSearchRequest("  ", " ", null, null, null)
+                new AdminEquipmentSearchRequest("  ", " ", null, null, 20)
         );
 
         assertThat(response.content()).isEmpty();
@@ -208,11 +208,11 @@ class AdminEquipmentServiceTest {
 
         var response = adminEquipmentService.getEquipmentDetail(EQUIPMENT_ID);
 
-        assertThat(response.equipmentId()).isEqualTo(EQUIPMENT_ID);
-        assertThat(response.owner().userId()).isEqualTo(OWNER_ID);
-        assertThat(response.name()).isEqualTo("맥북 프로");
-        assertThat(response.images()).hasSize(1);
-        assertThat(response.images().getFirst().imageUrl())
+        assertThat(response.getEquipmentId()).isEqualTo(EQUIPMENT_ID);
+        assertThat(response.getOwner().userId()).isEqualTo(OWNER_ID);
+        assertThat(response.getName()).isEqualTo("맥북 프로");
+        assertThat(response.getImages()).hasSize(1);
+        assertThat(response.getImages().getFirst().getImageUrl())
                 .isEqualTo("https://example.com/image.jpg");
     }
 
@@ -246,7 +246,7 @@ class AdminEquipmentServiceTest {
         );
 
         assertThat(equipment.getStatus()).isEqualTo(EquipmentStatus.SUSPENDED);
-        assertThat(response.status()).isEqualTo(EquipmentStatus.SUSPENDED);
+        assertThat(response.getStatus()).isEqualTo(EquipmentStatus.SUSPENDED);
         verify(adminActionService).record(
                 ADMIN_ID,
                 AdminActionTargetType.EQUIPMENT,
@@ -272,7 +272,7 @@ class AdminEquipmentServiceTest {
         );
 
         assertThat(equipment.getStatus()).isEqualTo(EquipmentStatus.INACTIVE);
-        assertThat(response.status()).isEqualTo(EquipmentStatus.INACTIVE);
+        assertThat(response.getStatus()).isEqualTo(EquipmentStatus.INACTIVE);
         verify(adminActionService).record(
                 ADMIN_ID,
                 AdminActionTargetType.EQUIPMENT,
@@ -342,19 +342,18 @@ class AdminEquipmentServiceTest {
             EquipmentStatus status,
             String name
     ) {
-        return Equipment.builder()
-                .id(id)
-                .ownerId(ownerId)
-                .category(EquipmentCategory.LAPTOP)
-                .name(name)
-                .description("테스트 장비")
-                .dailyPrice(BigDecimal.valueOf(30000))
-                .availableFrom(LocalDate.of(2026, 8, 1))
-                .availableTo(LocalDate.of(2026, 8, 31))
-                .status(status)
-                .productCondition(ProductConditionType.NORMAL)
-                .conditionDetail("정상")
-                .build();
+        return new Equipment(
+                ownerId,
+                EquipmentCategory.LAPTOP,
+                name,
+                "테스트 장비",
+                BigDecimal.valueOf(30000),
+                LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 31),
+                status,
+                ProductConditionType.NORMAL,
+                "정상",
+                id);
     }
 
     private UserSummary owner() {
@@ -368,13 +367,7 @@ class AdminEquipmentServiceTest {
             int sortOrder,
             boolean thumbnail
     ) {
-        return EquipmentImage.builder()
-                .id(id)
-                .equipment(equipment)
-                .imageUrl(url)
-                .sortOrder(sortOrder)
-                .thumbnail(thumbnail)
-                .build();
+        return new EquipmentImage(equipment, url, null, sortOrder, thumbnail, id);
     }
 
     private static Stream<EquipmentStatus> suspendableStatuses() {

@@ -48,12 +48,12 @@ class RentalCreationConcurrencyTest {
         int requesterCount = 3;
 
         User owner = userRepository.save(user("owner-" + System.nanoTime()));
-        Equipment equipment = equipmentRepository.save(Equipment.builder()
-                .ownerId(owner.getId())
-                .category(EquipmentCategory.CAMERA)
-                .name("소니 A7C2")
-                .dailyPrice(BigDecimal.valueOf(30000))
-                .build());
+        Equipment equipment = equipmentRepository.save(new Equipment(
+                owner.getId(),
+                EquipmentCategory.CAMERA,
+                "소니 A7C2",
+                null,
+                BigDecimal.valueOf(30000)));
 
         List<User> renters = List.of(
                 userRepository.save(user("renter1-" + System.nanoTime())),
@@ -90,7 +90,7 @@ class RentalCreationConcurrencyTest {
         assertThat(results.stream().filter(Boolean::booleanValue).count()).isEqualTo(1);
 
         List<Rental> createdRentals = rentalRepository.findAll().stream()
-                .filter(r -> r.getEquipmentId().equals(equipment.getId()))
+                .filter(r -> r.getEquipmentId() == equipment.getId())
                 .toList();
         assertThat(createdRentals).hasSize(1);
         assertThat(createdRentals.get(0).getStatus()).isEqualTo(RentalStatus.PENDING);

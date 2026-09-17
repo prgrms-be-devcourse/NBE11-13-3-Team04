@@ -1,6 +1,7 @@
 package com.example.iter.reservation.dto.response;
 
 import com.example.iter.reservation.domain.entity.ProductConditionType;
+import com.example.iter.common.image.CaptureView;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -21,12 +22,14 @@ class ConditionEvidenceResponseTest {
                 LocalDateTime.of(2026, 8, 1, 14, 30)
         );
 
-        assertThat(response.imageUrls()).isEmpty();
+        assertThat(response.images()).isEmpty();
     }
 
     @Test
     void 이미지_URL은_방어적_복사되어_원본_목록_변경의_영향을_받지_않는다() {
-        List<String> source = new ArrayList<>(List.of("first.jpg"));
+        List<ConditionEvidenceImageResponse> source = new ArrayList<>(List.of(
+                new ConditionEvidenceImageResponse(CaptureView.FRONT, "first.jpg")
+        ));
         var response = new ConditionEvidenceResponse(
                 ProductConditionType.NORMAL,
                 "정상",
@@ -34,9 +37,11 @@ class ConditionEvidenceResponseTest {
                 LocalDateTime.of(2026, 8, 1, 14, 30)
         );
 
-        source.add("second.jpg");
+        source.add(new ConditionEvidenceImageResponse(CaptureView.SIDE, "second.jpg"));
 
-        assertThat(response.imageUrls()).containsExactly("first.jpg");
+        assertThat(response.images())
+                .extracting(ConditionEvidenceImageResponse::imageUrl)
+                .containsExactly("first.jpg");
     }
 
     @Test
@@ -44,11 +49,12 @@ class ConditionEvidenceResponseTest {
         var response = new ConditionEvidenceResponse(
                 ProductConditionType.NORMAL,
                 "정상",
-                List.of("first.jpg"),
+                List.of(new ConditionEvidenceImageResponse(CaptureView.FRONT, "first.jpg")),
                 LocalDateTime.of(2026, 8, 1, 14, 30)
         );
 
-        assertThatThrownBy(() -> response.imageUrls().add("second.jpg"))
+        assertThatThrownBy(() -> response.images().add(
+                new ConditionEvidenceImageResponse(CaptureView.SIDE, "second.jpg")))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 }

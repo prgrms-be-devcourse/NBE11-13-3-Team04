@@ -1,5 +1,10 @@
 .gradle/
+.gradle-test-cache/
+.kotlin/
 build/
+# IntelliJ 내장 컴파일러 산출물. 빌드를 Gradle 에 위임하면 안 생기지만,
+# 위임 설정이 풀린 IDE 에서 한 번이라도 빌드하면 만들어진다.
+out/
 .idea/
 *.iml
 .DS_Store
@@ -16,6 +21,9 @@ build/
 
 # 로컬 수동 테스트로 업로드된 파일
 /uploads/
+
+# 코틀린 컴파일러 세션 디렉터리. 빌드 산출물이라 추적하지 않는다.
+.kotlin/
 
 # 로컬 도구/에이전트 설정 및 산출물
 .claude/
