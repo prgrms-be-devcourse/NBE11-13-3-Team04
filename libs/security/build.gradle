@@ -1,5 +1,6 @@
 plugins {
     id 'iter.spring-library-conventions'
+    id 'iter.kotlin-conventions'
 }
 
 description = 'iter 인증 공용 - JWT 발급/검증, 인증 주체(AuthUser), 인증 필터'

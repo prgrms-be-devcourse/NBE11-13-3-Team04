@@ -1,8 +1,4 @@
-package com.example.iter.common.security;
-
-import lombok.Getter;
-
-import java.util.Objects;
+package com.example.iter.common.security
 
 // 시큐리티 계층이 auth 도메인의 User 엔티티 대신 들고 다니는 최소 스냅샷.
 // 코드베이스 전체를 조사한 결과 시큐리티가 실제로 필요로 하는 멤버는 아래 5개뿐이다.
@@ -14,30 +10,21 @@ import java.util.Objects;
 // status == UserStatus.DELETED 비교는 false가 되므로,
 // 상태를 알 수 없는 principal이 조용히 인증을 통과한다. 컴파일도 테스트도 이를 잡지 못한다.
 // 생성 경로를 User#toAuthUser() 하나로 묶고 필수 필드를 생성자에서 강제하는 이유다.
-@Getter
-public final class AuthUser {
-
-    private final Long id;
-    private final String email;
+class AuthUser private constructor(
+    val id: Long,
+    val email: String?,
     // UserDetails.getPassword() 계약용. OAuth로 가입한 회원은 비밀번호가 없어 null일 수 있다.
-    private final String password;
-    private final Role role;
-    private final UserStatus status;
-
-    private AuthUser(Long id, String email, String password, Role role, UserStatus status) {
-        this.id = Objects.requireNonNull(id, "id");
-        this.role = Objects.requireNonNull(role, "role");
-        this.status = Objects.requireNonNull(status, "status");
-        this.email = email;
-        this.password = password;
-    }
-
-    public static AuthUser of(Long id, String email, String password, Role role, UserStatus status) {
-        return new AuthUser(id, email, password, role, status);
-    }
+    val password: String?,
+    val role: Role,
+    val status: UserStatus,
+) {
 
     // 메서드 보안 SpEL이 도메인 User 엔티티 없이도 현재 계정 활성 상태를 판별한다.
-    public boolean isActive() {
-        return status == UserStatus.ACTIVE;
+    fun isActive(): Boolean = status == UserStatus.ACTIVE
+
+    companion object {
+        @JvmStatic
+        fun of(id: Long, email: String?, password: String?, role: Role, status: UserStatus): AuthUser =
+            AuthUser(id, email, password, role, status)
     }
 }
