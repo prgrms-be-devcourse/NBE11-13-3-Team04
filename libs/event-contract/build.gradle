@@ -6,6 +6,6 @@ plugins {
 description = 'iter monolith↔chat 통합 이벤트 계약 — 순수 코틀린 데이터클래스, Spring 런타임 의존 없음'
 
 // iter.spring-library-conventions를 붙이지만 spring-boot-starter-* 는 하나도 추가하지
-// 않는다 — 여기 있는 건 Spring BOM의 "버전 맞춰주는 표" 역할뿐이라(lombok/jackson 버전을
-// 이걸로 해석한다), 실행 시점에 Spring 클래스가 클래스패스에 얹히는 게 아니다. 이 BOM
-// 없이는 iter.kotlin-conventions가 넣는 jackson-module-kotlin 조차 버전을 못 찾는다.
+// 않는다 — 여기 있는 건 Spring BOM의 "버전 맞춰주는 표" 역할뿐이라(jackson 버전을 이걸로
+// 해석한다), 실행 시점에 Spring 클래스가 클래스패스에 얹히는 게 아니다. 이 BOM 없이는
+// iter.kotlin-conventions가 넣는 jackson-module-kotlin 조차 버전을 못 찾는다.
