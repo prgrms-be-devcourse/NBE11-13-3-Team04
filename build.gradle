@@ -40,6 +40,14 @@ reporting {
 def aggregatedReport = tasks.named('testCodeCoverageReport', JacocoReport)
 
 aggregatedReport.configure {
+    // 게이트를 domain/service 계층에만 건다. dto·controller·config·support(adapter)·
+    // client 등은 전부 빠진다 — 얇은 보일러플레이트가 전체 평균을 깎거나(원래 테스트가
+    // 없던 delivery 등) 부풀리는 일 없이, 실제 비즈니스 로직 커버리지만 본다.
+    classDirectories.setFrom(
+        classDirectories.files.collect { dir ->
+            fileTree(dir: dir, includes: ['**/domain/**', '**/service/**'])
+        },
+    )
     reports {
         xml.required = true
         html.required = true
