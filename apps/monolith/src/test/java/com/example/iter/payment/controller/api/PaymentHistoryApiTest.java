@@ -182,16 +182,15 @@ class PaymentHistoryApiTest {
 
     private Payment savePayment(Rental rental, PaymentStatus status, String suffix) {
         LocalDateTime now = LocalDateTime.now();
-        return paymentRepository.saveAndFlush(Payment.builder()
-                .rentalId(rental.getId())
-                .renterIdSnapshot(rental.getRenterId())
-                .amount(rental.getTotalPrice())
-                .status(status)
-                .paidAt(status == PaymentStatus.PENDING ? null : now)
-                .refundedAt(status == PaymentStatus.REFUNDED ? now : null)
-                .orderId("order-" + suffix)
-                .paymentKey("payment-key-" + suffix)
-                .build());
+        return paymentRepository.saveAndFlush(new Payment(
+                rental.getId(),
+                rental.getRenterId(),
+                rental.getTotalPrice(),
+                status,
+                status == PaymentStatus.PENDING ? null : now,
+                status == PaymentStatus.REFUNDED ? now : null,
+                "order-" + suffix,
+                "payment-key-" + suffix));
     }
 
     private String bearerToken(User user) {

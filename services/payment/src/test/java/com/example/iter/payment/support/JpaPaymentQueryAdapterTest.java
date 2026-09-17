@@ -39,7 +39,7 @@ class JpaPaymentQueryAdapterTest {
     // "환불됨 = REFUNDED" 판단이 알림 리스너에서 이 어댑터로 옮겨왔다.
     @Test
     void 환불된_결제면_true를_돌려준다() {
-        Payment refunded = Payment.builder().rentalId(10L).amount(BigDecimal.valueOf(150000)).build();
+        Payment refunded = new Payment(10L, 2L, BigDecimal.valueOf(150000));
         refunded.markRefunded();
         when(paymentRepository.findByRentalId(10L)).thenReturn(Optional.of(refunded));
 
@@ -48,7 +48,7 @@ class JpaPaymentQueryAdapterTest {
 
     @Test
     void 환불되지_않은_결제면_false를_돌려준다() {
-        Payment paid = Payment.builder().rentalId(10L).amount(BigDecimal.valueOf(150000)).build();
+        Payment paid = new Payment(10L, 2L, BigDecimal.valueOf(150000));
         when(paymentRepository.findByRentalId(10L)).thenReturn(Optional.of(paid));
 
         assertThat(adapter.isRefundedForRental(10L)).isFalse();

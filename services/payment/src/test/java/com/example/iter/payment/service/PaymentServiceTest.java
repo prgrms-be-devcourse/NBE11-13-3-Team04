@@ -66,7 +66,7 @@ class PaymentServiceTest {
     }
 
     private Payment readyPayment(String orderId, BigDecimal amount) {
-        Payment payment = Payment.builder().rentalId(10L).amount(amount).build();
+        Payment payment = new Payment(10L, 2L, amount);
         payment.assignOrder(orderId, amount);
         return payment;
     }

@@ -75,7 +75,7 @@ class RentalReportContextContributor(
             }
         }
 
-        payments.findByRentalId(rental.id).ifPresent { payment -> addPayment(payment, draft) }
+        payments.findByRentalId(rental.id!!).ifPresent { payment -> addPayment(payment, draft) }
 
         for (delivery in shipping.findByRentalId(rental.id)) {
             addShipping(delivery, draft)
