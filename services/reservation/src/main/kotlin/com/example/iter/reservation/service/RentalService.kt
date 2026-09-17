@@ -61,7 +61,7 @@ class RentalService(
 
     @Transactional
     fun createRental(renterId: Long, request: RentalCreateRequest): RentalCreateResponse {
-        var equipment = equipmentQueryPort.find(request.equipmentId())
+        var equipment = equipmentQueryPort.find(request.equipmentId()!!)
             .orElseThrow { CustomException(ErrorCode.EQUIPMENT_NOT_FOUND) }
 
         if (equipment.isOwnedBy(renterId)) {
@@ -83,11 +83,11 @@ class RentalService(
 
         // 회원 탈퇴와 신규 대여 생성이 서로 같은 사용자 행 락에 참여하도록 한다.
         // 두 사용자를 항상 ID 오름차순으로 잠가 서로 상대방 장비를 동시에 대여할 때의 데드락도 줄인다.
-        lockAndValidateRentalParticipants(renterId, equipment.ownerId())
+        lockAndValidateRentalParticipants(renterId, equipment.ownerId)
 
         // 같은 장비에 대한 동시 요청을 직렬화하기 위해 락을 잡고 재조회 — 선점 방식이라
         // "겹치는지 확인"과 "저장"이 하나의 원자적 구간이어야 두 명이 동시에 같은 기간을 통과시키지 못한다.
-        equipment = equipmentLockPort.lockForUpdate(equipment.equipmentId())
+        equipment = equipmentLockPort.lockForUpdate(equipment.equipmentId)
             .orElseThrow { CustomException(ErrorCode.EQUIPMENT_NOT_FOUND) }
 
         if (!equipment.isActive()) {
@@ -95,23 +95,23 @@ class RentalService(
         }
 
         if (rentalRepository.findConflictingOccupyingRentalsForUpdate(
-                equipment.equipmentId(), startDate, endDate, RentalConflictPolicy.nonOccupyingStatuses(),
+                equipment.equipmentId, startDate, endDate, RentalConflictPolicy.nonOccupyingStatuses(),
             ).isNotEmpty()
         ) {
             throw CustomException(ErrorCode.RENTAL_PERIOD_CONFLICT)
         }
 
         val rentalDays = (ChronoUnit.DAYS.between(startDate, endDate) + 1).toInt()
-        val totalPrice = equipment.dailyPrice().multiply(BigDecimal.valueOf(rentalDays.toLong()))
+        val totalPrice = equipment.dailyPrice.multiply(BigDecimal.valueOf(rentalDays.toLong()))
 
         val rental = Rental(
-            equipment.equipmentId(),
-            equipment.ownerId(),
+            equipment.equipmentId,
+            equipment.ownerId,
             renterId,
             startDate,
             endDate,
-            equipment.name(),
-            equipment.dailyPrice(),
+            equipment.name,
+            equipment.dailyPrice,
             rentalDays,
             totalPrice,
             request.receiverName(),
@@ -123,7 +123,7 @@ class RentalService(
             null,
             null,
             RentalStatus.PENDING,
-            equipment.categoryName(),
+            equipment.categoryName,
         )
 
         val savedRental = rentalRepository.save(rental)
@@ -148,7 +148,7 @@ class RentalService(
 
         val renter = userQueryPort.findSummary(rental.renterId)
             .orElseThrow { CustomException(ErrorCode.USER_NOT_FOUND) }
-        val owner = userQueryPort.findSummary(equipment.ownerId())
+        val owner = userQueryPort.findSummary(equipment.ownerId)
             .orElseThrow { CustomException(ErrorCode.USER_NOT_FOUND) }
         val paymentStatus = paymentQueryPort.findStatusByRentalId(rentalId).orElse(null)
 
@@ -219,9 +219,9 @@ class RentalService(
         val paymentStatus = paymentCommandPort.cancelIfPaid(rentalId, "대여 취소").orElse(null)
 
         rental.changeStatus(RentalStatus.CANCELED)
-        equipmentOccupancyCommandPort.markVacated(rental.id)
+        equipmentOccupancyCommandPort.markVacated(rental.id!!)
         if (ownerWasNotified) {
-            eventPublisher.publishEvent(RentalCanceledEvent(rental.id))
+            eventPublisher.publishEvent(RentalCanceledEvent(rental.id!!))
         }
 
         log.info(
@@ -245,7 +245,7 @@ class RentalService(
             throw CustomException(ErrorCode.RENTAL_NOT_APPROVABLE)
         }
 
-        equipment = equipmentLockPort.lockForUpdate(equipment.equipmentId())
+        equipment = equipmentLockPort.lockForUpdate(equipment.equipmentId)
             .orElseThrow { CustomException(ErrorCode.EQUIPMENT_NOT_FOUND) }
 
         // 1) 락을 잡은 상태에서 재검증 — 요청 이후 관리자가 장비를 중지/삭제시켰다면 승인 불가
@@ -255,7 +255,7 @@ class RentalService(
 
         // 2) 이 사이 다른 트랜잭션이 먼저 커밋한 확정 예약이 있으면 승인 불가
         if (rentalRepository.findConflictingOccupyingRentalsForUpdate(
-                equipment.equipmentId(), rental.startDate, rental.endDate, RentalConflictPolicy.nonConfirmedStatuses(),
+                equipment.equipmentId, rental.startDate, rental.endDate, RentalConflictPolicy.nonConfirmedStatuses(),
             ).isNotEmpty()
         ) {
             throw CustomException(ErrorCode.RESERVATION_CONFLICT)
@@ -265,10 +265,10 @@ class RentalService(
         // 선점 방식(createRental 시점 락)이라 같은 기간에 REQUESTED가 동시에 여러 건 존재할 수 없어서
         // 예전처럼 "겹치는 다른 REQUESTED 자동 거절" 로직은 더 이상 필요 없다.
         rental.approve()
-        eventPublisher.publishEvent(RentalApprovedEvent(rental.id))
+        eventPublisher.publishEvent(RentalApprovedEvent(rental.id!!))
         log.info(
             "대여 승인 처리: rentalId={}, equipmentId={}, actorId={}, actorType={}, status={}",
-            rentalId, equipment.equipmentId(), currentUserId, if (isAdmin) "ADMIN" else "USER", rental.status,
+            rentalId, equipment.equipmentId, currentUserId, if (isAdmin) "ADMIN" else "USER", rental.status,
         )
 
         return RentalApproveResponse.from(rental)
@@ -289,7 +289,7 @@ class RentalService(
 
         // 환불 "후" 상태를 그대로 쓴다. 다시 조회하면 쿼리가 늘 뿐 결과는 같다.
         val paymentStatus = rejectAndRefund(rental, reason)
-        eventPublisher.publishEvent(RentalRejectedEvent(rental.id))
+        eventPublisher.publishEvent(RentalRejectedEvent(rental.id!!))
         log.info(
             "대여 거절 처리: rentalId={}, actorId={}, actorType={}, status={}, paymentStatus={}",
             rentalId, currentUserId, if (isAdmin) "ADMIN" else "USER", rental.status, paymentStatus,
@@ -318,7 +318,7 @@ class RentalService(
     private fun rejectAndRefund(rental: Rental, reason: String?): PaymentStatus? {
         val paymentStatus = paymentCommandPort.cancelIfPaid(rental.id, reason).orElse(null)
         rental.reject(reason)
-        equipmentOccupancyCommandPort.markVacated(rental.id)
+        equipmentOccupancyCommandPort.markVacated(rental.id!!)
         return paymentStatus
     }
 
@@ -341,13 +341,13 @@ class RentalService(
         val owner = requireLocked(locked, ownerId)
 
         // 어떤 상태가 차단 사유이고 어떤 에러 코드를 쓰는지는 이쪽(대여 정책)이 정한다.
-        if (renter.status() == UserStatus.SUSPENDED) {
+        if (renter.status == UserStatus.SUSPENDED) {
             throw CustomException(ErrorCode.USER_SUSPENDED)
         }
-        if (renter.status() == UserStatus.DELETED) {
+        if (renter.status == UserStatus.DELETED) {
             throw CustomException(ErrorCode.USER_DELETED)
         }
-        if (!owner.isActive) {
+        if (!owner.isActive()) {
             throw CustomException(ErrorCode.EQUIPMENT_NOT_AVAILABLE)
         }
     }

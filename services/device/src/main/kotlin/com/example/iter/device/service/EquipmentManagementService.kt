@@ -292,7 +292,7 @@ class EquipmentManagementService(
     ) {
         val periodChanged = availableFrom != equipment.availableFrom || availableTo != equipment.availableTo
         if (periodChanged &&
-            rentalQueryPort.hasOccupyingRentalOutsidePeriod(equipment.id!!, availableFrom, availableTo)
+            rentalQueryPort.hasOccupyingRentalOutsidePeriod(equipment.id!!, availableFrom!!, availableTo!!)
         ) {
             throw CustomException(
                 ErrorCode.ACTIVE_RENTAL_EXISTS,
@@ -332,7 +332,7 @@ class EquipmentManagementService(
             equipment.productCondition,
             equipment.conditionDetail,
             images,
-            EquipmentOwnerResponse(owner.userId(), owner.nickName()),
+            EquipmentOwnerResponse(owner.userId, owner.nickName),
             0.0,
             0L,
             equipment.createdAt,

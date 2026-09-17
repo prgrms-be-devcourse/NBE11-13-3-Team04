@@ -69,7 +69,7 @@ class RentalFulfillmentService(
         }
 
         val now = LocalDateTime.now()
-        shippingCommandPort.recordOutboundDelivered(rental.id, request.carrier(), request.trackingNumber(), now)
+        shippingCommandPort.recordOutboundDelivered(rental.id, request.carrier()!!, request.trackingNumber()!!, now)
 
         rental.changeStatus(RentalStatus.SHIPPING)
         log.info(
@@ -98,7 +98,7 @@ class RentalFulfillmentService(
         saveReceiptImages(receipt, request.images()!!)
 
         rental.changeStatus(RentalStatus.RENTING)
-        eventPublisher.publishEvent(RentalReceivedEvent(rental.id))
+        eventPublisher.publishEvent(RentalReceivedEvent(rental.id!!))
         log.info("대여 수령 처리: rentalId={}, renterId={}, status={}", rentalId, renterId, rental.status)
 
         return ReceiptCreateResponse(rental.id, rental.status, now)

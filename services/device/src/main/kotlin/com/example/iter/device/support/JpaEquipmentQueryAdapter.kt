@@ -46,7 +46,7 @@ class JpaEquipmentQueryAdapter(
 // 클래스 안의 static 이 아니라 톱레벨 함수다. 코틀린 companion object 멤버는 다른
 // 파일에서 `클래스::메서드` 참조로 못 부르는데, JpaEquipmentCommandAdapter 가 그렇게 쓴다.
 internal fun toInfo(equipment: Equipment): EquipmentInfo = EquipmentInfo(
-    equipment.id,
+    equipment.id!!,
     equipment.ownerId,
     equipment.name,
     equipment.category.name,

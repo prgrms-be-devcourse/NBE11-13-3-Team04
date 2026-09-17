@@ -37,7 +37,7 @@ class ReportTargetValidator(
     private fun validateEquipmentTarget(targetId: Long, reporterId: Long) {
         val equipment = equipmentQueryPort.find(targetId).orElseThrow { CustomException(ErrorCode.EQUIPMENT_NOT_FOUND) }
 
-        if (equipment.deleted()) {
+        if (equipment.deleted) {
             throw CustomException(ErrorCode.EQUIPMENT_NOT_FOUND)
         }
         if (equipment.isOwnedBy(reporterId)) {

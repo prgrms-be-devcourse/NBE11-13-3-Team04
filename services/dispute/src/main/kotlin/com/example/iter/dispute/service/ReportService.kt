@@ -95,7 +95,7 @@ class ReportService(
         val reporter = userLockPort.lockAll(listOf(reporterId))[reporterId]
             ?: throw CustomException(ErrorCode.USER_NOT_FOUND)
 
-        when (reporter.status()) {
+        when (reporter.status) {
             UserStatus.SUSPENDED -> throw CustomException(ErrorCode.USER_SUSPENDED)
             UserStatus.DELETED -> throw CustomException(ErrorCode.USER_DELETED)
             else -> Unit

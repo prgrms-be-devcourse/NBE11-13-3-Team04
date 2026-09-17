@@ -157,8 +157,8 @@ class ReturnQueryService(
 
     private fun toConditionImage(image: EquipmentImageInfo): ConditionEvidenceImageResponse =
         ConditionEvidenceImageResponse(
-            image.captureView()?.let(CaptureView::valueOf),
-            image.imageUrl()
+            image.captureView?.let(CaptureView::valueOf),
+            image.imageUrl
         )
 
     // 현재 장비 소유자가 바뀌어도 거래 생성 당시 등록자와 대여자만 비교 화면에 접근할 수 있습니다.

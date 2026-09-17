@@ -67,9 +67,9 @@ class AdminUserService(
 
         return adminUserMapper.toDetail(
             user,
-            rentalStats.rentedCount(),
-            rentalStats.lentCount(),
-            rentalStats.overdueCount(),
+            rentalStats.rentedCount,
+            rentalStats.lentCount,
+            rentalStats.overdueCount,
             reportQueryPort.countAgainstUser(userId)
         )
     }

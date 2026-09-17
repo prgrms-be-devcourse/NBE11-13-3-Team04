@@ -37,7 +37,7 @@ class JpaRentalQueryAdapter(
         }
         return rentalRepository.findAllById(rentalIds)
             .map { toInfo(it) }
-            .associateBy { it.rentalId() }
+            .associateBy { it.rentalId }
     }
 
     @Transactional(readOnly = true)
@@ -84,7 +84,7 @@ class JpaRentalQueryAdapter(
     @Transactional(readOnly = true)
     override fun findSchedule(equipmentId: Long, from: LocalDate, to: LocalDate): List<RentalScheduleItem> =
         rentalRepository.findEquipmentSchedule(equipmentId, from, to, RentalConflictPolicy.nonScheduledStatuses())
-            .map { rental -> RentalScheduleItem(rental.id, rental.startDate, rental.endDate, rental.status) }
+            .map { rental -> RentalScheduleItem(rental.id!!, rental.startDate, rental.endDate, rental.status) }
 
     private fun toInfo(rental: Rental): RentalInfo =
         RentalInfo(

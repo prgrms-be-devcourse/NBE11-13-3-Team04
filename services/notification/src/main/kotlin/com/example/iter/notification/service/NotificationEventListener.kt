@@ -38,40 +38,40 @@ class NotificationEventListener(
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun onPaymentConfirmed(event: PaymentConfirmedEvent) {
-        val rental = rentalQueryPort.find(event.rentalId()).orElse(null) ?: return
-        val ownerId = equipmentQueryPort.findOwnerId(rental.equipmentId()).orElse(null) ?: return
-        val renter = findUser(rental.renterId())
+        val rental = rentalQueryPort.find(event.rentalId).orElse(null) ?: return
+        val ownerId = equipmentQueryPort.findOwnerId(rental.equipmentId).orElse(null) ?: return
+        val renter = findUser(rental.renterId)
         val owner = findUser(ownerId)
 
-        val productName = rental.productName()
+        val productName = rental.productName
 
         if (owner != null) {
             val paymentCompletedOwner = NotificationMessages.paymentCompletedOwner(
-                renterNameOf(renter), productName, owner.preferredLanguage(),
+                renterNameOf(renter), productName, owner.preferredLanguage,
             )
             notify {
                 notificationService.create(
-                    owner.userId(), owner.email(), NotificationType.PAYMENT_COMPLETED_OWNER,
+                    owner.userId, owner.email!!, NotificationType.PAYMENT_COMPLETED_OWNER,
                     paymentCompletedOwner.title, paymentCompletedOwner.message, paymentCompletedOwner.params,
-                    rental.rentalId(),
+                    rental.rentalId,
                 )
             }
-            val rentalRequested = NotificationMessages.rentalRequested(productName, owner.preferredLanguage())
+            val rentalRequested = NotificationMessages.rentalRequested(productName, owner.preferredLanguage)
             notify {
                 notificationService.create(
-                    owner.userId(), owner.email(), NotificationType.RENTAL_REQUESTED,
+                    owner.userId, owner.email!!, NotificationType.RENTAL_REQUESTED,
                     rentalRequested.title, rentalRequested.message, rentalRequested.params,
-                    rental.rentalId(),
+                    rental.rentalId,
                 )
             }
         }
         if (renter != null) {
-            val paymentCompletedRenter = NotificationMessages.paymentCompletedRenter(productName, renter.preferredLanguage())
+            val paymentCompletedRenter = NotificationMessages.paymentCompletedRenter(productName, renter.preferredLanguage)
             notify {
                 notificationService.create(
-                    renter.userId(), renter.email(), NotificationType.PAYMENT_COMPLETED_RENTER,
+                    renter.userId, renter.email!!, NotificationType.PAYMENT_COMPLETED_RENTER,
                     paymentCompletedRenter.title, paymentCompletedRenter.message, paymentCompletedRenter.params,
-                    rental.rentalId(),
+                    rental.rentalId,
                 )
             }
         }
@@ -79,96 +79,96 @@ class NotificationEventListener(
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun onRentalApproved(event: RentalApprovedEvent) {
-        val rental = rentalQueryPort.find(event.rentalId()).orElse(null) ?: return
-        val renter = findUser(rental.renterId()) ?: return
-        val content = NotificationMessages.rentalApproved(rental.productName(), renter.preferredLanguage())
+        val rental = rentalQueryPort.find(event.rentalId).orElse(null) ?: return
+        val renter = findUser(rental.renterId) ?: return
+        val content = NotificationMessages.rentalApproved(rental.productName, renter.preferredLanguage)
         notify {
             notificationService.create(
-                renter.userId(), renter.email(), NotificationType.RENTAL_APPROVED,
+                renter.userId, renter.email!!, NotificationType.RENTAL_APPROVED,
                 content.title, content.message, content.params,
-                rental.rentalId(),
+                rental.rentalId,
             )
         }
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun onRentalRejected(event: RentalRejectedEvent) {
-        val rental = rentalQueryPort.find(event.rentalId()).orElse(null) ?: return
-        val renter = findUser(rental.renterId()) ?: return
+        val rental = rentalQueryPort.find(event.rentalId).orElse(null) ?: return
+        val renter = findUser(rental.renterId) ?: return
 
-        val refunded = paymentQueryPort.isRefundedForRental(rental.rentalId())
+        val refunded = paymentQueryPort.isRefundedForRental(rental.rentalId)
 
         val content = NotificationMessages.rentalRejected(
-            rental.productName(), rental.rejectReason(), refunded, renter.preferredLanguage(),
+            rental.productName, rental.rejectReason!!, refunded, renter.preferredLanguage,
         )
         notify {
             notificationService.create(
-                renter.userId(), renter.email(), NotificationType.RENTAL_REJECTED,
+                renter.userId, renter.email!!, NotificationType.RENTAL_REJECTED,
                 content.title, content.message, content.params,
-                rental.rentalId(),
+                rental.rentalId,
             )
         }
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun onRentalCanceled(event: RentalCanceledEvent) {
-        val rental = rentalQueryPort.find(event.rentalId()).orElse(null) ?: return
-        val ownerId = equipmentQueryPort.findOwnerId(rental.equipmentId()).orElse(null) ?: return
+        val rental = rentalQueryPort.find(event.rentalId).orElse(null) ?: return
+        val ownerId = equipmentQueryPort.findOwnerId(rental.equipmentId).orElse(null) ?: return
         val owner = findUser(ownerId) ?: return
-        val renter = findUser(rental.renterId())
+        val renter = findUser(rental.renterId)
 
-        val content = NotificationMessages.rentalCanceled(renterNameOf(renter), rental.productName(), owner.preferredLanguage())
+        val content = NotificationMessages.rentalCanceled(renterNameOf(renter), rental.productName, owner.preferredLanguage)
         notify {
             notificationService.create(
-                owner.userId(), owner.email(), NotificationType.RENTAL_CANCELED,
+                owner.userId, owner.email!!, NotificationType.RENTAL_CANCELED,
                 content.title, content.message, content.params,
-                rental.rentalId(),
+                rental.rentalId,
             )
         }
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun onRentalReceived(event: RentalReceivedEvent) {
-        val rental = rentalQueryPort.find(event.rentalId()).orElse(null) ?: return
-        val ownerId = equipmentQueryPort.findOwnerId(rental.equipmentId()).orElse(null) ?: return
+        val rental = rentalQueryPort.find(event.rentalId).orElse(null) ?: return
+        val ownerId = equipmentQueryPort.findOwnerId(rental.equipmentId).orElse(null) ?: return
         val owner = findUser(ownerId) ?: return
-        val renter = findUser(rental.renterId())
+        val renter = findUser(rental.renterId)
 
-        val content = NotificationMessages.rentalReceived(renterNameOf(renter), rental.productName(), owner.preferredLanguage())
+        val content = NotificationMessages.rentalReceived(renterNameOf(renter), rental.productName, owner.preferredLanguage)
         notify {
             notificationService.create(
-                owner.userId(), owner.email(), NotificationType.RENTAL_RECEIVED,
+                owner.userId, owner.email!!, NotificationType.RENTAL_RECEIVED,
                 content.title, content.message, content.params,
-                rental.rentalId(),
+                rental.rentalId,
             )
         }
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun onRentalReviewCreated(event: RentalReviewCreatedEvent) {
-        val review = rentalReviewQueryPort.find(event.reviewId()).orElse(null) ?: return
-        val rental: RentalInfo = rentalQueryPort.find(review.rentalId()).orElse(null) ?: return
-        val reviewer = findUser(review.reviewerId())
-        val reviewee = findUser(review.revieweeId()) ?: return
+        val review = rentalReviewQueryPort.find(event.reviewId).orElse(null) ?: return
+        val rental: RentalInfo = rentalQueryPort.find(review.rentalId).orElse(null) ?: return
+        val reviewer = findUser(review.reviewerId)
+        val reviewee = findUser(review.revieweeId) ?: return
 
         val content = NotificationMessages.reviewReceived(
-            reviewer?.name() ?: FALLBACK_REVIEWER_NAME,
-            rental.productName(),
-            review.rating(),
-            reviewee.preferredLanguage(),
+            reviewer?.name ?: FALLBACK_REVIEWER_NAME,
+            rental.productName,
+            review.rating,
+            reviewee.preferredLanguage,
         )
         notify {
             notificationService.create(
-                reviewee.userId(), reviewee.email(), NotificationType.REVIEW_RECEIVED,
+                reviewee.userId, reviewee.email!!, NotificationType.REVIEW_RECEIVED,
                 content.title, content.message, content.params,
-                rental.rentalId(),
+                rental.rentalId,
             )
         }
     }
 
     private fun findUser(userId: Long): UserProfile? = userQueryPort.findProfile(userId).orElse(null)
 
-    private fun renterNameOf(renter: UserProfile?): String = renter?.name() ?: FALLBACK_RENTER_NAME
+    private fun renterNameOf(renter: UserProfile?): String = renter?.name ?: FALLBACK_RENTER_NAME
 
     private fun notify(action: () -> Unit) {
         try {
