@@ -95,7 +95,8 @@ class Payment @JvmOverloads constructor(
         this.idempotencyKey = UUID.randomUUID().toString()
     }
 
-    // cancel은 PAID 상태에서만 일어나므로 최초 호출 시점에 한 번만 발급하고, 이후 재시도는 같은 값을 재사용한다.
+    // 취소 API 실패로 트랜잭션이 롤백돼도 다음 시도가 같은 키를 사용하도록 PAID 전환 시 발급한다.
+    // 이전에 생성된 PAID 결제를 위해 취소 시점의 방어 경로도 유지한다.
     fun ensureCancelIdempotencyKey(): String {
         if (cancelIdempotencyKey == null) {
             cancelIdempotencyKey = UUID.randomUUID().toString()
@@ -107,6 +108,9 @@ class Payment @JvmOverloads constructor(
         this.paymentKey = paymentKey
         this.status = PaymentStatus.PAID
         this.paidAt = approveAt
+        if (cancelIdempotencyKey == null) {
+            cancelIdempotencyKey = UUID.randomUUID().toString()
+        }
     }
 
     fun markFailed() {
