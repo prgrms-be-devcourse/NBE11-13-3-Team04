@@ -44,11 +44,10 @@ spring-boot-starter-data-r2dbc-test = { module = "org.springframework.boot:sprin
 spring-boot-testcontainers = { module = "org.springframework.boot:spring-boot-testcontainers" }
 
 # ---- 서드파티 ----
-# lombok, junit-platform-launcher, mysql, h2 는 버전을 적지 않는다.
+# junit-platform-launcher, mysql, h2 는 버전을 적지 않는다.
 # Spring Boot BOM 이 관리하며, 실제 해석 결과를 확인했다:
-#   lombok 1.18.46 / junit-platform-launcher 6.0.3 / byte-buddy 1.18.10
+#   junit-platform-launcher 6.0.3 / byte-buddy 1.18.10
 # byte-buddy 를 임의로 올리거나 내리지 말 것 - Mockito 의 Java 25 동작이 여기에 달려 있다.
-lombok = { module = "org.projectlombok:lombok" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 mysql-connector = { module = "com.mysql:mysql-connector-j" }
 # !! flyway-core 만 넣으면 Flyway 가 아예 안 돈다 !!
