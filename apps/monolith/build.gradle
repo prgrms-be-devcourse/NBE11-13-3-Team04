@@ -59,3 +59,41 @@ dependencies {
     testImplementation libs.mockito.kotlin
     testRuntimeOnly libs.h2
 }
+
+// H2 기반의 빠른 test와 실제 인프라를 쓰는 integrationTest를 소스 수준에서 분리한다.
+// 통합 테스트가 늘어나도 기본 build의 실행 시간과 로컬 Docker 유무에 영향을 주지 않는다.
+sourceSets {
+    integrationTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+configurations {
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestCompileOnly.extendsFrom testCompileOnly
+    integrationTestAnnotationProcessor.extendsFrom testAnnotationProcessor
+    // 애플리케이션의 MySQL/Flyway/JWT runtime은 포함하되 testRuntimeOnly의 H2는 제외한다.
+    integrationTestRuntimeOnly.extendsFrom runtimeOnly
+}
+
+dependencies {
+    // 실제 MySQL/Redis 위에서 실행하는 통합 테스트에만 Testcontainers를 노출한다.
+    integrationTestImplementation libs.spring.boot.testcontainers
+    integrationTestImplementation libs.testcontainers.junit.jupiter
+    integrationTestImplementation libs.testcontainers.mysql
+    integrationTestImplementation libs.testcontainers.redis
+    integrationTestRuntimeOnly libs.junit.platform.launcher
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Testcontainers 기반 모놀리스 통합 테스트 (Docker 필요)'
+    group = 'verification'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    useJUnitPlatform()
+    shouldRunAfter test
+
+    // DomainBoundaryTest와 같은 경로 기반 검증을 통합 테스트에서도 재사용할 수 있게 한다.
+    systemProperty 'iter.repoRoot', rootProject.projectDir.absolutePath
+}

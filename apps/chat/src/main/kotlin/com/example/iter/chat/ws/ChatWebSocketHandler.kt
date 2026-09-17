@@ -76,7 +76,13 @@ class ChatWebSocketHandler(
         // concatMap: 한 세션 안에서는 메시지를 순서대로 하나씩 처리한다(동시에 여러 SEND를
         // 병렬 저장하면 순서가 뒤섞일 수 있다). 방 전체 처리량은 세션 수만큼 자연히 늘어난다.
         val input = session.receive()
-            .concatMap { message -> mono { handleIncoming(session, sink, roomId, principal, message) } }
+            .concatMap { message ->
+                // WebSocketMessage의 버퍼는 receive 콜백이 끝나면 해제될 수 있다. 코루틴의
+                // 비동기 경계 안에서 읽으면 정상 프레임도 빈 값/해제된 버퍼로 보여 파싱이
+                // 실패하므로, 콜백 안에서 문자열로 복사한 뒤 넘긴다.
+                val rawPayload = message.payloadAsText
+                mono { handleIncoming(session, sink, roomId, principal, rawPayload) }
+            }
             .doFinally { sink.tryEmitComplete() }
 
         return output.and(input)
@@ -88,9 +94,9 @@ class ChatWebSocketHandler(
         sink: Sinks.Many<WebSocketMessage>,
         roomId: Long,
         principal: ChatPrincipal,
-        raw: WebSocketMessage,
+        rawPayload: String,
     ) {
-        val frame = runCatching { jsonMapper.readValue(raw.payloadAsText, IncomingFrame::class.java) }.getOrNull()
+        val frame = runCatching { jsonMapper.readValue(rawPayload, IncomingFrame::class.java) }.getOrNull()
         if (frame == null || frame.type != "SEND" || frame.content.isNullOrBlank()) {
             sink.tryEmitNext(session.textMessage(jsonMapper.writeValueAsString(OutgoingFrame.error("INVALID_FRAME"))))
             return

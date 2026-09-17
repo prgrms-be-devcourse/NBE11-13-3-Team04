@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.junit.jupiter.Container
@@ -29,6 +30,7 @@ import org.testcontainers.utility.DockerImageName
 // 때까지 폴링한다 — Awaitility 등 새 테스트 의존성을 추가하지 않고 간단히 재시도한다.
 @Testcontainers
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Tag("integration")
 class ChatIntegrationEventConsumerIntegrationTest {
 
@@ -53,15 +55,27 @@ class ChatIntegrationEventConsumerIntegrationTest {
 
         val updated = withTimeout(10_000) {
             var current = chatRoomRepository.findById(room.id!!)
-            while (current?.stage != RoomStage.TRADE) {
+            var pending = reactiveRedisTemplate.opsForStream<String, String>()
+                .pending("iter.events.chat", "chat")
+                .awaitSingleOrNull()
+            while (current?.stage != RoomStage.TRADE || pending?.totalPendingMessages != 0L) {
                 delay(200)
                 current = chatRoomRepository.findById(room.id)
+                pending = reactiveRedisTemplate.opsForStream<String, String>()
+                    .pending("iter.events.chat", "chat")
+                    .awaitSingleOrNull()
             }
             current
         }
 
         assertThat(updated.stage).isEqualTo(RoomStage.TRADE)
         assertThat(updated.rentalId).isEqualTo(999L)
+        assertThat(
+            reactiveRedisTemplate.opsForStream<String, String>()
+                .pending("iter.events.chat", "chat")
+                .awaitSingleOrNull()
+                ?.totalPendingMessages,
+        ).isZero()
     }
 
     companion object {

@@ -5,7 +5,7 @@ import pytest
 
 from app.domain.contracts import FeatureType, JobRequest
 
-FIXTURE_DIR = Path(__file__).parent / "fixtures"
+FIXTURE_DIR = Path(__file__).parents[3] / "integration-tests" / "contracts" / "ai" / "jobs"
 
 
 @pytest.mark.parametrize(

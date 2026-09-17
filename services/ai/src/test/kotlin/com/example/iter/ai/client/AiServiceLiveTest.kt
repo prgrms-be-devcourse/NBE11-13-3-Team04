@@ -6,6 +6,7 @@ import com.example.iter.ai.dto.AiJobStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import tools.jackson.databind.json.JsonMapper
 import java.nio.file.Files
@@ -14,6 +15,7 @@ import java.util.UUID
 
 // 별도로 실행한 로컬 Fake 서버만 대상으로 합니다. 일반 test 실행 시에는 건너뜁니다.
 @EnabledIfEnvironmentVariable(named = "AI_LIVE_TEST", matches = "true")
+@Tag("system")
 class AiServiceLiveTest {
     @Test
     fun 실제_Python_Fake_서버에_세_기능을_접수하고_조회한다() {
@@ -37,7 +39,8 @@ class AiServiceLiveTest {
         }
 
         listOf("equipment-draft-job", "report-triage-job", "return-condition-job").forEach { fixture ->
-            val path = Path.of("ai-service/tests/contract/fixtures/$fixture.json")
+            val path = Path.of(System.getProperty("integration.contract.dir"))
+                .resolve("ai/jobs/$fixture.json")
             val template = mapper.readValue(Files.readString(path), AiJobRequest::class.java)
             val request = AiJobRequest.create(
                 requireNotNull(template.featureType),
