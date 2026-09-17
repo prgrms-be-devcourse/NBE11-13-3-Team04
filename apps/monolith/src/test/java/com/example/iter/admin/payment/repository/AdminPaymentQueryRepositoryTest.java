@@ -287,13 +287,14 @@ class AdminPaymentQueryRepositoryTest {
                 null,
                 null));
 
-        Payment payment = paymentRepository.saveAndFlush(Payment.builder()
-                .rentalId(rental.getId())
-                .renterIdSnapshot(rental.getRenterId())
-                .amount(BigDecimal.valueOf(300000))
-                .status(paymentStatus)
-                .orderId(orderId)
-                .build());
+        Payment payment = paymentRepository.saveAndFlush(new Payment(
+                rental.getId(),
+                rental.getRenterId(),
+                BigDecimal.valueOf(300000),
+                paymentStatus,
+                null,
+                null,
+                orderId));
 
         return new Fixture(renter, rental, payment);
     }

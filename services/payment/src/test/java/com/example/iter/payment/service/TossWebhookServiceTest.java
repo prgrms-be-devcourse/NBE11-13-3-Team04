@@ -38,7 +38,7 @@ class TossWebhookServiceTest {
     private TossWebhookService tossWebhookService;
 
     private Payment pendingPayment(String orderId) {
-        Payment payment = Payment.builder().rentalId(10L).amount(BigDecimal.valueOf(100)).build();
+        Payment payment = new Payment(10L, 2L, BigDecimal.valueOf(100));
         payment.assignOrder(orderId, BigDecimal.valueOf(100));
         return payment;
     }
