@@ -18,7 +18,7 @@ import java.util.Base64
 class TossPaymentClient(tossProperties: TossProperties) {
 
     private val restClient: RestClient = RestClient.builder()
-        .baseUrl(BASE_URL)
+        .baseUrl(tossProperties.baseUrl.ifBlank { TossProperties.DEFAULT_BASE_URL })
         .defaultHeader(HttpHeaders.AUTHORIZATION, basicAuthHeader(tossProperties.secretKey))
         .build()
 
@@ -77,7 +77,6 @@ class TossPaymentClient(tossProperties: TossProperties) {
     }
 
     private companion object {
-        private const val BASE_URL = "https://api.tosspayments.com"
         private const val CONFIRM_URI = "/v1/payments/confirm"
         private const val LOOKUP_URI = "/v1/payments/{paymentKey}"
         private const val CANCEL_URI = "/v1/payments/{paymentKey}/cancel"

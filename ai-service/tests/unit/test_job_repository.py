@@ -10,7 +10,14 @@ from app.domain.contracts import JobRequest, JobStatus
 from app.domain.jobs import Base
 from app.infrastructure.job_repository import JobConflictError, JobRepository
 
-FIXTURE = Path(__file__).parents[1] / "contract" / "fixtures" / "report-triage-job.json"
+FIXTURE = (
+    Path(__file__).parents[3]
+    / "integration-tests"
+    / "contracts"
+    / "ai"
+    / "jobs"
+    / "report-triage-job.json"
+)
 
 
 def load_request() -> JobRequest:

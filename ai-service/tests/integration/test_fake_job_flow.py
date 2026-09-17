@@ -1,20 +1,29 @@
 import json
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.core.config import Settings
-from app.domain.jobs import Base
+from app.domain.jobs import AiJob, Base
 from app.infrastructure.mysql import get_session
 from app.main import app
 
-FIXTURE = Path(__file__).parents[1] / "contract" / "fixtures" / "equipment-draft-job.json"
+FIXTURE = (
+    Path(__file__).parents[3]
+    / "integration-tests"
+    / "contracts"
+    / "ai"
+    / "jobs"
+    / "equipment-draft-job.json"
+)
 
 
-def test_fake_job_can_be_created_and_queried(monkeypatch) -> None:
+@pytest.fixture
+def fake_client(monkeypatch):
     engine = create_engine(
         "sqlite+pysqlite://",
         connect_args={"check_same_thread": False},
@@ -38,14 +47,56 @@ def test_fake_job_can_be_created_and_queried(monkeypatch) -> None:
 
     try:
         with TestClient(app) as client:
-            request = json.loads(FIXTURE.read_text(encoding="utf-8"))
-            created = client.post("/internal/v1/jobs", json=request)
-            fetched = client.get(f"/internal/v1/jobs/{request['jobId']}")
+            yield client, engine
     finally:
         app.dependency_overrides.clear()
+        engine.dispose()
+
+
+def test_fake_job_can_be_created_and_queried(fake_client) -> None:
+    client, _ = fake_client
+    request = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    created = client.post("/internal/v1/jobs", json=request)
+    fetched = client.get(f"/internal/v1/jobs/{request['jobId']}")
 
     assert created.status_code == 202
     assert fetched.status_code == 200
     assert fetched.json()["status"] == "SUCCEEDED"
     assert fetched.json()["result"]["name"] is None
     assert "priceSuggestion" not in fetched.json()["result"]
+
+
+def test_duplicate_and_conflicting_job_requests_preserve_single_result(
+    fake_client, monkeypatch
+) -> None:
+    client, engine = fake_client
+    from app.services import job_service
+
+    calls = []
+    original_pipeline = job_service.run_pipeline
+
+    def count_pipeline(feature_type, payload, provider):
+        calls.append(feature_type)
+        return original_pipeline(feature_type, payload, provider)
+
+    monkeypatch.setattr(job_service, "run_pipeline", count_pipeline)
+    request = json.loads(FIXTURE.read_text(encoding="utf-8"))
+
+    created = client.post("/internal/v1/jobs", json=request)
+    first_result = client.get(f"/internal/v1/jobs/{request['jobId']}").json()
+    duplicate = client.post("/internal/v1/jobs", json=request)
+    changed = json.loads(json.dumps(request))
+    changed["payload"]["hints"]["category"] = "CAMERA"
+    conflict = client.post("/internal/v1/jobs", json=changed)
+    final_result = client.get(f"/internal/v1/jobs/{request['jobId']}").json()
+
+    assert created.status_code == duplicate.status_code == 202
+    assert created.json()["duplicate"] is False
+    assert duplicate.json()["duplicate"] is True
+    assert duplicate.json()["status"] == "SUCCEEDED"
+    assert conflict.status_code == 409
+    assert conflict.json()["detail"]["code"] == "IDEMPOTENCY_CONFLICT"
+    assert first_result == final_result
+    assert len(calls) == 1
+    with Session(engine) as session:
+        assert session.query(AiJob).count() == 1

@@ -79,3 +79,17 @@ def aggregatedCoverageVerification = tasks.register('aggregatedCoverageVerificat
 tasks.named('check') {
     dependsOn aggregatedReport, aggregatedCoverageVerification
 }
+
+// 현재 JVM 애플리케이션의 실제 인프라 통합 테스트를 한 명령으로 실행한다.
+// Python AI 통합 테스트는 Python 실행 환경을 Gradle에 연결하는 단계에서 이 태스크에 추가한다.
+tasks.register('projectIntegrationTest') {
+    description = '모놀리스와 채팅의 Testcontainers 통합 테스트를 모두 실행한다.'
+    group = 'verification'
+    dependsOn ':apps:monolith:integrationTest', ':apps:chat:integrationTest'
+}
+
+tasks.register('contractTest') {
+    description = '공용 fixture를 사용하는 JVM 서비스 계약 테스트를 실행한다.'
+    group = 'verification'
+    dependsOn ':services:ai:contractTest'
+}

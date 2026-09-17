@@ -1,6 +1,7 @@
 package com.example.iter.chat.repository
 
 import com.example.iter.chat.domain.ChatRoom
+import com.redis.testcontainers.RedisContainer
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Tag
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
+import org.springframework.test.annotation.DirtiesContext
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -22,6 +24,7 @@ import org.testcontainers.utility.DockerImageName
 // 조립할 필요가 없다. 기동 시 Flyway가 이 컨테이너에 V1__init_chat.sql을 실행한다.
 @Testcontainers
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Tag("integration")
 class ChatRoomRepositoryIntegrationTest {
 
@@ -68,5 +71,10 @@ class ChatRoomRepositoryIntegrationTest {
         @ServiceConnection
         @JvmStatic
         val mysql: MySQLContainer<*> = MySQLContainer(DockerImageName.parse("mysql:8.0"))
+
+        @Container
+        @ServiceConnection
+        @JvmStatic
+        val redis: RedisContainer = RedisContainer(DockerImageName.parse("redis:7"))
     }
 }

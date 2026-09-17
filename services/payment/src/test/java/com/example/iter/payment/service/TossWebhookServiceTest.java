@@ -7,6 +7,8 @@ import com.example.iter.payment.domain.repository.PaymentRepository;
 import com.example.iter.payment.dto.toss.TossConfirmApiResponse;
 import com.example.iter.payment.dto.toss.TossWebhookData;
 import com.example.iter.payment.dto.toss.TossWebhookPayload;
+import com.example.iter.payment.event.PaymentConfirmedEvent;
+import com.example.iter.reservation.api.RentalInfo;
 import com.example.iter.reservation.api.RentalStatus;
 import com.example.iter.reservation.api.RentalCommandPort;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -33,6 +36,8 @@ class TossWebhookServiceTest {
     private RentalCommandPort rentalCommandPort;
     @Mock
     private TossPaymentClient tossPaymentClient;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private TossWebhookService tossWebhookService;
@@ -61,6 +66,9 @@ class TossWebhookServiceTest {
         when(tossPaymentClient.getPayment("payKey"))
                 .thenReturn(new TossConfirmApiResponse("payKey", "order-1", "DONE", "2026-08-18T14:18:34+09:00", 100L));
         when(paymentRepository.findByOrderId("order-1")).thenReturn(Optional.of(payment));
+        RentalInfo confirmedRental = org.mockito.Mockito.mock(RentalInfo.class);
+        when(confirmedRental.rentalId()).thenReturn(10L);
+        when(rentalCommandPort.markPaymentConfirmed(10L)).thenReturn(Optional.of(confirmedRental));
 
 
         tossWebhookService.handle(payload);
@@ -69,6 +77,7 @@ class TossWebhookServiceTest {
         assertThat(payment.getPaymentKey()).isEqualTo("payKey");
         // 대여 상태 전환은 reservation 이 한다. 웹훅은 "결제됐다"만 알린다.
         verify(rentalCommandPort).markPaymentConfirmed(10L);
+        verify(eventPublisher).publishEvent(new PaymentConfirmedEvent(10L));
     }
 
     @Test
@@ -85,6 +94,7 @@ class TossWebhookServiceTest {
         tossWebhookService.handle(payload);
 
         verify(rentalCommandPort, never()).markPaymentConfirmed(any());
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
