@@ -83,8 +83,8 @@ class ReturnQueryService(
     }
 
     private fun createPageRequest(request: PagingRequest): PageRequest = PageRequest.of(
-        request.page(),
-        request.size(),
+        request.page,
+        request.size,
         Sort.by(Sort.Order.desc("updatedAt"), Sort.Order.desc("id"))
     )
 

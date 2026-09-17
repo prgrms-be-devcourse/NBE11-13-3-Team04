@@ -46,7 +46,7 @@ class RentalHistoryService(
         val renterId = renterId!!
         val rentals = rentalHistoryRepository.findAll(
             RentalSpecifications.borrowedHistory(renterId, request.status(), normalizeKeyword(request.equipmentName())),
-            historyPageable(request.page(), request.size()),
+            historyPageable(request.page, request.size),
         )
 
         return toBorrowedHistoryResponse(rentals, LocalDate.now())
@@ -60,7 +60,7 @@ class RentalHistoryService(
             ownerId,
             request.status(),
             normalizeKeyword(request.equipmentName()),
-            historyPageable(request.page(), request.size()),
+            historyPageable(request.page, request.size),
         )
 
         return toLentHistoryResponse(rentals, LocalDate.now())
@@ -76,7 +76,7 @@ class RentalHistoryService(
             renterId,
             today,
             RentalOverduePolicy.statuses(),
-            overduePageable(request.page(), request.size()),
+            overduePageable(request.page, request.size),
         )
 
         return toBorrowedHistoryResponse(rentals, today)
@@ -92,7 +92,7 @@ class RentalHistoryService(
             ownerId,
             today,
             RentalOverduePolicy.statuses(),
-            overduePageable(request.page(), request.size()),
+            overduePageable(request.page, request.size),
         )
 
         return toLentHistoryResponse(rentals, today)

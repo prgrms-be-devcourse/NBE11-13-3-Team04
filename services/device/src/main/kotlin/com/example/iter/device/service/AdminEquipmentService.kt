@@ -45,8 +45,8 @@ class AdminEquipmentService(
             keyword,
             category,
             request.status,
-            cursorKey?.createdAt(),
-            cursorKey?.id(),
+            cursorKey?.createdAt,
+            cursorKey?.id,
             PageRequest.of(0, request.size + 1),
         )
 
@@ -57,7 +57,7 @@ class AdminEquipmentService(
             equipment,
             request.size,
             { item -> adminEquipmentMapper.toSummary(item, getRequiredOwner(ownerMap, item.ownerId), thumbnailMap[item.id!!]) },
-            { item -> CursorKey(item.createdAt, item.id) },
+            { item -> CursorKey(item.createdAt!!, item.id!!) },
         )
     }
 

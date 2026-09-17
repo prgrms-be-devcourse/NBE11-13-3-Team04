@@ -66,8 +66,8 @@ class RentalReviewService(
     @Transactional(readOnly = true)
     fun getReviewsForUser(userId: Long, cursor: String?, size: Int): CursorPageResponse<RentalReviewResponse> {
         val cursorKey = CursorCodec.decode(cursor)
-        val cursorCreatedAt = cursorKey?.createdAt()
-        val cursorId = cursorKey?.id()
+        val cursorCreatedAt = cursorKey?.createdAt
+        val cursorId = cursorKey?.id
 
         val limit = PageRequest.of(0, size + 1)
         val reviews = rentalReviewRepository.findNextByRevieweeId(userId, cursorCreatedAt, cursorId, limit)
@@ -76,7 +76,7 @@ class RentalReviewService(
             reviews,
             size,
             { RentalReviewResponse.from(it) },
-            { review -> CursorKey(review.createdAt, review.id) },
+            { review -> CursorKey(review.createdAt!!, review.id!!) },
         )
     }
 
@@ -89,8 +89,8 @@ class RentalReviewService(
     @Transactional(readOnly = true)
     fun getReviewsWrittenByUser(userId: Long, cursor: String?, size: Int): CursorPageResponse<RentalReviewResponse> {
         val cursorKey = CursorCodec.decode(cursor)
-        val cursorCreatedAt = cursorKey?.createdAt()
-        val cursorId = cursorKey?.id()
+        val cursorCreatedAt = cursorKey?.createdAt
+        val cursorId = cursorKey?.id
 
         val limit = PageRequest.of(0, size + 1)
         val reviews = rentalReviewRepository.findNextByReviewerId(userId, cursorCreatedAt, cursorId, limit)
@@ -99,7 +99,7 @@ class RentalReviewService(
             reviews,
             size,
             { RentalReviewResponse.from(it) },
-            { review -> CursorKey(review.createdAt, review.id) },
+            { review -> CursorKey(review.createdAt!!, review.id!!) },
         )
     }
 
