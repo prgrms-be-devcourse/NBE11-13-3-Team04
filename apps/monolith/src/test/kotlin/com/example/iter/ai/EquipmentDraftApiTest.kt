@@ -71,7 +71,7 @@ class EquipmentDraftApiTest {
         owner = user(UserStatus.ACTIVE)
         upload = uploads.saveAndFlush(
             EquipmentImageUpload(
-                requireNotNull(owner.id),
+                requireNotNull(owner.id!!),
                 "equipment/temp/${owner.id}/${UUID.randomUUID()}.jpg",
                 "image/jpeg",
                 123,
@@ -85,7 +85,7 @@ class EquipmentDraftApiTest {
         whenever(client.createJob(any())).thenAnswer { call ->
             assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse()
             val request = call.getArgument<AiJobRequest>(0)
-            assertThat(jobs.findByJobIdAndOwnerId(request.jobId.toString(), owner.id)).isPresent()
+            assertThat(jobs.findByJobIdAndOwnerId(request.jobId.toString(), owner.id!!)).isPresent()
             AiJobAccepted(request.jobId, AiJobStatus.Status.PENDING, false)
         }
     }
@@ -100,7 +100,7 @@ class EquipmentDraftApiTest {
 
     @Test
     fun 다른_회원은_결과_조회와_재접수가_불가능하다() {
-        val response = service.create(owner.id, request())
+        val response = service.create(owner.id!!, request())
         val other = user(UserStatus.ACTIVE)
         clearInvocations(client)
         mvc.get("$URL/${response.jobId}") { header("Authorization", bearer(other)) }.andExpect { status { isNotFound() } }
@@ -128,10 +128,10 @@ class EquipmentDraftApiTest {
     @Test
     fun 만료되거나_사용한_사진과_중복_키를_차단한다() {
         upload.use(LocalDateTime.now(clock)); uploads.saveAndFlush(upload)
-        assertError(ErrorCode.IMAGE_UPLOAD_ALREADY_USED) { service.create(owner.id, request()) }
+        assertError(ErrorCode.IMAGE_UPLOAD_ALREADY_USED) { service.create(owner.id!!, request()) }
         val expired = uploads.saveAndFlush(
             EquipmentImageUpload(
-                requireNotNull(owner.id),
+                requireNotNull(owner.id!!),
                 "equipment/temp/expired-${UUID.randomUUID()}",
                 "image/jpeg",
                 123,
@@ -139,10 +139,10 @@ class EquipmentDraftApiTest {
             )
         )
         assertError(ErrorCode.IMAGE_UPLOAD_EXPIRED) {
-            service.create(owner.id, EquipmentDraftRequest(listOf(expired.objectKey), null, null))
+            service.create(owner.id!!, EquipmentDraftRequest(listOf(expired.objectKey), null, null))
         }
         assertThatThrownBy {
-            service.create(owner.id, EquipmentDraftRequest(listOf(upload.objectKey, upload.objectKey), null, null))
+            service.create(owner.id!!, EquipmentDraftRequest(listOf(upload.objectKey, upload.objectKey), null, null))
         }.isInstanceOf(CustomException::class.java)
         verifyNoInteractions(images, client)
     }
@@ -158,32 +158,32 @@ class EquipmentDraftApiTest {
     @Test
     fun 접수_실패도_UUID를_보존하고_재접수는_추가_횟수를_차감하지_않는다() {
         doThrow(AiServiceException(0)).whenever(client).createJob(any())
-        val response = service.create(owner.id, request())
+        val response = service.create(owner.id!!, request())
         val jobId = requireNotNull(response.jobId)
         assertThat(response.status).isEqualTo("SUBMISSION_UNKNOWN")
         whenever(client.getJob(jobId)).thenThrow(AiServiceException(404))
         doReturn(AiJobAccepted(jobId, AiJobStatus.Status.PENDING, false)).whenever(client).createJob(any())
-        assertThat(service.retry(owner.id, jobId).jobId).isEqualTo(jobId)
-        assertThat(jobs.countByOwnerIdAndCreatedAtGreaterThanEqual(owner.id, LocalDateTime.now(clock).minusDays(1))).isEqualTo(1)
+        assertThat(service.retry(owner.id!!, jobId).jobId).isEqualTo(jobId)
+        assertThat(jobs.countByOwnerIdAndCreatedAtGreaterThanEqual(owner.id!!, LocalDateTime.now(clock).minusDays(1))).isEqualTo(1)
         verify(client, times(2)).createJob(argThat { this.jobId == jobId })
     }
 
     @Test
     fun 성공한_결과는_재분석하지_않고_조회한다() {
-        val created = service.create(owner.id, request())
+        val created = service.create(owner.id!!, request())
         val jobId = requireNotNull(created.jobId)
         whenever(client.getJob(jobId)).thenReturn(
             AiJobStatus(jobId, AiJobRequest.FeatureType.EQUIPMENT_DRAFT_V1, AiJobStatus.Status.SUCCEEDED,
                 mapOf("name" to "카메라"), null, "fake", "fake-v1", null, null, null,
                 LocalDateTime.now(), LocalDateTime.now())
         )
-        assertThat(service.retry(owner.id, jobId).draft).containsEntry("name", "카메라")
+        assertThat(service.retry(owner.id!!, jobId).draft).containsEntry("name", "카메라")
         verify(client, times(1)).createJob(any())
     }
 
     @Test
     fun 동시_요청도_회원별_일일_한도를_넘지_않는다() {
-        service.create(owner.id, request())
+        service.create(owner.id!!, request())
         val start = CountDownLatch(1)
         Executors.newFixedThreadPool(2).use { executor ->
             val work = Callable { start.await(); tryCreate() }
@@ -195,7 +195,7 @@ class EquipmentDraftApiTest {
         verify(client, times(2)).createJob(any())
     }
 
-    private fun tryCreate(): String = try { requireNotNull(service.create(owner.id, request()).status) }
+    private fun tryCreate(): String = try { requireNotNull(service.create(owner.id!!, request()).status) }
     catch (exception: CustomException) { exception.errorCode.name }
 
     private fun assertError(code: ErrorCode, block: () -> Unit) {

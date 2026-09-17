@@ -41,19 +41,19 @@ class UserReportContextContributor(
         draft.addFact("userRole", target.role)
         draft.addFact(
             "reportsAgainstUser",
-            reports.countByTargetTypeAndTargetId(ReportTargetType.USER, target.id)
+            reports.countByTargetTypeAndTargetId(ReportTargetType.USER, target.id!!)
         )
-        draft.addFact("completedRentalsAsRenter", rentals.countByRenterIdAndStatusIn(target.id, completed))
-        draft.addFact("completedRentalsAsOwner", rentals.countByOwnerIdSnapshotAndStatusIn(target.id, completed))
+        draft.addFact("completedRentalsAsRenter", rentals.countByRenterIdAndStatusIn(target.id!!, completed))
+        draft.addFact("completedRentalsAsOwner", rentals.countByOwnerIdSnapshotAndStatusIn(target.id!!, completed))
         draft.addFact(
             "overdueRentalsAsRenter",
-            rentals.countByRenterIdAndEndDateBeforeAndStatusIn(target.id, LocalDate.now(clock), overdueStates)
+            rentals.countByRenterIdAndEndDateBeforeAndStatusIn(target.id!!, LocalDate.now(clock), overdueStates)
         )
         sanitizer.addPublicContent(draft.publicContent, "targetNickname", target.nickname)
 
         // 거래와 무관한 회원 신고에는 불필요한 거래·사진 정보를 전달하지 않습니다.
         if (sanitizer.mentionsTransaction(reviewedDescription)) {
-            rentals.findLatestBetweenUsers(report.reporterId, target.id).ifPresent { rental ->
+            rentals.findLatestBetweenUsers(report.reporterId, target.id!!).ifPresent { rental ->
                 rentalContributor.addRentalContext(
                     rental,
                     "LATEST_RENTAL_BETWEEN_RELATED_USERS",

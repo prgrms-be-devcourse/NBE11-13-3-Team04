@@ -106,7 +106,7 @@ class ReportAnalysisApiTest {
     @Test
     fun 재접수는_본문없이_기존_입력을_재사용하고_미접수는_거부한다() {
         mvc.post("${url(report)}/retry") { header("Authorization", bearer(admin)) }.andExpect { status { isNotFound() } }
-        val created = service.create(admin.id, reportId(report), input())
+        val created = service.create(admin.id!!, reportId(report), input())
         mvc.post("${url(report)}/retry") { header("Authorization", bearer(admin)) }.andExpect {
             status { isAccepted() }; jsonPath("$.jobId") { value(created.jobId.toString()) }
         }
@@ -153,22 +153,22 @@ class ReportAnalysisApiTest {
     @Test
     fun 접수_불명확시_같은_UUID와_최초_입력을_보존한다() {
         doThrow(AiServiceException(0)).whenever(client).createJob(any())
-        val first = service.create(admin.id, reportId(report), input())
+        val first = service.create(admin.id!!, reportId(report), input())
         val jobId = requireNotNull(first.jobId)
         assertThat(first.status).isEqualTo("SUBMISSION_UNKNOWN")
         whenever(client.getJob(jobId)).thenThrow(AiServiceException(404))
         assertThat(service.get(reportId(report)).status).isEqualTo("SUBMISSION_UNKNOWN")
         doReturn(AiJobAccepted(jobId, AiJobStatus.Status.FAILED, true)).whenever(client).createJob(any())
-        val again = service.create(admin.id, reportId(report), ReportAnalysisRequest("변경한 내용", true))
+        val again = service.create(admin.id!!, reportId(report), ReportAnalysisRequest("변경한 내용", true))
         assertThat(again.status).isEqualTo("FAILED"); assertThat(again.jobId).isEqualTo(jobId)
         verify(client, times(2)).createJob(argThat { this.jobId == jobId && payload?.get("description") == input().description })
-        assertThat(jobs.countByAdminIdAndCreatedAtGreaterThanEqual(admin.id, LocalDateTime.now().minusDays(1))).isEqualTo(1)
+        assertThat(jobs.countByAdminIdAndCreatedAtGreaterThanEqual(admin.id!!, LocalDateTime.now().minusDays(1))).isEqualTo(1)
     }
 
     @Test
     fun 처리_완료_신고는_새로_분석하지_않는다() {
         val closed = report(ReportStatus.RESOLVED)
-        assertError(ErrorCode.AI_REPORT_CLOSED) { service.create(admin.id, reportId(closed), input()) }
+        assertError(ErrorCode.AI_REPORT_CLOSED) { service.create(admin.id!!, reportId(closed), input()) }
         verifyNoInteractions(client)
     }
 
@@ -176,15 +176,15 @@ class ReportAnalysisApiTest {
     fun 동시에_접수해도_신고별_UUID는_하나다() {
         val otherAdmin = user(Role.ADMIN); val start = CountDownLatch(1)
         Executors.newFixedThreadPool(2).use { executor ->
-            val first = executor.submit<UUID?> { start.await(); service.create(admin.id, reportId(report), input()).jobId }
-            val second = executor.submit<UUID?> { start.await(); service.create(otherAdmin.id, reportId(report), input()).jobId }
+            val first = executor.submit<UUID?> { start.await(); service.create(admin.id!!, reportId(report), input()).jobId }
+            val second = executor.submit<UUID?> { start.await(); service.create(otherAdmin.id!!, reportId(report), input()).jobId }
             start.countDown(); assertThat(first.get(10, TimeUnit.SECONDS)).isEqualTo(second.get(10, TimeUnit.SECONDS))
         }
     }
 
     @Test
     fun 동시_요청도_관리자별_일일_한도를_지킨다() {
-        service.create(admin.id, reportId(report), input())
+        service.create(admin.id!!, reportId(report), input())
         val firstReport = report(ReportStatus.RECEIVED); val secondReport = report(ReportStatus.RECEIVED)
         val start = CountDownLatch(1)
         Executors.newFixedThreadPool(2).use { executor ->
@@ -198,7 +198,7 @@ class ReportAnalysisApiTest {
 
     @Test
     fun 성공_결과를_조회하며_장애와_다른_기능의_결과는_차단한다() {
-        val created = service.create(admin.id, reportId(report), input()); val jobId = requireNotNull(created.jobId)
+        val created = service.create(admin.id!!, reportId(report), input()); val jobId = requireNotNull(created.jobId)
         whenever(client.getJob(jobId)).thenReturn(status(jobId, AiJobRequest.FeatureType.REPORT_TRIAGE_V1, mapOf("summary" to "검토 자료")))
         mvc.get(url(report)) { header("Authorization", bearer(admin)) }.andExpect {
             status { isOk() }; jsonPath("$.analysis.summary") { value("검토 자료") }
@@ -213,15 +213,15 @@ class ReportAnalysisApiTest {
         jobId, feature, AiJobStatus.Status.SUCCEEDED, result, null, "fake", "fake-v1", null, null, null,
         LocalDateTime.now(), LocalDateTime.now()
     )
-    private fun tryCreate(target: Report): String = try { requireNotNull(service.create(admin.id, reportId(target), input()).status) }
+    private fun tryCreate(target: Report): String = try { requireNotNull(service.create(admin.id!!, reportId(target), input()).status) }
     catch (exception: CustomException) { exception.errorCode.name }
     private fun user(role: Role) = users.saveAndFlush(User.builder().email("${UUID.randomUUID()}@example.test")
         .name("테스트").password("test-only").role(role).status(UserStatus.ACTIVE).build())
     private fun report(status: ReportStatus) = reports.saveAndFlush(
         Report(
-            reporterId = admin.id,
+            reporterId = admin.id!!,
             targetType = ReportTargetType.USER,
-            targetId = admin.id,
+            targetId = admin.id!!,
             reason = "신고 사유",
             description = "원본 private@example.test",
             status = status,

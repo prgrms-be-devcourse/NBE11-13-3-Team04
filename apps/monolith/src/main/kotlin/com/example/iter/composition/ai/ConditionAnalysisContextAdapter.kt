@@ -29,14 +29,14 @@ class ConditionAnalysisContextAdapter(
     override fun requireOwner(ownerId: Long, rentalId: Long) {
         val owner = findActiveUser(ownerId)
         val rental = findRental(rentalId)
-        validateOwner(owner.id, rental)
+        validateOwner(owner.id!!, rental)
     }
 
     // S3 자료를 불러오기 전에 권한과 상태를 선검증해 불필요한 외부 호출을 줄입니다.
     override fun requireReady(ownerId: Long, rentalId: Long) {
         val owner = findActiveUser(ownerId)
         val rental = findRental(rentalId)
-        validateOwner(owner.id, rental)
+        validateOwner(owner.id!!, rental)
         validateReady(rental)
     }
 
@@ -49,7 +49,7 @@ class ConditionAnalysisContextAdapter(
 
         val rental = rentals.findWithLockById(rentalId).orElseThrow { CustomException(ErrorCode.RENTAL_NOT_FOUND) }
 
-        validateOwner(owner.id, rental)
+        validateOwner(owner.id!!, rental)
         validateReady(rental)
     }
 
