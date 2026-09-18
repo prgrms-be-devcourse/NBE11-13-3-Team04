@@ -88,6 +88,27 @@ class ChatRoomService(
         }
     }
 
+    // ChatIntegrationEventConsumer가 거래 최종 완료 이벤트를 받으면 호출한다. 방은
+    // (equipmentId, requesterId)로 재사용되므로(createRoom) stage를 INQUIRY로 되돌려
+    // 다음 문의부터 정책 필터가 다시 걸리게 한다 — 되돌리지 않으면 한 번 거래한 조합은
+    // 이후 영영 필터가 꺼진 채로 남는다.
+    //
+    // 멱등: rentalId가 일치할 때만 되돌린다. Redis Stream은 at-least-once라 같은 이벤트가
+    // 재전달될 수 있고, 그 사이 새 거래가 시작됐다면 과거 이벤트가 그 거래를 되돌리면 안 된다.
+    suspend fun markRentalCompleted(equipmentId: Long, renterId: Long, rentalId: Long) {
+        val room = chatRoomRepository.findByEquipmentIdAndRequesterId(equipmentId, renterId)
+        if (room == null) {
+            log.info(
+                "거래 완료 이벤트에 해당하는 방이 없다 equipmentId={} renterId={} rentalId={}",
+                equipmentId, renterId, rentalId,
+            )
+            return
+        }
+        if (room.stage == RoomStage.TRADE && room.rentalId == rentalId) {
+            chatRoomRepository.save(room.copy(stage = RoomStage.INQUIRY, rentalId = null))
+        }
+    }
+
     suspend fun requireRoom(roomId: Long): ChatRoom =
         chatRoomRepository.findById(roomId) ?: throw ChatException(ChatErrorCode.ROOM_NOT_FOUND)
 

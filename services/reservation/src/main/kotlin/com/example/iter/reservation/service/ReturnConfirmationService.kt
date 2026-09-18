@@ -13,8 +13,10 @@ import com.example.iter.reservation.domain.repository.RentalRepository
 import com.example.iter.reservation.domain.repository.ReturnReceiptRepository
 import com.example.iter.reservation.dto.request.ReturnConfirmationRequest
 import com.example.iter.reservation.dto.response.ReturnConfirmationResponse
+import com.example.iter.reservation.event.RentalCompletedEvent
 import com.example.iter.reservation.util.ReturnMapper
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -25,7 +27,8 @@ class ReturnConfirmationService(
     private val receiptRepository: ReceiptRepository,
     private val returnReceiptRepository: ReturnReceiptRepository,
     private val disputeCommandPort: DisputeCommandPort,
-    private val returnMapper: ReturnMapper
+    private val returnMapper: ReturnMapper,
+    private val eventPublisher: ApplicationEventPublisher
 ) {
     // 거래 행을 잠근 뒤 증빙과 상태를 재검증하고 정상 완료 또는 분쟁 전환을 원자적으로 처리합니다.
     @Transactional
@@ -47,6 +50,9 @@ class ReturnConfirmationService(
                 rental.status,
                 false
             )
+            // 거래가 실제로 끝난 건 이 분기뿐입니다. 구독자는 커밋 이후에만 반응합니다
+            // (AFTER_COMMIT) — 이 트랜잭션이 롤백되면 거래 종료도 없던 일이 돼야 하기 때문입니다.
+            eventPublisher.publishEvent(RentalCompletedEvent(rental.id!!))
 
             return returnMapper.toConfirmation(rental, null, null)
         }
