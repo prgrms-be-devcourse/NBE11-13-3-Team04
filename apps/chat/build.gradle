@@ -6,7 +6,7 @@ plugins {
 description = 'iter 채팅 서비스 — monolith와 별개로 뜨는 독립 앱(WebFlux + 코루틴 + R2DBC)'
 
 springBoot {
-    mainClass = 'com.example.iter.chat.ChatApplicationKt'
+    mainClass = 'iter.chat.ChatApplicationKt'
 }
 
 // 두 번째 앱이라 monolith와 산출물 이름이 겹치면 안 된다.

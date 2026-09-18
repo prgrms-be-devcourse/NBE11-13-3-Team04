@@ -6,7 +6,7 @@ plugins {
 description = 'iter'
 
 springBoot {
-    mainClass = 'com.example.iter.IterApplicationKt'
+    mainClass = 'iter.IterApplicationKt'
 }
 
 // 기존 배포 산출물 이름(iter-*.jar)을 유지한다.
