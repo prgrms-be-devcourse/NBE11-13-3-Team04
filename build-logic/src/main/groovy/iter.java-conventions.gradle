@@ -9,7 +9,7 @@ plugins {
 // 아래가 공식적으로 지원되는 우회 방법이다.
 def libs = extensions.getByType(VersionCatalogsExtension).named('libs')
 
-group = 'com.example'
+group = 'iter'
 version = '0.0.1-SNAPSHOT'
 
 java {
