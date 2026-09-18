@@ -64,6 +64,25 @@ class ChatIntegrationEventConsumerTest {
     }
 
     @Test
+    fun `RENTAL_COMPLETED 레코드를 받으면 거래 완료를 알리고 ACK한다`() = runTest {
+        whenever(redisTemplate.opsForStream<String, String>()).thenReturn(streamOperations)
+        whenever(streamOperations.acknowledge(eq("chat"), any<MapRecord<String, String, String>>())).thenReturn(Mono.just(1L))
+
+        val record = MapRecord.create(
+            "iter.events.chat",
+            mapOf(
+                "type" to "RENTAL_COMPLETED",
+                "payload" to """{"eventId":"e2","rentalId":1,"equipmentId":2,"renterId":3,"occurredAt":"2026-01-01T00:00:00Z"}""",
+            ),
+        )
+
+        consumer.handle(record)
+
+        verify(chatRoomService).markRentalCompleted(2L, 3L, 1L)
+        verify(streamOperations).acknowledge(eq("chat"), any<MapRecord<String, String, String>>())
+    }
+
+    @Test
     fun `모르는 type은 무시하지만 그대로 ACK한다`() = runTest {
         whenever(redisTemplate.opsForStream<String, String>()).thenReturn(streamOperations)
         whenever(streamOperations.acknowledge(eq("chat"), any<MapRecord<String, String, String>>())).thenReturn(Mono.just(1L))

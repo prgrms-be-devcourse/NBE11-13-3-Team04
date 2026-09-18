@@ -2,6 +2,7 @@ package com.example.iter.chat.event
 
 import com.example.iter.chat.service.ChatRoomService
 import com.example.iter.event.contract.PaymentConfirmedIntegrationEvent
+import com.example.iter.event.contract.RentalCompletedIntegrationEvent
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.reactor.mono
 import org.slf4j.LoggerFactory
@@ -24,6 +25,7 @@ private const val STREAM_KEY = "iter.events.chat"
 private const val CONSUMER_GROUP = "chat"
 private const val CONSUMER_NAME = "chat-consumer-1"
 private const val TYPE_PAYMENT_CONFIRMED = "PAYMENT_CONFIRMED"
+private const val TYPE_RENTAL_COMPLETED = "RENTAL_COMPLETED"
 
 // monolith(ChatIntegrationEventPublisher)가 XADD한 iter.events.chat 스트림을 소비자
 // 그룹으로 읽는다. Pub/Sub과 다르게 그 순간 안 듣고 있어도 유실되지 않는다 — chat이
@@ -80,9 +82,15 @@ class ChatIntegrationEventConsumer(
         val type = record.value["type"]
         val payload = record.value["payload"] ?: return
 
-        if (type == TYPE_PAYMENT_CONFIRMED) {
-            val event = jsonMapper.readValue(payload, PaymentConfirmedIntegrationEvent::class.java)
-            chatRoomService.markPaymentConfirmed(event.equipmentId, event.renterId, event.rentalId)
+        when (type) {
+            TYPE_PAYMENT_CONFIRMED -> {
+                val event = jsonMapper.readValue(payload, PaymentConfirmedIntegrationEvent::class.java)
+                chatRoomService.markPaymentConfirmed(event.equipmentId, event.renterId, event.rentalId)
+            }
+            TYPE_RENTAL_COMPLETED -> {
+                val event = jsonMapper.readValue(payload, RentalCompletedIntegrationEvent::class.java)
+                chatRoomService.markRentalCompleted(event.equipmentId, event.renterId, event.rentalId)
+            }
         }
     }
 }

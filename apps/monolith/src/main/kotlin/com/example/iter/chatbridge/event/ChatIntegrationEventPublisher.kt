@@ -1,6 +1,7 @@
 package com.example.iter.chatbridge.event
 
 import com.example.iter.event.contract.PaymentConfirmedIntegrationEvent
+import com.example.iter.event.contract.RentalCompletedIntegrationEvent
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
@@ -18,18 +19,26 @@ class ChatIntegrationEventPublisher(
 ) {
 
     fun publishPaymentConfirmed(event: PaymentConfirmedIntegrationEvent) {
+        publish(TYPE_PAYMENT_CONFIRMED, event, event.rentalId)
+    }
+
+    fun publishRentalCompleted(event: RentalCompletedIntegrationEvent) {
+        publish(TYPE_RENTAL_COMPLETED, event, event.rentalId)
+    }
+
+    private fun publish(type: String, event: Any, rentalId: Long) {
         try {
             redisTemplate.opsForStream<String, String>().add(
                 STREAM_KEY,
                 mapOf(
-                    "type" to TYPE_PAYMENT_CONFIRMED,
+                    "type" to type,
                     "payload" to jsonMapper.writeValueAsString(event),
                 ),
             )
         } catch (e: Exception) {
             // 여기서 실패하면 이 이벤트는 유실된다(아웃박스 없음) — 알려진 한계다.
             // rentalId를 로그에 남겨서 필요하면 수동으로 재처리할 수 있게 한다.
-            log.error("chat 통합 이벤트 발행 실패 rentalId={}", event.rentalId, e)
+            log.error("chat 통합 이벤트 발행 실패 type={} rentalId={}", type, rentalId, e)
         }
     }
 
@@ -37,5 +46,6 @@ class ChatIntegrationEventPublisher(
         // apps:chat의 소비자 그룹 이름과 반드시 맞아야 한다(ChatIntegrationEventConsumer).
         private const val STREAM_KEY = "iter.events.chat"
         private const val TYPE_PAYMENT_CONFIRMED = "PAYMENT_CONFIRMED"
+        private const val TYPE_RENTAL_COMPLETED = "RENTAL_COMPLETED"
     }
 }

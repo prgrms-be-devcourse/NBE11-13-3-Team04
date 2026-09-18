@@ -26,6 +26,7 @@ import com.example.iter.reservation.domain.repository.ReturnReceiptImageReposito
 import com.example.iter.reservation.domain.repository.ReturnReceiptRepository;
 import com.example.iter.reservation.dto.request.ReturnConfirmationRequest;
 import com.example.iter.reservation.dto.response.ConditionEvidenceImageResponse;
+import com.example.iter.reservation.event.RentalCompletedEvent;
 import com.example.iter.reservation.util.ReturnMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -95,6 +97,9 @@ class ReturnServiceTest {
     @Mock
     private RentalEvidenceUploadService evidenceUploadService;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     @Spy
     private ReturnMapper returnMapper = new ReturnMapper();
 
@@ -120,7 +125,8 @@ class ReturnServiceTest {
                 receiptRepository,
                 returnReceiptRepository,
                 disputeCommandPort,
-                returnMapper
+                returnMapper,
+                eventPublisher
         );
         returnService = new ReturnService(returnQueryService, returnConfirmationService);
     }
@@ -269,6 +275,8 @@ class ReturnServiceTest {
         assertThat(response.reportId()).isNull();
         verify(rentalRepository).findWithLockById(RENTAL_ID);
         verifyNoInteractions(disputeCommandPort);
+        // 거래가 끝났음을 알려야 chat 이 그 방의 stage 를 INQUIRY 로 되돌려 정책 필터를 다시 켠다.
+        verify(eventPublisher).publishEvent(new RentalCompletedEvent(RENTAL_ID));
     }
 
     @Test
@@ -298,6 +306,8 @@ class ReturnServiceTest {
         assertThat(response.status()).isEqualTo(RentalStatus.DISPUTED);
         assertThat(response.disputeId()).isEqualTo(50L);
         assertThat(response.reportId()).isEqualTo(60L);
+        // 분쟁은 거래가 끝난 게 아니다 — 완료 이벤트가 나가면 안 된다.
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
