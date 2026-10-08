@@ -110,4 +110,4 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [requestId=%X{requestId:-none}] %logger{36} - %msg%n"
   level:
-    com.example.iter: debug
+    iter: debug
